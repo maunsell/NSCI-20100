@@ -62,6 +62,18 @@ function varargout = EOG_OutputFcn(hObject, eventdata, handles)  %#ok<*INUSL>
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+function taskData = processSignals(taskData)
+    taskData.rawDiff = taskData.rawData(:, 1) - taskData.rawData(:, 2);
+    taskData.rawDiff = taskData.rawDiff - mean(taskData.rawDiff(1:taskData.sampleRateHz * 
+    taskData.summedData(:, taskData.offsetIndex) = taskData.summedData(:, taskData.offsetIndex) + taskData.rawDiff;  
+    taskData.numSummed(taskData.offsetIndex) = taskData.numSummed(taskData.offsetIndex) + 1;
+    taskData.avgData(:, taskData.offsetIndex) = taskData.summedData(:, taskData.offsetIndex) ...
+        / taskData.numSummed(taskData.offsetIndex);
+    updatePlots(lbj, taskData, daqaxes);
+    taskData.trialStartTimeS = 0;
+    taskData.taskState = TaskState.taskIdle;
+
 % initialize application
 varargout{1} = handles.output;
 set(handles.startbutton, 'String', 'Start','BackgroundColor', 'green');
@@ -70,14 +82,7 @@ set(hObject, 'CloseRequestFcn', {@closeProgram, handles});
 handles.lbj = [];                             % the U6 object
 guidata(hObject, handles);                  % save updates to handles
 
-function taskData = processSignals(taskData)
-    taskData.rawDiff = taskData.rawData(:, 1) - taskData.rawData(:, 2);
-    taskData.rawDiff = taskData.rawDiff - mean(taskData.rawDiff(1:taskData.sampleRateHz * taskData.samplePrestimS));
-    taskData.summedData(:, taskData.offsetIndex) = taskData.summedData(:, taskData.offsetIndex) + taskData.rawDiff;  
-    taskData.numSummed(taskData.offsetIndex) = taskData.numSummed(taskData.offsetIndex) + 1;
-    taskData.avgData(:, taskData.offsetIndex) = taskData.summedData(:, taskData.offsetIndex) ...
-        / taskData.numSummed(taskData.offsetIndex);
-    
+
 %% respond to button presses
 function startbutton_Callback(hObject, eventdata, handles)                  %#ok<DEFNU>
 % hObject    handle to startbutton (see GCBO)
@@ -127,9 +132,7 @@ if strcmp(get(handles.startbutton, 'String'), 'Start') % if start button, do the
     taskData.currentOffsetPix = 0.0;
     taskData.offsetsDone = zeros (1, taskData.numOffsets);
     taskData.blocksDone = 0;
-    taskData.sampleRateHz = lbj.SampleRateHz;
     taskData.trialLimitS = 1.0;
-    taskData.samplePrestimS = 0.250;
     taskData.samplesNeeded = floor(taskData.trialLimitS * lbj.SampleRateHz);
     taskData.taskState = TaskState.taskIdle;
     taskData.trialStartTimeS = 0;
@@ -204,7 +207,7 @@ switch taskData.taskState
             analogOut(lbj,1, 2.5 - taskData.voltage);
         elseif etime(clock, taskData.trialStartTimeS) > 0.050               % data settled for one taskTimer cycle
             taskData.trialStartTimeS = clock;                               % reset the trial clock
-            taskData.stimTimeS = taskData.samplePrestimS + rand() * 0.250;
+            taskData.stimTimeS = taskData.sample + rand() * 0.250;
             taskData.dataState = DataState.dataStart;
             taskData.taskState = TaskState.taskPrestim;
         end
@@ -229,9 +232,6 @@ switch taskData.taskState
         disp('endtrial');
         % NEED TO DETECT THE SACCADE OFFSET AND DO ALIGNMENT
         taskData = processSignals(taskData);
-        updatePlots(lbj, taskData, daqaxes);
-        taskData.trialStartTimeS = 0;
-        taskData.taskState = TaskState.taskIdle;
 end
 lbj.UserData = taskData;                                                    % save new points to UserData
 
