@@ -102,9 +102,9 @@ if strcmp(get(handles.startbutton, 'String'), 'Start') % if start button, do the
     lbj.SampleRateHz = 1000;                    % sample rate (Hz)
     lbj.ResolutionADC = 1;                      % ADC resolution (AD bit depth)
 
-    voltage = 0; 
+    voltage = 2.5; 
     analogOut(lbj, 0, voltage);                 % For debugging (AOuts to AIns)
-    analogOut(lbj, 1, voltage + 1);
+    analogOut(lbj, 1, voltage);
 
     % configure LabJack for analog input streaming
     
@@ -115,6 +115,11 @@ if strcmp(get(handles.startbutton, 'String'), 'Start') % if start button, do the
     end 
     
     % Initialize the variables for storing the data that is plotted
+    taskData.offsetPix = [100 200 300 400];
+    taskData.currentOffsetPix = 0.0;
+    taskData.numOffsets = length(taskData.offsetPix);
+    taskData.offsetsDone = zeros (1, taskData.numOffsets);
+    taskData.blocksDone = 0;
     taskData.trialLimitS = 1.0;
     taskData.samplesNeeded = floor(taskData.trialLimitS * lbj.SampleRateHz);
     taskData.taskState = TaskState.taskIdle;
@@ -169,35 +174,47 @@ else % stop
 end
 
 %% taskController: function to collect data from LabJack
-function taskController(obj, taskData, daqaxes)
+function taskController(obj, event, daqaxes)
 lbj = obj.UserData;                                                         % handle to labjack is in timer UserData
 taskData = lbj.UserData;                                                    % UserData must be initialized w daq setup
 switch taskData.taskState
     case TaskState.taskIdle
-        if taskData.trialStartTimeS == 0
+        if taskData.trialStartTimeS == 0                                    % initialize a new trial
+            if sum(taskData.offsetsDone) >= taskData.numOffsets             % finished another block
+                taskData.offsetsDone = zeros(1, taskData.numOffsets);       % clear counters
+                taskData.blocksDone = taskData.blocksDone + 1;              % increment block counter
+            end
+            taskData.offsetIndex = ceil(rand() * taskData.numOffsets);
+            while taskData.offsetsDone(taskData.offsetIndex) > 0
+                taskData.offsetIndex = mod(x, task.numOffsets) + 1;
+            end
             taskData.trialStartTimeS = clock;
-            taskData.voltage = 0;
-            analogOut(lbj,0, taskData.voltage);                             % debugging- connect DOC0 to AIN Ch0
-            analogOut(lbj,1, taskData.voltage + 1);
-        elseif etime(clock, taskData.trialStartTimeS) > 0.075               % let data settle
+            taskData.voltage = taskData.currentOffsetPix / 1000.0;          % debugging- connect DOC0 to AIN Ch0
+            analogOut(lbj,0, 2.5 + taskData.voltage);
+            analogOut(lbj,1, 2.5 - taskData.voltage);
+        elseif etime(clock, taskData.trialStartTimeS) > 0.050               % data settled for one taskTimer cycle
             taskData.trialStartTimeS = clock;                               % reset the trial clock
+            taskData.stimTimeS = 0.250 + rand() * 0.250;
             taskData.dataState = DataState.dataStart;
             taskData.taskState = TaskState.taskPrestim;
-            taskData.stimTimeS = 0.250 + rand() * 0.250;
         end
     case TaskState.taskPrestim
         if etime(clock, taskData.trialStartTimeS) > taskData.stimTimeS
             % DO THE STIMULUS
-            analogOut(lbj,0, taskData.voltage + 0.5);                             % debugging- connect DOC0 to AIN Ch0
-            analogOut(lbj,1, taskData.voltage + 1 - 0.5);
+            if taskData.currentOffsetPix > 0
+                taskData.currentOffsetPix = taskData.currentOffsetPix - taskData.offsetPix(taskData.offsetIndex);
+            else
+                taskData.currentOffsetPix = taskData.currentOffsetPix + taskData.offsetPix(taskData.offsetIndex);
+            end
+            taskData.voltage = taskData.currentOffsetPix / 1000.0;          % debugging- connect DOC0 to AIN Ch0
+            analogOut(lbj,0, 2.5 + taskData.voltage);
+            analogOut(lbj,1, 2.5 - taskData.voltage);
             taskData.taskState = TaskState.taskPoststim;
         end
     case TaskState.taskPoststim
-        if etime(clock, taskData.trialStartTimeS) > taskData.trialLimitS
-            taskData.taskState = TaskState.taskIdle;
-            taskData.trialStartTimeS = 0;
-        end
+        % just wait for end of trial
     case TaskState.taskEndtrial
+        % NEED TO DETECT THE SACCADE OFFSET AND DO ALIGNMENT
         taskData.rawDiff = taskData.rawData(:, 1) - taskData.rawData(:, 2);
         taskData.summedData = taskData.summedData + taskData.rawDiff;  
         taskData.avgData = taskData.summedData / taskData.numSummed;
@@ -241,10 +258,7 @@ lbj.UserData = taskData;                                                    % sa
 %     taskData.samplesRead = 0;                                             % prep for next cycle
 % end;
 
-
-
 function updatePlots(lbj, taskData, daqaxes)
-    disp('plot data');
     timestepS = 1 / lbj.SampleRateHz;                                       % time interval of samples
     timeaxes1 = 0:1:size(taskData.avgData,1) - 1 * timestepS;               % make array of timepoints
 
