@@ -57,7 +57,7 @@ handles.output = hObject;                                       % select default
 guidata(hObject, handles);                                      % save the selection
 
 %% initialization
-function varargout = EOG_OutputFcn(hObject, eventdata, handles) 
+function varargout = EOG_OutputFcn(hObject, eventdata, handles)  %#ok<*INUSL>
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -116,8 +116,8 @@ if strcmp(get(handles.startbutton, 'String'), 'Start') % if start button, do the
     
     % Initialize the variables for storing the data that is plotted
     taskData.offsetPix = [100 200 300 400];
-    taskData.currentOffsetPix = 0.0;
     taskData.numOffsets = length(taskData.offsetPix);
+    taskData.currentOffsetPix = 0.0;
     taskData.offsetsDone = zeros (1, taskData.numOffsets);
     taskData.blocksDone = 0;
     taskData.trialLimitS = 1.0;
@@ -126,13 +126,11 @@ if strcmp(get(handles.startbutton, 'String'), 'Start') % if start button, do the
     taskData.trialStartTimeS = 0;
     taskData.samplesRead = 0;
     taskData.dataState = DataState.dataIdle;
-    taskData.numSummed = 0;
-    taskData.rawData = zeros(taskData.samplesNeeded, lbj.numChannels);  % for raw data
-    taskData.rawDiff = zeros(taskData.samplesNeeded, 1);                % for difference data
-    taskData.summedData = zeros(taskData.samplesNeeded, 1);             % for summed data
-    taskData.avgData = zeros(taskData.samplesNeeded, 1);                % for averaged data
-%     taskData.summedData = zeros(taskData.samplesNeeded, lbj.numChannels); % for summed data
-%     taskData.avgData = zeros(taskData.samplesNeeded, lbj.numChannels); % for averaged data
+    taskData.numSummed = zeros(1, taskData.numOffsets);
+    taskData.rawData = zeros(taskData.samplesNeeded, lbj.numChannels);          % for raw data
+    taskData.rawDiff = zeros(taskData.samplesNeeded, 1);                        % for difference data
+    taskData.summedData = zeros(taskData.samplesNeeded, taskData.numOffsets);	% for summed data
+    taskData.avgData = zeros(taskData.samplesNeeded, taskData.numOffsets);      % for averaged data
     lbj.UserData = taskData;                                           % pass to U6 object
 
     %% - Prepare to Get Data
@@ -174,7 +172,7 @@ else % stop
 end
 
 %% taskController: function to collect data from LabJack
-function taskController(obj, event, daqaxes)
+function taskController(obj, ~, daqaxes)
 lbj = obj.UserData;                                                         % handle to labjack is in timer UserData
 taskData = lbj.UserData;                                                    % UserData must be initialized w daq setup
 switch taskData.taskState
@@ -188,6 +186,9 @@ switch taskData.taskState
             while taskData.offsetsDone(taskData.offsetIndex) > 0
                 taskData.offsetIndex = mod(x, task.numOffsets) + 1;
             end
+            
+            disp(taskData.offsetIndex);
+            
             taskData.trialStartTimeS = clock;
             taskData.voltage = taskData.currentOffsetPix / 1000.0;          % debugging- connect DOC0 to AIN Ch0
             analogOut(lbj,0, 2.5 + taskData.voltage);
@@ -199,6 +200,7 @@ switch taskData.taskState
             taskData.taskState = TaskState.taskPrestim;
         end
     case TaskState.taskPrestim
+        disp('prestim');
         if etime(clock, taskData.trialStartTimeS) > taskData.stimTimeS
             % DO THE STIMULUS
             if taskData.currentOffsetPix > 0
@@ -212,13 +214,20 @@ switch taskData.taskState
             taskData.taskState = TaskState.taskPoststim;
         end
     case TaskState.taskPoststim
+        disp('poststim');
         % just wait for end of trial
     case TaskState.taskEndtrial
+        disp('endtrial');
         % NEED TO DETECT THE SACCADE OFFSET AND DO ALIGNMENT
         taskData.rawDiff = taskData.rawData(:, 1) - taskData.rawData(:, 2);
-        taskData.summedData = taskData.summedData + taskData.rawDiff;  
-        taskData.avgData = taskData.summedData / taskData.numSummed;
-        taskData.numSummed = taskData.numSummed + 1;                        % enable plotting
+        taskData.summedData(:, taskData.offsetIndex) = taskData.summedData(:, taskData.offsetIndex) + taskData.rawDiff;  
+%         sizeof(taskData.avgData)
+%         sizeof(summedData)
+%         sizeof(taskData.avgData(:, taskData.offsetIndex))
+%         sizeof(taskData.summedData(:, taskData.offsetIndex))
+        taskData.numSummed(taskData.offsetIndex) = taskData.numSummed(taskData.offsetIndex) + 1;
+        taskData.avgData(:, taskData.offsetIndex) = taskData.summedData(:, taskData.offsetIndex) ...
+            / taskData.numSummed(taskData.offsetIndex);
         updatePlots(lbj, taskData, daqaxes);
         taskData.trialStartTimeS = 0;
         taskData.taskState = TaskState.taskIdle;
@@ -268,7 +277,7 @@ function updatePlots(lbj, taskData, daqaxes)
     xlabel(daqaxes(1),'Time (s)','FontSize',14);
 
     plot(daqaxes(2), timeaxes1, taskData.avgData, '-');
-    title(daqaxes(2),['AI from ' lbj.Tag sprintf('(average of %d traces', taskData.numSummed)], ...
+    title(daqaxes(2),['AI from ' lbj.Tag sprintf('(completed %d blocks', taskData.blocksDone)], ...
                   'FontSize',12,'FontWeight','Bold')
     ylabel(daqaxes(2),'Analog Input (V)','FontSize',14);
     xlabel(daqaxes(2),'Time (s)','FontSize',14);
