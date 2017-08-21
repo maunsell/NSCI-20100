@@ -123,7 +123,6 @@ if strcmp(get(handles.startbutton, 'String'), 'Start') % if start button, do the
     taskData.dataState = DataState.dataIdle;
     taskData.numSummed = 0;
     taskData.rawData = zeros(taskData.samplesNeeded, lbj.numChannels);  % for raw data
-    taskData.rawDiff = zeros(taskData.samplesNeeded, 1);                % for difference data
     taskData.summedData = zeros(taskData.samplesNeeded, 1);             % for summed data
     taskData.avgData = zeros(taskData.samplesNeeded, 1);                % for averaged data
 %     taskData.summedData = zeros(taskData.samplesNeeded, lbj.numChannels); % for summed data
@@ -188,8 +187,9 @@ switch taskData.taskState
     case TaskState.taskPrestim
         if etime(clock, taskData.trialStartTimeS) > taskData.stimTimeS
             % DO THE STIMULUS
-            analogOut(lbj,0, taskData.voltage + 0.5);                             % debugging- connect DOC0 to AIN Ch0
-            analogOut(lbj,1, taskData.voltage + 1 - 0.5);
+            taskData.voltage = taskData.voltage + 0.5;
+            analogOut(lbj,0, taskData.voltage);                             % debugging- connect DOC0 to AIN Ch0
+            analogOut(lbj,1, taskData.voltage + 1);
             taskData.taskState = TaskState.taskPoststim;
         end
     case TaskState.taskPoststim
@@ -198,8 +198,9 @@ switch taskData.taskState
             taskData.trialStartTimeS = 0;
         end
     case TaskState.taskEndtrial
-        taskData.rawDiff = taskData.rawData(:, 1) - taskData.rawData(:, 2);
-        taskData.summedData = taskData.summedData + taskData.rawDiff;  
+%         taskData.summedData = taskData.summedData + taskData.rawData;       % sum in new trace
+        taskData.rawDiff = taskData.rawData(1, :) - taskData.rawData(2, :);
+        taskData.summedData = taskData.summedData + trawDiff;  
         taskData.avgData = taskData.summedData / taskData.numSummed;
         taskData.numSummed = taskData.numSummed + 1;                        % enable plotting
         updatePlots(lbj, taskData, daqaxes);
