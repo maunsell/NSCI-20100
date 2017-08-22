@@ -62,18 +62,6 @@ function varargout = EOG_OutputFcn(hObject, eventdata, handles)  %#ok<*INUSL>
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-function taskData = processSignals(taskData)
-    taskData.rawDiff = taskData.rawData(:, 1) - taskData.rawData(:, 2);
-    taskData.rawDiff = taskData.rawDiff - mean(taskData.rawDiff(1:taskData.sampleRateHz * 
-    taskData.summedData(:, taskData.offsetIndex) = taskData.summedData(:, taskData.offsetIndex) + taskData.rawDiff;  
-    taskData.numSummed(taskData.offsetIndex) = taskData.numSummed(taskData.offsetIndex) + 1;
-    taskData.avgData(:, taskData.offsetIndex) = taskData.summedData(:, taskData.offsetIndex) ...
-        / taskData.numSummed(taskData.offsetIndex);
-    updatePlots(lbj, taskData, daqaxes);
-    taskData.trialStartTimeS = 0;
-    taskData.taskState = TaskState.taskIdle;
-
 % initialize application
 varargout{1} = handles.output;
 set(handles.startbutton, 'String', 'Start','BackgroundColor', 'green');
@@ -82,7 +70,29 @@ set(hObject, 'CloseRequestFcn', {@closeProgram, handles});
 handles.lbj = [];                             % the U6 object
 guidata(hObject, handles);                  % save updates to handles
 
+function taskData = processSignals(taskData)
 
+    if (taskData.stepSign == 1)
+        rawDiff = taskData.rawData(:, 1) - taskData.rawData(:, 2);
+    else
+        rawDiff = taskData.rawData(:, 2) - taskData.rawData(:, 1);
+    end
+    taskData.rawDiff = taskData.rawDiff - mean(taskData.rawDiff(1:taskData.sampleRateHz * taskData.samplePrestimS));
+    % do a boxcar filter of the raw signal
+    windowSize = 50;
+    b = (1 / windowSize) * ones(1, windowSize);
+    task.filteredDiff = filter(b, 1, rawDiff);
+    % Debug: add some noise to make things realistic
+    task.filteredDiff = task.filteredDiff + 0.1 * rand(size(filteredDiff));
+
+    % NEED TO REJECT BAD TRIALS
+    % NEED TO DETECT SACCADE Time    
+    taskData.summedData(:, taskData.offsetIndex) = taskData.summedData(:, taskData.offsetIndex) + filteredDiff;  
+    taskData.numSummed(taskData.offsetIndex) = taskData.numSummed(taskData.offsetIndex) + 1;
+    taskData.avgData(:, taskData.offsetIndex) = taskData.summedData(:, taskData.offsetIndex) ...
+        / taskData.numSummed(taskData.offsetIndex);
+    taskData.offsetsDone(taskData.offsetIndex) = taskData.offsetsDone(taskData.offsetIndex) + 1;
+    
 %% respond to button presses
 function startbutton_Callback(hObject, eventdata, handles)                  %#ok<DEFNU>
 % hObject    handle to startbutton (see GCBO)
@@ -130,9 +140,13 @@ if strcmp(get(handles.startbutton, 'String'), 'Start') % if start button, do the
     taskData.offsetPix = [100 200 300 400];
     taskData.numOffsets = length(taskData.offsetPix);
     taskData.currentOffsetPix = 0.0;
+    taskData.stepSign = 1;
+    taskData.offsetIndex = 0;
     taskData.offsetsDone = zeros (1, taskData.numOffsets);
     taskData.blocksDone = 0;
+    taskData.sampleRateHz = lbj.SampleRateHz;
     taskData.trialLimitS = 1.0;
+    taskData.samplePrestimS = 0.250;
     taskData.samplesNeeded = floor(taskData.trialLimitS * lbj.SampleRateHz);
     taskData.taskState = TaskState.taskIdle;
     taskData.trialStartTimeS = 0;
@@ -196,42 +210,41 @@ switch taskData.taskState
             end
             taskData.offsetIndex = ceil(rand() * taskData.numOffsets);
             while taskData.offsetsDone(taskData.offsetIndex) > 0
-                taskData.offsetIndex = mod(x, task.numOffsets) + 1;
+                taskData.offsetIndex = mod(taskData.offsetIndex, taskData.numOffsets) + 1;
             end
-            
-            disp(taskData.offsetIndex);
-            
             taskData.trialStartTimeS = clock;
             taskData.voltage = taskData.currentOffsetPix / 1000.0;          % debugging- connect DOC0 to AIN Ch0
             analogOut(lbj,0, 2.5 + taskData.voltage);
             analogOut(lbj,1, 2.5 - taskData.voltage);
         elseif etime(clock, taskData.trialStartTimeS) > 0.050               % data settled for one taskTimer cycle
             taskData.trialStartTimeS = clock;                               % reset the trial clock
-            taskData.stimTimeS = taskData.sample + rand() * 0.250;
+            taskData.stimTimeS = taskData.samplePrestimS + rand() * 0.250;
             taskData.dataState = DataState.dataStart;
             taskData.taskState = TaskState.taskPrestim;
         end
     case TaskState.taskPrestim
-        disp('prestim');
         if etime(clock, taskData.trialStartTimeS) > taskData.stimTimeS
             % DO THE STIMULUS
             if taskData.currentOffsetPix > 0
-                taskData.currentOffsetPix = taskData.currentOffsetPix - taskData.offsetPix(taskData.offsetIndex);
+                taskData.stepSign = -1;
             else
-                taskData.currentOffsetPix = taskData.currentOffsetPix + taskData.offsetPix(taskData.offsetIndex);
+                taskData.stepSign = 1;
             end
+                taskData.currentOffsetPix = taskData.currentOffsetPix + ...
+                    taskData.stepSign * taskData.offsetPix(taskData.offsetIndex);
             taskData.voltage = taskData.currentOffsetPix / 1000.0;          % debugging- connect DOC0 to AIN Ch0
             analogOut(lbj,0, 2.5 + taskData.voltage);
             analogOut(lbj,1, 2.5 - taskData.voltage);
             taskData.taskState = TaskState.taskPoststim;
         end
     case TaskState.taskPoststim
-        disp('poststim');
         % just wait for end of trial
     case TaskState.taskEndtrial
-        disp('endtrial');
         % NEED TO DETECT THE SACCADE OFFSET AND DO ALIGNMENT
         taskData = processSignals(taskData);
+        updatePlots(lbj, taskData, daqaxes);
+        taskData.trialStartTimeS = 0;
+        taskData.taskState = TaskState.taskIdle;
 end
 lbj.UserData = taskData;                                                    % save new points to UserData
 

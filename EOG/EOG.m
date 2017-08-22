@@ -71,12 +71,27 @@ handles.lbj = [];                             % the U6 object
 guidata(hObject, handles);                  % save updates to handles
 
 function taskData = processSignals(taskData)
-    taskData.rawDiff = taskData.rawData(:, 1) - taskData.rawData(:, 2);
-    taskData.rawDiff = taskData.rawDiff - mean(taskData.rawDiff(1:taskData.sampleRateHz * taskData.samplePrestimS));
-    taskData.summedData(:, taskData.offsetIndex) = taskData.summedData(:, taskData.offsetIndex) + taskData.rawDiff;  
+
+    if (taskData.stepSign == 1)
+        taskData.diffTrace = taskData.rawData(:, 1) - taskData.rawData(:, 2);
+    else
+        taskData.diffTrace = taskData.rawData(:, 2) - taskData.rawData(:, 1);
+    end
+    taskData.diffTrace = taskData.diffTrace - mean(taskData.diffTrace(1:taskData.sampleRateHz * taskData.samplePrestimS));
+    % do a boxcar filter of the raw signal
+    windowSize = 50;
+    b = (1 / windowSize) * ones(1, windowSize);
+%     taskData.diffTrace = filter(b, 1, taskData.diffTrace);
+    % Debug: add some noise to make things realistic
+    taskData.diffTrace = taskData.diffTrace + 0.1 * rand(size(taskData.diffTrace));
+
+    % NEED TO REJECT BAD TRIALS
+    % NEED TO DETECT SACCADE Time    
+    taskData.summedData(:, taskData.offsetIndex) = taskData.summedData(:, taskData.offsetIndex) + taskData.diffTrace;  
     taskData.numSummed(taskData.offsetIndex) = taskData.numSummed(taskData.offsetIndex) + 1;
     taskData.avgData(:, taskData.offsetIndex) = taskData.summedData(:, taskData.offsetIndex) ...
         / taskData.numSummed(taskData.offsetIndex);
+    taskData.offsetsDone(taskData.offsetIndex) = taskData.offsetsDone(taskData.offsetIndex) + 1;
     
 %% respond to button presses
 function startbutton_Callback(hObject, eventdata, handles)                  %#ok<DEFNU>
@@ -125,6 +140,8 @@ if strcmp(get(handles.startbutton, 'String'), 'Start') % if start button, do the
     taskData.offsetPix = [100 200 300 400];
     taskData.numOffsets = length(taskData.offsetPix);
     taskData.currentOffsetPix = 0.0;
+    taskData.stepSign = 1;
+    taskData.offsetIndex = 0;
     taskData.offsetsDone = zeros (1, taskData.numOffsets);
     taskData.blocksDone = 0;
     taskData.sampleRateHz = lbj.SampleRateHz;
@@ -137,7 +154,7 @@ if strcmp(get(handles.startbutton, 'String'), 'Start') % if start button, do the
     taskData.dataState = DataState.dataIdle;
     taskData.numSummed = zeros(1, taskData.numOffsets);
     taskData.rawData = zeros(taskData.samplesNeeded, lbj.numChannels);          % for raw data
-    taskData.rawDiff = zeros(taskData.samplesNeeded, 1);                        % for difference data
+    taskData.diffTrace = zeros(taskData.samplesNeeded, 1);                        % for difference data
     taskData.summedData = zeros(taskData.samplesNeeded, taskData.numOffsets);	% for summed data
     taskData.avgData = zeros(taskData.samplesNeeded, taskData.numOffsets);      % for averaged data
     lbj.UserData = taskData;                                           % pass to U6 object
@@ -193,11 +210,8 @@ switch taskData.taskState
             end
             taskData.offsetIndex = ceil(rand() * taskData.numOffsets);
             while taskData.offsetsDone(taskData.offsetIndex) > 0
-                taskData.offsetIndex = mod(x, task.numOffsets) + 1;
+                taskData.offsetIndex = mod(taskData.offsetIndex, taskData.numOffsets) + 1;
             end
-            
-            disp(taskData.offsetIndex);
-            
             taskData.trialStartTimeS = clock;
             taskData.voltage = taskData.currentOffsetPix / 1000.0;          % debugging- connect DOC0 to AIN Ch0
             analogOut(lbj,0, 2.5 + taskData.voltage);
@@ -209,24 +223,23 @@ switch taskData.taskState
             taskData.taskState = TaskState.taskPrestim;
         end
     case TaskState.taskPrestim
-        disp('prestim');
         if etime(clock, taskData.trialStartTimeS) > taskData.stimTimeS
             % DO THE STIMULUS
             if taskData.currentOffsetPix > 0
-                taskData.currentOffsetPix = taskData.currentOffsetPix - taskData.offsetPix(taskData.offsetIndex);
+                taskData.stepSign = -1;
             else
-                taskData.currentOffsetPix = taskData.currentOffsetPix + taskData.offsetPix(taskData.offsetIndex);
+                taskData.stepSign = 1;
             end
+                taskData.currentOffsetPix = taskData.currentOffsetPix + ...
+                    taskData.stepSign * taskData.offsetPix(taskData.offsetIndex);
             taskData.voltage = taskData.currentOffsetPix / 1000.0;          % debugging- connect DOC0 to AIN Ch0
             analogOut(lbj,0, 2.5 + taskData.voltage);
             analogOut(lbj,1, 2.5 - taskData.voltage);
             taskData.taskState = TaskState.taskPoststim;
         end
     case TaskState.taskPoststim
-        disp('poststim');
         % just wait for end of trial
     case TaskState.taskEndtrial
-        disp('endtrial');
         % NEED TO DETECT THE SACCADE OFFSET AND DO ALIGNMENT
         taskData = processSignals(taskData);
         updatePlots(lbj, taskData, daqaxes);
@@ -272,13 +285,13 @@ function updatePlots(lbj, taskData, daqaxes)
     timestepS = 1 / lbj.SampleRateHz;                                       % time interval of samples
     timeaxes1 = 0:1:size(taskData.avgData,1) - 1 * timestepS;               % make array of timepoints
 
-    plot(daqaxes(1), timeaxes1, taskData.rawDiff, '-k');
+    plot(daqaxes(1), timeaxes1, taskData.diffTrace, '-k');
     title(daqaxes(1), ['Most recent AI trace from ' lbj.Tag], 'FontSize',12,'FontWeight','Bold')
     ylabel(daqaxes(1),'Analog Input (V)','FontSize',14);
     xlabel(daqaxes(1),'Time (s)','FontSize',14);
 
     plot(daqaxes(2), timeaxes1, taskData.avgData, '-');
-    title(daqaxes(2),['AI from ' lbj.Tag sprintf('(completed %d blocks', taskData.blocksDone)], ...
+    title(daqaxes(2),['AI from ' lbj.Tag sprintf(' (%d blocks completed)', taskData.blocksDone)], ...
                   'FontSize',12,'FontWeight','Bold')
     ylabel(daqaxes(2),'Analog Input (V)','FontSize',14);
     xlabel(daqaxes(2),'Time (s)','FontSize',14);
