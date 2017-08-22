@@ -78,12 +78,12 @@ function taskData = processSignals(taskData)
         taskData.diffTrace = taskData.rawData(:, 2) - taskData.rawData(:, 1);
     end
     taskData.diffTrace = taskData.diffTrace - mean(taskData.diffTrace(1:taskData.sampleRateHz * taskData.samplePrestimS));
+    % Debug: add some noise to make things realistic
+    taskData.diffTrace = taskData.diffTrace + 0.1 * rand(size(taskData.diffTrace));
     % do a boxcar filter of the raw signal
     windowSize = 50;
     b = (1 / windowSize) * ones(1, windowSize);
-%     taskData.diffTrace = filter(b, 1, taskData.diffTrace);
-    % Debug: add some noise to make things realistic
-    taskData.diffTrace = taskData.diffTrace + 0.1 * rand(size(taskData.diffTrace));
+    taskData.diffTrace = filter(b, 1, taskData.diffTrace);
 
     % NEED TO REJECT BAD TRIALS
     % NEED TO DETECT SACCADE Time    
@@ -285,7 +285,8 @@ function updatePlots(lbj, taskData, daqaxes)
     timestepS = 1 / lbj.SampleRateHz;                                       % time interval of samples
     timeaxes1 = 0:1:size(taskData.avgData,1) - 1 * timestepS;               % make array of timepoints
 
-    plot(daqaxes(1), timeaxes1, taskData.diffTrace, '-k');
+    colors = get(daqaxes(1), 'ColorOrder');
+    plot(daqaxes(1), timeaxes1, taskData.diffTrace, 'color', colors(taskData.offsetIndex,:));
     title(daqaxes(1), ['Most recent AI trace from ' lbj.Tag], 'FontSize',12,'FontWeight','Bold')
     ylabel(daqaxes(1),'Analog Input (V)','FontSize',14);
     xlabel(daqaxes(1),'Time (s)','FontSize',14);
