@@ -116,18 +116,13 @@ function taskData = processSignals(taskData)
     if (taskData.stepSign == 1)
         taskData.posSummed(:, taskData.offsetIndex) = taskData.posSummed(:, taskData.offsetIndex)... 
                     + taskData.posTrace;  
-        taskData.velSummed(:, taskData.offsetIndex) = taskData.velSummed(:, taskData.offsetIndex)... 
-                    + taskData.velTrace;  
     else
         taskData.posSummed(:, taskData.offsetIndex) = taskData.posSummed(:, taskData.offsetIndex)...
                     - taskData.posTrace;  
-        taskData.velSummed(:, taskData.offsetIndex) = taskData.velSummed(:, taskData.offsetIndex)... 
-                    - taskData.velTrace;  
     end
+%     taskData.posSummed(:, taskData.offsetIndex) = taskData.posSummed(:, taskData.offsetIndex) + taskData.posTrace;  
     taskData.numSummed(taskData.offsetIndex) = taskData.numSummed(taskData.offsetIndex) + 1;
     taskData.posAvg(:, taskData.offsetIndex) = taskData.posSummed(:, taskData.offsetIndex) ...
-        / taskData.numSummed(taskData.offsetIndex);
-    taskData.velAvg(:, taskData.offsetIndex) = taskData.velSummed(:, taskData.offsetIndex) ...
         / taskData.numSummed(taskData.offsetIndex);
     taskData.offsetsDone(taskData.offsetIndex) = taskData.offsetsDone(taskData.offsetIndex) + 1;
     
@@ -295,36 +290,24 @@ function updatePlots(lbj, taskData, daqaxes)
 
     colors = get(daqaxes(1), 'ColorOrder');
     plot(daqaxes(1), timeaxes1, taskData.posTrace, 'color', colors(taskData.offsetIndex,:));
+    a = axis(daqaxes(1));
+    yLim = max(abs(a(3)), abs(a(4)));
+    axis(daqaxes(1), [-inf inf -yLim yLim]);
     title(daqaxes(1), 'Most recent position trace', 'FontSize',12,'FontWeight','Bold')
     ylabel(daqaxes(1),'Analog Input (V)','FontSize',14);
- 
-    plot(daqaxes(2), timeaxes1, taskData.posAvg, '-');
-    title(daqaxes(2), ['Average position traces (left/right combined; ' sprintf('%d blocks completed)', taskData.blocksDone)], ...
-                  'FontSize',12,'FontWeight','Bold')
-
-    a1 = axis(daqaxes(1));
-    a2 = axis(daqaxes(2));
-    yLim = max([abs(a1(3)), abs(a1(4)), abs(a2(3)), abs(a2(4))]);
-    axis(daqaxes(1), [-inf inf -yLim yLim]);
-    axis(daqaxes(2), [-inf inf -yLim yLim]);
-   
+    
     plot(daqaxes(3), timeaxes1, taskData.velTrace, 'color', colors(taskData.offsetIndex,:));
     a = axis(daqaxes(3));
     yLim = max(abs(a(3)), abs(a(4)));
     axis(daqaxes(3), [-inf inf -yLim yLim]);
     title(daqaxes(3), 'Most recent velocity trace', 'FontSize',12,'FontWeight','Bold')
-    ylabel(daqaxes(3),'Analog Input (dV/dt)','FontSize',14);
-    xlabel(daqaxes(3),'Time (s)','FontSize',14);
+    ylabel(daqaxes(1),'Analog Input (dV/dt)','FontSize',14);
+    xlabel(daqaxes(1),'Time (s)','FontSize',14);
 
-    plot(daqaxes(4), timeaxes1, taskData.velAvg, '-');
-    title(daqaxes(4), 'Average velocity traces (left/right combined)', 'FontSize',12,'FontWeight','Bold')
-    ylabel(daqaxes(4),'Analog Input (V)','FontSize',14);
-    xlabel(daqaxes(4),'Time (s)','FontSize',14);
-  
-    a1 = axis(daqaxes(3));
-    a2 = axis(daqaxes(4));
-    yLim = max([abs(a1(3)), abs(a1(4)), abs(a2(3)), abs(a2(4))]);
-    axis(daqaxes(3), [-inf inf -yLim yLim]);
-    axis(daqaxes(4), [-inf inf -yLim yLim]);
+    plot(daqaxes(2), timeaxes1, taskData.posAvg, '-');
+    title(daqaxes(2),['AI from ' lbj.Tag sprintf(' (%d blocks completed)', taskData.blocksDone)], ...
+                  'FontSize',12,'FontWeight','Bold')
+    ylabel(daqaxes(2),'Analog Input (V)','FontSize',14);
+    xlabel(daqaxes(2),'Time (s)','FontSize',14);
 
     drawnow;
