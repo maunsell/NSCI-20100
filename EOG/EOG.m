@@ -34,7 +34,7 @@ else
 % End initialization code - DO NOT EDIT
 end
 
-%% close program
+%% closeEOG: clean up
 function closeEOG(hObject, eventdata, handles)
 % this function is called  when the user closes the main window
 %
@@ -70,18 +70,7 @@ switch taskData.dataState
 end
 lbj.UserData = taskData;                                                    % save new points to UserData
 
-% --- Executes just before EOG is made visible.
-function openEOG(hObject, eventdata, handles, varargin)
-% This function has no output args, see OutputFcn.
-% hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to EOG (see VARARGIN)
-
-handles.output = hObject;                                       % select default command line output
-guidata(hObject, handles);                                      % save the selection
-
-%% initialization
+%% initEOG: initialization
 function varargout = initEOG(hObject, eventdata, handles)  %#ok<*INUSL>
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
@@ -95,34 +84,53 @@ set(hObject, 'CloseRequestFcn', {@closeEOG, handles});
 handles.lbj = [];                             % the U6 object
 guidata(hObject, handles);                  % save updates to handles
 
-function taskData = processSignals(taskData)
+%  openEOG: just before EOG is made visible.
+function openEOG(hObject, eventdata, handles, varargin)
+% This function has no output args, see OutputFcn.
+% hObject    handle to figure
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% varargin   command line arguments to EOG (see VARARGIN)
+
+handles.output = hObject;                                       % select default command line output
+guidata(hObject, handles);                                      % save the selection
+
+%% processSignals: function to process data from one trial
+function [taskData, validTrial, maxIndex] = processSignals(taskData)
 %     if (taskData.stepSign == 1)
         taskData.posTrace = taskData.rawData(:, 1) - taskData.rawData(:, 2);
 %     else
 %         taskData.posTrace = taskData.rawData(:, 2) - taskData.rawData(:, 1);
 %     end
-    taskData.posTrace = taskData.posTrace - mean(taskData.posTrace(1:taskData.sampleRateHz * taskData.samplePrestimS));
+    taskData.posTrace = taskData.posTrace - mean(taskData.posTrace(1:taskData.sampleRateHz * taskData.prestimDurS));
     % Debug: add some noise to make things realistic
-    taskData.posTrace = taskData.posTrace + 0.1 * rand(size(taskData.posTrace)) - 0.05;
+    taskData.posTrace = taskData.posTrace + 0.3 * rand(size(taskData.posTrace)) - 0.15;
     % do a boxcar filter of the raw signal
     windowSize = 50;
     b = (1 / windowSize) * ones(1, windowSize);
     taskData.posTrace = filter(b, 1, taskData.posTrace);
     taskData.velTrace(1:end - 1) = diff(taskData.posTrace);
     taskData.velTrace(end) = taskData.velTrace(end - 1);
-
-    % NEED TO REJECT BAD TRIALS
-    % NEED TO DETECT SACCADE Time    
+    if (taskData.stepSign == 1)
+        [~, maxIndex] = max(taskData.velTrace);
+    else
+        [~, maxIndex] = min(taskData.velTrace);
+    end
+    saccadeOffset = taskData.saccadeSamples / 2;
+    validTrial = (maxIndex >= saccadeOffset) && (maxIndex < taskData.trialSamples - saccadeOffset);
+    if ~validTrial
+        return
+    end
     if (taskData.stepSign == 1)
         taskData.posSummed(:, taskData.offsetIndex) = taskData.posSummed(:, taskData.offsetIndex)... 
-                    + taskData.posTrace;  
+                    + taskData.posTrace(maxIndex - saccadeOffset:maxIndex + saccadeOffset - 1);  
         taskData.velSummed(:, taskData.offsetIndex) = taskData.velSummed(:, taskData.offsetIndex)... 
-                    + taskData.velTrace;  
+                    + taskData.velTrace(maxIndex - saccadeOffset:maxIndex + saccadeOffset - 1);  
     else
         taskData.posSummed(:, taskData.offsetIndex) = taskData.posSummed(:, taskData.offsetIndex)...
-                    - taskData.posTrace;  
+                    - taskData.posTrace(maxIndex - saccadeOffset:maxIndex + saccadeOffset - 1);  
         taskData.velSummed(:, taskData.offsetIndex) = taskData.velSummed(:, taskData.offsetIndex)... 
-                    - taskData.velTrace;  
+                    - taskData.velTrace(maxIndex - saccadeOffset:maxIndex + saccadeOffset - 1);  
     end
     taskData.numSummed(taskData.offsetIndex) = taskData.numSummed(taskData.offsetIndex) + 1;
     taskData.posAvg(:, taskData.offsetIndex) = taskData.posSummed(:, taskData.offsetIndex) ...
@@ -130,7 +138,7 @@ function taskData = processSignals(taskData)
     taskData.velAvg(:, taskData.offsetIndex) = taskData.velSummed(:, taskData.offsetIndex) ...
         / taskData.numSummed(taskData.offsetIndex);
     taskData.offsetsDone(taskData.offsetIndex) = taskData.offsetsDone(taskData.offsetIndex) + 1;
-    
+
 %% respond to button presses
 function startbutton_Callback(hObject, eventdata, handles)                  %#ok<DEFNU>
 % hObject    handle to startbutton (see GCBO)
@@ -183,23 +191,24 @@ if strcmp(get(handles.startbutton, 'String'), 'Start') % if start button, do the
     taskData.offsetsDone = zeros (1, taskData.numOffsets);
     taskData.blocksDone = 0;
     taskData.sampleRateHz = lbj.SampleRateHz;
-    taskData.sampleDurS = 0.5
-    taskData.trialDurS = max(1.0, 2 * taskData.sampleDurS);
-    taskData.samplePrestimS = 0.250;
+    taskData.saccadeDurS = 0.25;
+    taskData.saccadeSamples = floor(taskData.saccadeDurS * lbj.SampleRateHz);
+    taskData.trialDurS = max(0.50, 2 * taskData.saccadeDurS);
     taskData.trialSamples = floor(taskData.trialDurS * lbj.SampleRateHz);
+    taskData.prestimDurS = min(taskData.trialDurS / 4, 0.250);
     taskData.taskState = TaskState.taskIdle;
     taskData.trialStartTimeS = 0;
     taskData.samplesRead = 0;
     taskData.dataState = DataState.dataIdle;
     taskData.numSummed = zeros(1, taskData.numOffsets);
-    taskData.rawData = zeros(taskData.trialSamples, lbj.numChannels);          % raw data
-    taskData.posTrace = zeros(taskData.trialSamples, 1);                       % trial EOG position trace
-    taskData.posSummed = zeros(taskData.trialSamples, taskData.numOffsets);	% summed position traces
-    taskData.posAvg = zeros(taskData.trialSamples, taskData.numOffsets);       % averaged position traces
-    taskData.velTrace = zeros(taskData.trialSamples, 1);                       % trial EOG velocity trace
-    taskData.velSummed = zeros(taskData.trialSamples, taskData.numOffsets);	% summed position traces
-    taskData.velAvg = zeros(taskData.trialSamples, taskData.numOffsets);       % averaged position traces
-   lbj.UserData = taskData;                                           % pass to U6 object
+    taskData.rawData = zeros(taskData.trialSamples, lbj.numChannels);            % raw data
+    taskData.posTrace = zeros(taskData.trialSamples, 1);                         % trial EOG position trace
+    taskData.posSummed = zeros(taskData.saccadeSamples, taskData.numOffsets);    % summed position traces
+    taskData.posAvg = zeros(taskData.saccadeSamples, taskData.numOffsets);       % averaged position traces
+    taskData.velTrace = zeros(taskData.trialSamples, 1);                         % trial EOG velocity trace
+    taskData.velSummed = zeros(taskData.saccadeSamples, taskData.numOffsets);    % summed position traces
+    taskData.velAvg = zeros(taskData.saccadeSamples, taskData.numOffsets);       % averaged position traces
+    lbj.UserData = taskData;                                                     % pass to U6 object
 
     %% - Prepare to Get Data
     % create timer to control the task
@@ -260,7 +269,7 @@ switch taskData.taskState
             analogOut(lbj,1, 2.5 - taskData.voltage);
         elseif etime(clock, taskData.trialStartTimeS) > 0.050               % data settled for one taskTimer cycle
             taskData.trialStartTimeS = clock;                               % reset the trial clock
-            taskData.stimTimeS = taskData.samplePrestimS + rand() * 0.250;
+            taskData.stimTimeS = taskData.prestimDurS + rand() * 0.1250;
             taskData.dataState = DataState.dataStart;
             taskData.taskState = TaskState.taskPrestim;
         end
@@ -283,23 +292,27 @@ switch taskData.taskState
         % just wait for end of trial
     case TaskState.taskEndtrial
         % NEED TO DETECT THE SACCADE OFFSET AND DO ALIGNMENT
-        taskData = processSignals(taskData);
-        updatePlots(lbj, taskData, daqaxes);
+        [taskData, validTrial, maxIndex] = processSignals(taskData);
+        if validTrial
+            updatePlots(lbj, taskData, daqaxes, maxIndex);
+        end
         taskData.trialStartTimeS = 0;
         taskData.taskState = TaskState.taskIdle;
 end
 lbj.UserData = taskData;                                                    % save new points to UserData
-
-function updatePlots(lbj, taskData, daqaxes)
+    
+%% updatePlots: function to refresh the plots after each trial
+function updatePlots(lbj, taskData, daqaxes, maxIndex)
     timestepS = 1 / lbj.SampleRateHz;                                       % time interval of samples
-    timeaxes1 = 0:1:size(taskData.posAvg,1) - 1 * timestepS;               % make array of timepoints
+    trialTimes = 0:1:size(taskData.posTrace,1) - 1 * timestepS;               % make array of trial time points
+    saccadeTimes = -(size(taskData.posAvg,1) / 2):1:(size(taskData.posAvg,1) / 2) - 1 * timestepS;              
 
     colors = get(daqaxes(1), 'ColorOrder');
-    plot(daqaxes(1), timeaxes1, taskData.posTrace, 'color', colors(taskData.offsetIndex,:));
+    plot(daqaxes(1), trialTimes, taskData.posTrace, 'color', colors(taskData.offsetIndex,:));
     title(daqaxes(1), 'Most recent position trace', 'FontSize',12,'FontWeight','Bold')
     ylabel(daqaxes(1),'Analog Input (V)','FontSize',14);
  
-    plot(daqaxes(2), timeaxes1, taskData.posAvg, '-');
+    plot(daqaxes(2), saccadeTimes, taskData.posAvg, '-');
     title(daqaxes(2), ['Average position traces (left/right combined; ' sprintf('n>=%d)', taskData.blocksDone)], ...
                   'FontSize',12,'FontWeight','Bold')
 
@@ -308,8 +321,11 @@ function updatePlots(lbj, taskData, daqaxes)
     yLim = max([abs(a1(3)), abs(a1(4)), abs(a2(3)), abs(a2(4))]);
     axis(daqaxes(1), [-inf inf -yLim yLim]);
     axis(daqaxes(2), [-inf inf -yLim yLim]);
-   
-    plot(daqaxes(3), timeaxes1, taskData.velTrace, 'color', colors(taskData.offsetIndex,:));
+    hold(daqaxes(1), 'on');
+    plot(daqaxes(1), [maxIndex, maxIndex], [-yLim yLim], 'color', colors(taskData.offsetIndex,:), 'linestyle', ':');
+    hold(daqaxes(1), 'off');
+
+    plot(daqaxes(3), trialTimes, taskData.velTrace, 'color', colors(taskData.offsetIndex,:));
     a = axis(daqaxes(3));
     yLim = max(abs(a(3)), abs(a(4)));
     axis(daqaxes(3), [-inf inf -yLim yLim]);
@@ -317,7 +333,7 @@ function updatePlots(lbj, taskData, daqaxes)
     ylabel(daqaxes(3),'Analog Input (dV/dt)','FontSize',14);
     xlabel(daqaxes(3),'Time (s)','FontSize',14);
 
-    plot(daqaxes(4), timeaxes1, taskData.velAvg, '-');
+    plot(daqaxes(4), saccadeTimes, taskData.velAvg, '-');
     title(daqaxes(4), 'Average velocity traces (left/right combined)', 'FontSize',12,'FontWeight','Bold')
     ylabel(daqaxes(4),'Analog Input (V)','FontSize',14);
     xlabel(daqaxes(4),'Time (s)','FontSize',14);
@@ -327,5 +343,9 @@ function updatePlots(lbj, taskData, daqaxes)
     yLim = max([abs(a1(3)), abs(a1(4)), abs(a2(3)), abs(a2(4))]);
     axis(daqaxes(3), [-inf inf -yLim yLim]);
     axis(daqaxes(4), [-inf inf -yLim yLim]);
+    
+    hold(daqaxes(3), 'on');
+    plot(daqaxes(3), [maxIndex, maxIndex], [-yLim yLim], 'color', colors(taskData.offsetIndex,:), 'linestyle', ':');
+    hold(daqaxes(3), 'off');
 
     drawnow;
