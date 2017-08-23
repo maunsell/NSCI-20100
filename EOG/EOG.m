@@ -71,23 +71,31 @@ handles.lbj = [];                             % the U6 object
 guidata(hObject, handles);                  % save updates to handles
 
 function taskData = processSignals(taskData)
-
-    if (taskData.stepSign == 1)
-        taskData.diffTrace = taskData.rawData(:, 1) - taskData.rawData(:, 2);
-    else
-        taskData.diffTrace = taskData.rawData(:, 2) - taskData.rawData(:, 1);
-    end
-    taskData.diffTrace = taskData.diffTrace - mean(taskData.diffTrace(1:taskData.sampleRateHz * taskData.samplePrestimS));
+%     if (taskData.stepSign == 1)
+        taskData.posTrace = taskData.rawData(:, 1) - taskData.rawData(:, 2);
+%     else
+%         taskData.posTrace = taskData.rawData(:, 2) - taskData.rawData(:, 1);
+%     end
+    taskData.posTrace = taskData.posTrace - mean(taskData.posTrace(1:taskData.sampleRateHz * taskData.samplePrestimS));
     % Debug: add some noise to make things realistic
-    taskData.diffTrace = taskData.diffTrace + 0.1 * rand(size(taskData.diffTrace));
+    taskData.posTrace = taskData.posTrace + 0.1 * rand(size(taskData.posTrace)) - 0.05;
     % do a boxcar filter of the raw signal
     windowSize = 50;
     b = (1 / windowSize) * ones(1, windowSize);
-    taskData.diffTrace = filter(b, 1, taskData.diffTrace);
+    taskData.posTrace = filter(b, 1, taskData.posTrace);
+    taskData.velTrace(1:end - 1) = diff(taskData.posTrace);
+    taskData.velTrace(end) = taskData.velTrace(end - 1);
 
     % NEED TO REJECT BAD TRIALS
     % NEED TO DETECT SACCADE Time    
-    taskData.summedData(:, taskData.offsetIndex) = taskData.summedData(:, taskData.offsetIndex) + taskData.diffTrace;  
+    if (taskData.stepSign == 1)
+        taskData.summedData(:, taskData.offsetIndex) = taskData.summedData(:, taskData.offsetIndex)... 
+                    + taskData.posTrace;  
+    else
+        taskData.summedData(:, taskData.offsetIndex) = taskData.summedData(:, taskData.offsetIndex)...
+                    - taskData.posTrace;  
+    end
+%     taskData.summedData(:, taskData.offsetIndex) = taskData.summedData(:, taskData.offsetIndex) + taskData.posTrace;  
     taskData.numSummed(taskData.offsetIndex) = taskData.numSummed(taskData.offsetIndex) + 1;
     taskData.avgData(:, taskData.offsetIndex) = taskData.summedData(:, taskData.offsetIndex) ...
         / taskData.numSummed(taskData.offsetIndex);
@@ -154,7 +162,8 @@ if strcmp(get(handles.startbutton, 'String'), 'Start') % if start button, do the
     taskData.dataState = DataState.dataIdle;
     taskData.numSummed = zeros(1, taskData.numOffsets);
     taskData.rawData = zeros(taskData.samplesNeeded, lbj.numChannels);          % for raw data
-    taskData.diffTrace = zeros(taskData.samplesNeeded, 1);                        % for difference data
+    taskData.posTrace = zeros(taskData.samplesNeeded, 1);                       % trial EOG position trace
+    taskData.velTrace = zeros(taskData.samplesNeeded, 1);                       % trial EOG velocity trace
     taskData.summedData = zeros(taskData.samplesNeeded, taskData.numOffsets);	% for summed data
     taskData.avgData = zeros(taskData.samplesNeeded, taskData.numOffsets);      % for averaged data
     lbj.UserData = taskData;                                           % pass to U6 object
@@ -273,20 +282,15 @@ switch taskData.dataState
 end
 lbj.UserData = taskData;                                                    % save new points to UserData
 
-
-% if (taskData.samplesRead == taskData.samplesNeeded)
-%     taskData.summedData = taskData.summedData + taskData.rawData;  % sum in new trace
-%     taskData.avgData = taskData.summedData / taskData.numSummed;
-%     taskData.numSummed = taskData.numSummed + 1;                      % enable plotting
-%     taskData.samplesRead = 0;                                             % prep for next cycle
-% end;
-
 function updatePlots(lbj, taskData, daqaxes)
     timestepS = 1 / lbj.SampleRateHz;                                       % time interval of samples
     timeaxes1 = 0:1:size(taskData.avgData,1) - 1 * timestepS;               % make array of timepoints
 
     colors = get(daqaxes(1), 'ColorOrder');
-    plot(daqaxes(1), timeaxes1, taskData.diffTrace, 'color', colors(taskData.offsetIndex,:));
+    plot(daqaxes(1), timeaxes1, taskData.posTrace, 'color', colors(taskData.offsetIndex,:));
+    hold(daqaxes(1), 'on');
+    plot(daqaxes(1), timeaxes1, taskData.velTrace, 'color', colors(taskData.offsetIndex,:));
+    hold(daqaxes(1), 'off');
     title(daqaxes(1), ['Most recent AI trace from ' lbj.Tag], 'FontSize',12,'FontWeight','Bold')
     ylabel(daqaxes(1),'Analog Input (V)','FontSize',14);
     xlabel(daqaxes(1),'Time (s)','FontSize',14);
