@@ -27,7 +27,7 @@ classdef EOGStimulus < handle
             obj.grayColor = obj.whiteColor / 2;
             obj.currentOffsetPix = 0;
             screenRectPix = Screen('Resolution', obj.screenNumber);
-            obj.windowRectPix = [50, screenRectPix.height - 150, screenRectPix.width - 50, screenRectPix.height - 50];
+            obj.windowRectPix = [50, screenRectPix.height - 200, screenRectPix.width - 50, screenRectPix.height - 100];
             [obj.window, obj.windowRectPix] = PsychImaging('OpenWindow', obj.screenNumber, obj.grayColor, ...
                 obj.windowRectPix, obj.pixelDepth, 2, [], [], kPsychNeed32BPCFloat);
             obj.topPriorityLevel = MaxPriority(obj.window);

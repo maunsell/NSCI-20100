@@ -48,7 +48,7 @@ switch selection
     taskData.velSummed = zeros(taskData.saccadeSamples, taskData.numOffsets);    % summed position traces
     taskData.velAvg = zeros(taskData.saccadeSamples, taskData.numOffsets);       % averaged position traces
     handles.lbj.UserData = taskData;                                             % pass to LabJack object
-    updatePlots(handles.lbj, taskData, [handles.axes1 handles.axes2 handles.axes3 handles.axes4], 0);
+    updatePlots(hObject.lbj, taskData, daqaxes, maxIndex)
     guidata(hObject, handles);
 end
 
@@ -271,8 +271,8 @@ if strcmp(get(handles.startButton, 'String'), 'Start') % if start button, do the
         'TimerFcn', {@collectData}, 'StartDelay', 0.1); % StartDelay allows other parts of the gui to execute
 
     % set the gui button to "running" state
-    set(handles.startButton, 'String', 'Stop', 'BackgroundColor', 'red');
-    set(handles.clearButton,'Enable','off');
+    set(handles.startButton, 'String', 'Stop', 'BackgroundColor', 'red')
+      
     % save timers to handles and update the GUI display
     handles.taskTimer = taskTimer;
     handles.dataTimer = dataTimer;
@@ -285,11 +285,11 @@ if strcmp(get(handles.startButton, 'String'), 'Start') % if start button, do the
 
 %% Stop -- we're already running, so it's a the stop button    
 else % stop
+    disp('EOG Stop')
     stop(timerfind);                                                        % stop/delete timers; pause data stream
     delete(timerfind);        
     stopStream(handles.lbj);
-    set(handles.startButton, 'string', 'Start','backgroundColor', 'green');
-    set(handles.clearButton,'enable','on');
+    set(handles.startButton, 'String', 'Start','BackgroundColor', 'green');
     centerStimulus(handles.visStim);                                        % recenter fixspot
     drawnow;  
 end
@@ -361,10 +361,8 @@ function updatePlots(lbj, taskData, daqaxes, maxIndex)
     axis(daqaxes(1), [-inf inf -yLim yLim]);
     axis(daqaxes(2), [-inf inf -yLim yLim]);
     hold(daqaxes(1), 'on');
-    if (maxIndex > 0)
-        plot(daqaxes(1), [maxIndex, maxIndex] * timestepS, [-yLim yLim], 'color', colors(taskData.offsetIndex,:),...
-            'linestyle', ':');
-    end
+    plot(daqaxes(1), [maxIndex, maxIndex] * timestepS, [-yLim yLim], 'color', colors(taskData.offsetIndex,:),...
+        'linestyle', ':');
     hold(daqaxes(1), 'off');
 
     plot(daqaxes(3), trialTimes, taskData.velTrace, 'color', colors(taskData.offsetIndex,:));
