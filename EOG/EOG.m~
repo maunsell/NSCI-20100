@@ -33,6 +33,7 @@ function closeEOG(hObject, eventdata, handles)
 % close the timer and clear the LabJack handle
 %
 fprintf(1,'EOG: close window\n');
+cleanup(handles.visStim);
 try stop(timerfind); end
 try delete(timerfind); end
 try clear('handles.lbj'); end
@@ -65,17 +66,18 @@ lbj.UserData = taskData;                                                    % sa
 
 %% initEOG: initialization
 function varargout = initEOG(hObject, eventdata, handles)               %#ok<*INUSL>
-% initialize application
+% initialize application.  We need to set up GUI items  after the GUI has been
+% created by after openEOG function. This method gets called after the GUI is
+% created but before control returns to the command line.
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 varargout{1} = handles.output;
 set(handles.startbutton, 'String', 'Start','BackgroundColor', 'green');
-set(hObject, 'CloseRequestFcn', {@closeEOG, handles});                  % close function will close LabJack
-handles.lbj = [];                                                       % the LabJack object
-handles.visStim = [];                                                   % the visual stimulus object
-guidata(hObject, handles);                                              % save updates to handles
+% set(hObject, 'CloseRequestFcn', {@closeEOG, handles});                  % close function will close LabJack
+% handles.lbj = [];                                                       % the LabJack object
+% guidata(hObject, handles);                                              % save updates to handles
 
 % openEOG: just before gui is made visible.
 function openEOG(hObject, eventdata, handles, varargin)
@@ -86,6 +88,10 @@ function openEOG(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to EOG (see VARARGIN)
 
 handles.output = hObject;                                               % select default command line output
+handles.visStim = EOGStimulus;
+set(hObject, 'CloseRequestFcn', {@closeEOG, handles});                  % close function will close LabJack
+handles.lbj = [];                                                       % the LabJack object
+% set(handles.startbutton, 'String', 'Start','BackgroundColor', 'green');
 guidata(hObject, handles);                                              % save the selection
 
 %% processSignals: function to process data from one trial
@@ -162,15 +168,6 @@ if errorCode > 0
     return
 end
 
-%% Set up the LabJack
-function visStim = setupVisStim(handles)
-% configure visual stimulus display
-if isempty(handles.visStim)
-    visStim = EOGStimulus;
-else
-    visStim = handles.visStim;
-end
-
 %% respond to button presses
 function startbutton_Callback(hObject, eventdata, handles)                  %#ok<DEFNU>
 % hObject    handle to startbutton (see GCBO)
@@ -180,7 +177,7 @@ function startbutton_Callback(hObject, eventdata, handles)                  %#ok
 if strcmp(get(handles.startbutton, 'String'), 'Start') % if start button, do the following
 
     fprintf(1,'\nEOG v1.0\n %s\n', datestr(clock));
-    handles.visStim = setupVisStim(handles);
+%     handles.visStim = setupVisStim(handles);
     handles.lbj = setupLabJack(handles);
 
 %     %% Set up the LabJack DAQ
@@ -307,14 +304,14 @@ switch taskData.taskState
         end
     case TaskState.taskPrestim
         if etime(clock, taskData.trialStartTimeS) > taskData.stimTimeS
-            % DO THE STIMULUS
             if taskData.currentOffsetPix > 0
                 taskData.stepSign = -1;
             else
                 taskData.stepSign = 1;
             end
-                taskData.currentOffsetPix = taskData.currentOffsetPix + ...
+            taskData.currentOffsetPix = taskData.currentOffsetPix + ...
                     taskData.stepSign * taskData.offsetPix(taskData.offsetIndex);
+            drawDot(obj.visStim, currentOffsetPix);
             taskData.voltage = taskData.currentOffsetPix / 1000.0;          % debugging- connect DOC0 to AIN Ch0
             analogOut(lbj,0, 2.5 + taskData.voltage);
             analogOut(lbj,1, 2.5 - taskData.voltage);

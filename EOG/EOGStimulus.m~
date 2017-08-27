@@ -43,7 +43,6 @@ classdef EOGStimulus
             obj.topPriorityLevel = MaxPriority(obj.window);
             [obj.xCenterPix, obj.yCenterPix] = RectCenter(obj.windowRectPix);
             obj.frameDurS = Screen('GetFlipInterval', obj.window);
-            drawDot(obj, 0);
 %             obj.xPosPix = [obj.xCenterPix - obj.gaborShiftPix obj.xCenterPix + obj.gaborShiftPix];
 %             obj.yPosPix = [obj.yCenterPix obj.yCenterPix];
 %             

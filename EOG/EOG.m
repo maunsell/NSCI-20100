@@ -245,7 +245,7 @@ if strcmp(get(handles.startbutton, 'String'), 'Start') % if start button, do the
     % create timer to control the task
     taskTimer = timer('Name', 'TaskTimer', 'ExecutionMode', 'fixedRate',...
         'Period', 0.1, 'UserData', handles.lbj, 'ErrorFcn', {@timerErrorFcnStop, handles},...
-        'TimerFcn', {@taskController, [handles.axes1 handles.axes2 handles.axes3 handles.axes4]});
+        'TimerFcn', {@taskController, handles.visStim, [handles.axes1 handles.axes2 handles.axes3 handles.axes4]});
     
     % create timer to get data from LabJack
     dataCollectRateHz = 50;                       % Fast enough to prevent overflow w/o blocking other activity
@@ -278,7 +278,7 @@ else % stop
 end
 
 %% taskController: function to collect data from LabJack
-function taskController(obj, ~, daqaxes)
+function taskController(obj, ~, visStim, daqaxes)
 lbj = obj.UserData;                                                         % handle to labjack is in timer UserData
 taskData = lbj.UserData;                                                    % UserData must be initialized w daq setup
 switch taskData.taskState
@@ -304,14 +304,14 @@ switch taskData.taskState
         end
     case TaskState.taskPrestim
         if etime(clock, taskData.trialStartTimeS) > taskData.stimTimeS
-            % DO THE STIMULUS
             if taskData.currentOffsetPix > 0
                 taskData.stepSign = -1;
             else
                 taskData.stepSign = 1;
             end
-                taskData.currentOffsetPix = taskData.currentOffsetPix + ...
+            taskData.currentOffsetPix = taskData.currentOffsetPix + ...
                     taskData.stepSign * taskData.offsetPix(taskData.offsetIndex);
+            drawDot(visStim, taskData.currentOffsetPix);
             taskData.voltage = taskData.currentOffsetPix / 1000.0;          % debugging- connect DOC0 to AIN Ch0
             analogOut(lbj,0, 2.5 + taskData.voltage);
             analogOut(lbj,1, 2.5 - taskData.voltage);
@@ -320,7 +320,6 @@ switch taskData.taskState
     case TaskState.taskPoststim
         % just wait for end of trial
     case TaskState.taskEndtrial
-        % NEED TO DETECT THE SACCADE OFFSET AND DO ALIGNMENT
         [taskData, validTrial, maxIndex] = processSignals(taskData);
         if validTrial
             updatePlots(lbj, taskData, daqaxes, maxIndex);
