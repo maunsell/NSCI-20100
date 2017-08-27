@@ -30,8 +30,10 @@ end
 %% clearButton_Callback
 function clearButton_Callback(hObject, eventdata, handles)                  %#ok<DEFNU>
 
-handles
+originalSize = get(0, 'DefaultUIControlFontSize');
+set(0, 'DefaultUIControlFontSize', 14);
 selection = questdlg('Really clear all data? (This cannot be undone).', 'Clear Data', 'Yes', 'No', 'Yes');
+set(0, 'DefaultUIControlFontSize', originalSize);
 switch selection
     case 'Yes'
     taskData = handles.lbj.UserData;
@@ -356,10 +358,3 @@ function updatePlots(lbj, taskData, daqaxes, maxIndex)
     hold(daqaxes(3), 'off');
 
     drawnow;
-
-
-% --- Executes on button press in clearButton.
-function clearButton_Callback(hObject, eventdata, handles)
-% hObject    handle to clearButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
