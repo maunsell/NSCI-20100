@@ -9,6 +9,7 @@ classdef EOGStimulus < handle
         grayColor
         screenNumber
         topPriorityLevel
+        viewDistanceCM
         whiteColor
         window
         windowRectPix
@@ -35,22 +36,31 @@ classdef EOGStimulus < handle
             obj.frameDurS = Screen('GetFlipInterval', obj.window);
             drawDot(obj);
         end
+        
         function centerStimulus(obj)
             obj.currentOffsetPix = 0;
             drawDot(obj);
         end
+        
         function cleanup(obj)
             sca;
         end
+        
         function clearScreen(obj)
             Screen('Flip', obj.window);
         end
+        
         function drawDot(obj)
             Screen('BlendFunction', obj.window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
             Screen('DrawDots', obj.window, [obj.currentOffsetPix; 0], 25, obj.whiteColor, ...
                                                         [obj.xCenterPix obj.yCenterPix], 1);
             Screen('Flip', obj.window);
         end
+        
+        function setViewDistanceCM(obj, newValueCM);
+            obj.viewDistanceCM = newValueCM;
+        end
+        
         function stepSign = stepStimulus(obj, offsetPix)
             stepSign = -sign(obj.currentOffsetPix);
             if stepSign == 0

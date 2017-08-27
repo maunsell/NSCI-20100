@@ -111,9 +111,7 @@ function openEOG(hObject, eventdata, handles, varargin)
 
 handles.output = hObject;                                               % select default command line output
 handles.visStim = EOGStimulus;
-handles.visStim.tag = 'JHRM';
 set(hObject, 'CloseRequestFcn', {@closeEOG, handles});                  % close function will close LabJack
-% handles.lbj = [];                                                       % the LabJack object
 
 handles.lbj = setupLabJack();
     
@@ -142,12 +140,8 @@ taskData.velTrace = zeros(taskData.trialSamples, 1);                         % t
 taskData.velSummed = zeros(taskData.saccadeSamples, taskData.numOffsets);    % summed position traces
 taskData.velAvg = zeros(taskData.saccadeSamples, taskData.numOffsets);       % averaged position traces
 handles.lbj.UserData = taskData;                                             % pass to LabJack object
-
-
-
-    
 movegui(hObject, 'northeast');
-guidata(hObject, handles);                                              % save the selection
+guidata(hObject, handles);                                                   % save the selection
 
 %% processSignals: function to process data from one trial
 function [taskData, validTrial, maxIndex] = processSignals(taskData)
@@ -258,7 +252,7 @@ if strcmp(get(handles.startButton, 'String'), 'Start') % if start button, do the
 %     taskData.velAvg = zeros(taskData.saccadeSamples, taskData.numOffsets);       % averaged position traces
 %     handles.lbj.UserData = taskData;                                             % pass to LabJack object
 
-    %% - Prepare to Get Data
+    setViewDistanceCM(handles.visStim, str2double(get(handles.viewDistanceText, 'string'))); 
     % create timer to control the task
     taskTimer = timer('Name', 'TaskTimer', 'ExecutionMode', 'fixedRate',...
         'Period', 0.1, 'UserData', handles.lbj, 'ErrorFcn', {@timerErrorFcnStop, handles},...
@@ -272,7 +266,8 @@ if strcmp(get(handles.startButton, 'String'), 'Start') % if start button, do the
 
     % set the gui button to "running" state
     set(handles.startButton, 'String', 'Stop', 'BackgroundColor', 'red');
-    set(handles.clearButton,'Enable','off');
+    set(handles.clearButton,'enable','off');
+    set(handles.viewDistanceText,'enable','off');
     % save timers to handles and update the GUI display
     handles.taskTimer = taskTimer;
     handles.dataTimer = dataTimer;
@@ -290,6 +285,7 @@ else % stop
     stopStream(handles.lbj);
     set(handles.startButton, 'string', 'Start','backgroundColor', 'green');
     set(handles.clearButton,'enable','on');
+    set(handles.viewDistanceText,'enable','on');
     centerStimulus(handles.visStim);                                        % recenter fixspot
     drawnow;  
 end
@@ -342,52 +338,73 @@ lbj.UserData = taskData;                                                    % sa
     
 %% updatePlots: function to refresh the plots after each trial
 function updatePlots(lbj, taskData, daqaxes, maxIndex)
-    timestepS = 1 / lbj.SampleRateHz;                                       % time interval of samples
-    trialTimes = (0:1:size(taskData.posTrace, 1) - 1) * timestepS;          % make array of trial time points
-    saccadeTimes = (-(size(taskData.posAvg, 1) / 2):1:(size(taskData.posAvg,1) / 2) - 1) * timestepS;              
+timestepS = 1 / lbj.SampleRateHz;                                       % time interval of samples
+trialTimes = (0:1:size(taskData.posTrace, 1) - 1) * timestepS;          % make array of trial time points
+saccadeTimes = (-(size(taskData.posAvg, 1) / 2):1:(size(taskData.posAvg,1) / 2) - 1) * timestepS;              
 
-    colors = get(daqaxes(1), 'ColorOrder');
-    plot(daqaxes(1), trialTimes, taskData.posTrace, 'color', colors(taskData.offsetIndex,:));
-    title(daqaxes(1), 'Most recent position trace', 'FontSize',12,'FontWeight','Bold')
-    ylabel(daqaxes(1),'Analog Input (V)','FontSize',14);
- 
-    plot(daqaxes(2), saccadeTimes, taskData.posAvg, '-');
-    title(daqaxes(2), ['Average position traces (left/right combined; ' sprintf('n>=%d)', taskData.blocksDone)], ...
-                  'FontSize',12,'FontWeight','Bold')
+colors = get(daqaxes(1), 'ColorOrder');
+plot(daqaxes(1), trialTimes, taskData.posTrace, 'color', colors(taskData.offsetIndex,:));
+title(daqaxes(1), 'Most recent position trace', 'FontSize',12,'FontWeight','Bold')
+ylabel(daqaxes(1),'Analog Input (V)','FontSize',14);
 
-    a1 = axis(daqaxes(1));
-    a2 = axis(daqaxes(2));
-    yLim = max([abs(a1(3)), abs(a1(4)), abs(a2(3)), abs(a2(4))]);
-    axis(daqaxes(1), [-inf inf -yLim yLim]);
-    axis(daqaxes(2), [-inf inf -yLim yLim]);
-    hold(daqaxes(1), 'on');
-    if (maxIndex > 0)
-        plot(daqaxes(1), [maxIndex, maxIndex] * timestepS, [-yLim yLim], 'color', colors(taskData.offsetIndex,:),...
-            'linestyle', ':');
-    end
-    hold(daqaxes(1), 'off');
+plot(daqaxes(2), saccadeTimes, taskData.posAvg, '-');
+title(daqaxes(2), ['Average position traces (left/right combined; ' sprintf('n>=%d)', taskData.blocksDone)], ...
+              'FontSize',12,'FontWeight','Bold')
 
-    plot(daqaxes(3), trialTimes, taskData.velTrace, 'color', colors(taskData.offsetIndex,:));
-    a = axis(daqaxes(3));
-    yLim = max(abs(a(3)), abs(a(4)));
-    axis(daqaxes(3), [-inf inf -yLim yLim]);
-    title(daqaxes(3), 'Most recent velocity trace', 'FontSize',12,'FontWeight','Bold')
-    ylabel(daqaxes(3),'Analog Input (dV/dt)','FontSize',14);
-    xlabel(daqaxes(3),'Time (s)','FontSize',14);
+a1 = axis(daqaxes(1));
+a2 = axis(daqaxes(2));
+yLim = max([abs(a1(3)), abs(a1(4)), abs(a2(3)), abs(a2(4))]);
+axis(daqaxes(1), [-inf inf -yLim yLim]);
+axis(daqaxes(2), [-inf inf -yLim yLim]);
+hold(daqaxes(1), 'on');
+if (maxIndex > 0)
+    plot(daqaxes(1), [maxIndex, maxIndex] * timestepS, [-yLim yLim], 'color', colors(taskData.offsetIndex,:),...
+        'linestyle', ':');
+end
+hold(daqaxes(1), 'off');
 
-    plot(daqaxes(4), saccadeTimes, taskData.velAvg, '-');
-    title(daqaxes(4), 'Average velocity traces (left/right combined)', 'FontSize',12,'FontWeight','Bold')
-    ylabel(daqaxes(4),'Analog Input (V)','FontSize',14);
-    xlabel(daqaxes(4),'Time (s)','FontSize',14);
-  
-    a1 = axis(daqaxes(3));
-    a2 = axis(daqaxes(4));
-    yLim = max([abs(a1(3)), abs(a1(4)), abs(a2(3)), abs(a2(4))]);
-    axis(daqaxes(3), [-inf inf -yLim yLim]);
-    axis(daqaxes(4), [-inf inf -yLim yLim]);
-    
-    hold(daqaxes(3), 'on');
-    plot(daqaxes(3), [maxIndex, maxIndex] * timestepS, [-yLim yLim], 'color', colors(taskData.offsetIndex,:), 'linestyle', ':');
-    hold(daqaxes(3), 'off');
+plot(daqaxes(3), trialTimes, taskData.velTrace, 'color', colors(taskData.offsetIndex,:));
+a = axis(daqaxes(3));
+yLim = max(abs(a(3)), abs(a(4)));
+axis(daqaxes(3), [-inf inf -yLim yLim]);
+title(daqaxes(3), 'Most recent velocity trace', 'FontSize',12,'FontWeight','Bold')
+ylabel(daqaxes(3),'Analog Input (dV/dt)','FontSize',14);
+xlabel(daqaxes(3),'Time (s)','FontSize',14);
 
-    drawnow;
+plot(daqaxes(4), saccadeTimes, taskData.velAvg, '-');
+title(daqaxes(4), 'Average velocity traces (left/right combined)', 'FontSize',12,'FontWeight','Bold')
+ylabel(daqaxes(4),'Analog Input (V)','FontSize',14);
+xlabel(daqaxes(4),'Time (s)','FontSize',14);
+
+a1 = axis(daqaxes(3));
+a2 = axis(daqaxes(4));
+yLim = max([abs(a1(3)), abs(a1(4)), abs(a2(3)), abs(a2(4))]);
+axis(daqaxes(3), [-inf inf -yLim yLim]);
+axis(daqaxes(4), [-inf inf -yLim yLim]);
+
+hold(daqaxes(3), 'on');
+plot(daqaxes(3), [maxIndex, maxIndex] * timestepS, [-yLim yLim], 'color', colors(taskData.offsetIndex,:), 'linestyle', ':');
+hold(daqaxes(3), 'off');
+
+drawnow;
+
+function viewDistanceText_Callback(hObject, eventdata, handles)
+% hObject    handle to viewDistanceText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of viewDistanceText as text
+%        str2double(get(hObject,'String')) returns contents of viewDistanceText as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function viewDistanceText_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to viewDistanceText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
