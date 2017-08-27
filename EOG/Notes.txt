@@ -1,8 +1,6 @@
 Things to do:
 	GUI: 
         Need a main sequence plot 3-12°
-        Need to stop and start without rezeroing the data
-        Need a button to clear the data
 	Visual stimulus: Convert to degrees
         Add GUI for viewing distance
         Add conversion functions to stimulus file

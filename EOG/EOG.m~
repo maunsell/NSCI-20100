@@ -59,9 +59,9 @@ function closeEOG(hObject, eventdata, handles)
 %
 fprintf(1,'EOG: close window\n');
 cleanup(handles.visStim);
-try stop(timerfind); end
-try delete(timerfind); end
-try clear('handles.lbj'); end
+try stop(timerfind); catch, end
+try delete(timerfind); catch, end
+try clear('handles.lbj'); catch, end
 delete(hObject);                                                            % close the program window
 
 %% collectData: function to collect data from LabJack
@@ -111,8 +111,10 @@ function openEOG(hObject, eventdata, handles, varargin)
 
 handles.output = hObject;                                               % select default command line output
 handles.visStim = EOGStimulus;
+
+screenMM(handles.visStim);
+
 set(hObject, 'CloseRequestFcn', {@closeEOG, handles});                  % close function will close LabJack
-% handles.lbj = [];                                                       % the LabJack object
 
 handles.lbj = setupLabJack();
     
@@ -141,12 +143,8 @@ taskData.velTrace = zeros(taskData.trialSamples, 1);                         % t
 taskData.velSummed = zeros(taskData.saccadeSamples, taskData.numOffsets);    % summed position traces
 taskData.velAvg = zeros(taskData.saccadeSamples, taskData.numOffsets);       % averaged position traces
 handles.lbj.UserData = taskData;                                             % pass to LabJack object
-
-
-
-    
 movegui(hObject, 'northeast');
-guidata(hObject, handles);                                              % save the selection
+guidata(hObject, handles);                                                   % save the selection
 
 %% processSignals: function to process data from one trial
 function [taskData, validTrial, maxIndex] = processSignals(taskData)
@@ -230,6 +228,7 @@ function startButton_Callback(hObject, eventdata, handles)                  %#ok
 
 if strcmp(get(handles.startButton, 'String'), 'Start') % if start button, do the following
     fprintf(1,'\nEOG v1.0\n %s\n', datestr(clock));
+    d
 %     handles.lbj = setupLabJack(handles);
 %     taskData.offsetPix = [100 200 300 400];
 %     taskData.numOffsets = length(taskData.offsetPix);
@@ -257,7 +256,7 @@ if strcmp(get(handles.startButton, 'String'), 'Start') % if start button, do the
 %     taskData.velAvg = zeros(taskData.saccadeSamples, taskData.numOffsets);       % averaged position traces
 %     handles.lbj.UserData = taskData;                                             % pass to LabJack object
 
-    setViewDistanceCM(handles.visStim, str2double(get(hObject.viewDistanceText, 'string'))); 
+    setViewDistanceCM(handles.visStim, str2double(get(handles.viewDistanceText, 'string'))); 
     % create timer to control the task
     taskTimer = timer('Name', 'TaskTimer', 'ExecutionMode', 'fixedRate',...
         'Period', 0.1, 'UserData', handles.lbj, 'ErrorFcn', {@timerErrorFcnStop, handles},...
@@ -392,24 +391,3 @@ plot(daqaxes(3), [maxIndex, maxIndex] * timestepS, [-yLim yLim], 'color', colors
 hold(daqaxes(3), 'off');
 
 drawnow;
-
-function viewDistanceText_Callback(hObject, eventdata, handles)
-% hObject    handle to viewDistanceText (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of viewDistanceText as text
-%        str2double(get(hObject,'String')) returns contents of viewDistanceText as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function viewDistanceText_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to viewDistanceText (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end

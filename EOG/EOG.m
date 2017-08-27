@@ -59,9 +59,9 @@ function closeEOG(hObject, eventdata, handles)
 %
 fprintf(1,'EOG: close window\n');
 cleanup(handles.visStim);
-try stop(timerfind); end
-try delete(timerfind); end
-try clear('handles.lbj'); end
+try stop(timerfind); catch, end
+try delete(timerfind); catch, end
+try clear('handles.lbj'); catch, end
 delete(hObject);                                                            % close the program window
 
 %% collectData: function to collect data from LabJack
@@ -111,6 +111,7 @@ function openEOG(hObject, eventdata, handles, varargin)
 
 handles.output = hObject;                                               % select default command line output
 handles.visStim = EOGStimulus;
+
 set(hObject, 'CloseRequestFcn', {@closeEOG, handles});                  % close function will close LabJack
 
 handles.lbj = setupLabJack();
@@ -118,7 +119,7 @@ handles.lbj = setupLabJack();
 taskData.offsetPix = [100 200 300 400];
 taskData.numOffsets = length(taskData.offsetPix);
 taskData.stepSign = 1;
-taskData.offsetIndex = 0;
+taskData.offsetIndex = 1;
 taskData.offsetsDone = zeros (1, taskData.numOffsets);
 taskData.blocksDone = 0;
 taskData.sampleRateHz = handles.lbj.SampleRateHz;
@@ -225,6 +226,7 @@ function startButton_Callback(hObject, eventdata, handles)                  %#ok
 
 if strcmp(get(handles.startButton, 'String'), 'Start') % if start button, do the following
     fprintf(1,'\nEOG v1.0\n %s\n', datestr(clock));
+    disp(maxDeg(handles.visStim));
 %     handles.lbj = setupLabJack(handles);
 %     taskData.offsetPix = [100 200 300 400];
 %     taskData.numOffsets = length(taskData.offsetPix);
@@ -388,14 +390,6 @@ hold(daqaxes(3), 'off');
 
 drawnow;
 
-function viewDistanceText_Callback(hObject, eventdata, handles)
-% hObject    handle to viewDistanceText (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of viewDistanceText as text
-%        str2double(get(hObject,'String')) returns contents of viewDistanceText as a double
-
 
 % --- Executes during object creation, after setting all properties.
 function viewDistanceText_CreateFcn(hObject, eventdata, handles)
@@ -408,3 +402,11 @@ function viewDistanceText_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+function viewDistanceText_Callback(hObject, eventdata, handles)
+% hObject    handle to viewDistanceText (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of viewDistanceText as text
+%        str2double(get(hObject,'String')) returns contents of viewDistanceText as a double
