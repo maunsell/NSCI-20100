@@ -89,6 +89,7 @@ function openEOG(hObject, eventdata, handles, varargin)
 
 handles.output = hObject;                                               % select default command line output
 handles.visStim = EOGStimulus;
+handles.visStim.tag = 'JHRM';
 set(hObject, 'CloseRequestFcn', {@closeEOG, handles});                  % close function will close LabJack
 handles.lbj = [];                                                       % the LabJack object
 % set(handles.startbutton, 'String', 'Start','BackgroundColor', 'green');
@@ -175,48 +176,11 @@ function startbutton_Callback(hObject, eventdata, handles)                  %#ok
 % handles    structure with handles and user data (see GUIDATA)
 
 if strcmp(get(handles.startbutton, 'String'), 'Start') % if start button, do the following
-
     fprintf(1,'\nEOG v1.0\n %s\n', datestr(clock));
-%     handles.visStim = setupVisStim(handles);
     handles.lbj = setupLabJack(handles);
-
-%     %% Set up the LabJack DAQ
-%     %  get hardware info and do not continue if daq device/drivers unavailable
-%     if isempty(handles.lbj)
-%         lbj = labJackU6;                        % create the daq object
-%         lbj.verbose = 1;                        % more messages
-% %         lbj.Tag = 'LabJackU3';                  % set name to be the daq's name
-%         open(lbj);                              % open connection to the daq
-%         if isempty(lbj.handle)
-%             error('No USB connection to a LabJack was found. Check connections and try again.');
-%         end
-%         fprintf(1,'EOG: LabJack Ready.\n\n');
-%         handles.lbj=lbj;                        % save the daq object for future use
-%     else
-%         lbj = handles.lbj;                      % get a copy of lbj for convenience
-%     end
-%     % create input channel list
-%     removeChannel(lbj, -1);                     % remove all input channels
-%     addChannel(lbj, [0 1], [10 10], ['s' 's']); % add channels 0,1 as inputs
-%     lbj.SampleRateHz = 1000;                    % sample rate (Hz)
-%     lbj.ResolutionADC = 1;                      % ADC resolution (AD bit depth)
-% 
-%     voltage = 2.5; 
-%     analogOut(lbj, 0, voltage);                 % For debugging (AOuts to AIns)
-%     analogOut(lbj, 1, voltage);
-% 
-%     % configure LabJack for analog input streaming
-%     
-%     errorCode = streamConfigure(lbj);
-%     if errorCode > 0
-%         fprintf(1,'EOG: Unable to configure LabJack. Error %d.\n',errorCode);
-%         return
-%     end 
-    
     % Initialize the variables for storing the data that is plotted
     taskData.offsetPix = [100 200 300 400];
     taskData.numOffsets = length(taskData.offsetPix);
-    taskData.currentOffsetPix = 0.0;
     taskData.stepSign = 1;
     taskData.offsetIndex = 0;
     taskData.offsetsDone = zeros (1, taskData.numOffsets);
@@ -259,7 +223,6 @@ if strcmp(get(handles.startbutton, 'String'), 'Start') % if start button, do the
     % save timers to handles and update the GUI display
     handles.taskTimer = taskTimer;
     handles.dataTimer = dataTimer;
-%     handles.lbj = lbj;
     guidata(hObject, handles);    
     
     %% Start plots, data pickup, and data acquisition 
@@ -279,8 +242,9 @@ end
 
 %% taskController: function to collect data from LabJack
 function taskController(obj, ~, visStim, daqaxes)
-lbj = obj.UserData;                                                         % handle to labjack is in timer UserData
-taskData = lbj.UserData;                                                    % UserData must be initialized w daq setup
+
+lbj = obj.UserData;                                                      % handle to LabJack is in timer UserData
+taskData = lbj.UserData;                                                    % taskData is UserData of LabJack
 switch taskData.taskState
     case TaskState.taskIdle
         if taskData.trialStartTimeS == 0                                    % initialize a new trial
@@ -293,7 +257,7 @@ switch taskData.taskState
                 taskData.offsetIndex = mod(taskData.offsetIndex, taskData.numOffsets) + 1;
             end
             taskData.trialStartTimeS = clock;
-            taskData.voltage = taskData.currentOffsetPix / 1000.0;          % debugging- connect DOC0 to AIN Ch0
+            taskData.voltage = visStim.currentOffsetPix / 1000.0;          % debugging- connect DOC0 to AIN Ch0
             analogOut(lbj,0, 2.5 + taskData.voltage);
             analogOut(lbj,1, 2.5 - taskData.voltage);
         elseif etime(clock, taskData.trialStartTimeS) > 0.050               % data settled for one taskTimer cycle
@@ -304,17 +268,18 @@ switch taskData.taskState
         end
     case TaskState.taskPrestim
         if etime(clock, taskData.trialStartTimeS) > taskData.stimTimeS
-            if taskData.currentOffsetPix > 0
-                taskData.stepSign = -1;
-            else
-                taskData.stepSign = 1;
-            end
-            taskData.currentOffsetPix = taskData.currentOffsetPix + ...
-                    taskData.stepSign * taskData.offsetPix(taskData.offsetIndex);
-            drawDot(visStim, taskData.currentOffsetPix);
-            taskData.voltage = taskData.currentOffsetPix / 1000.0;          % debugging- connect DOC0 to AIN Ch0
-            analogOut(lbj,0, 2.5 + taskData.voltage);
-            analogOut(lbj,1, 2.5 - taskData.voltage);
+            taskData.stepSign = stepStimulus(visStim, taskData.offsetPix(taskData.offsetIndex));
+%             taskData.stepSign = -sign(visStim.currentOffsetPix);
+%             if taskData.stepSign == 0
+%                 taskData.stepSign = sign(rand - 0.5);
+%             end
+%             visStim.currentOffsetPix = visStim.currentOffsetPix + ...
+%                     taskData.stepSign * taskData.offsetPix(taskData.offsetIndex);
+% %             offsetStimCenter(visStim, taskData.stepSign * taskData.offsetPix(taskData.offsetIndex));
+%             drawDot(visStim);
+            taskData.voltage = visStim.currentOffsetPix / 1000.0;          % debugging- connect DOC0 to AIN Ch0
+            analogOut(lbj, 0, 2.5 + taskData.voltage);
+            analogOut(lbj, 1, 2.5 - taskData.voltage);
             taskData.taskState = TaskState.taskPoststim;
         end
     case TaskState.taskPoststim

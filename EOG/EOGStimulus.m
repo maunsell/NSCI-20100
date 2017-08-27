@@ -1,10 +1,11 @@
-classdef EOGStimulus
+classdef EOGStimulus < handle
     % Contrast threshold stimuli controller
+    properties
+        currentOffsetPix
+        tag
+    end
     properties (GetAccess = private)
-%         allRects
-%         blackColor
         frameDurS
-%         gaborTex
         grayColor
         screenNumber
         topPriorityLevel
@@ -12,21 +13,10 @@ classdef EOGStimulus
         window
         windowRectPix
         xCenterPix
-%         xPosPix
         yCenterPix
-%         yPosPix     
     end
     properties (Constant)
         pixelDepth = 32;
-%         numGabors = 2;
-%         gaborDimPix = 150;
-%         gaborSigma = 150 / 7;
-%         gaborOriDeg = 0;
-%         gaborContrast = 0.5;
-%         gaborPhaseDeg = 0;
-%         gaborCycles = 4;
-%         gaborFreqPix = 4 / 150;
-%         gaborShiftPix = 120;
     end
     methods
         function obj = EOGStimulus()
@@ -35,7 +25,7 @@ classdef EOGStimulus
             obj.screenNumber = max(Screen('Screens'));
             obj.whiteColor = WhiteIndex(obj.screenNumber);
             obj.grayColor = obj.whiteColor / 2;
-%             obj.blackColor = BlackIndex(obj.screenNumber);
+            obj.currentOffsetPix = 0;
             screenRectPix = Screen('Resolution', obj.screenNumber);
             obj.windowRectPix = [50, screenRectPix.height - 150, screenRectPix.width - 50, screenRectPix.height - 50];
             [obj.window, obj.windowRectPix] = PsychImaging('OpenWindow', obj.screenNumber, obj.grayColor, ...
@@ -43,17 +33,7 @@ classdef EOGStimulus
             obj.topPriorityLevel = MaxPriority(obj.window);
             [obj.xCenterPix, obj.yCenterPix] = RectCenter(obj.windowRectPix);
             obj.frameDurS = Screen('GetFlipInterval', obj.window);
-            drawDot(obj, 0);
-%             obj.xPosPix = [obj.xCenterPix - obj.gaborShiftPix obj.xCenterPix + obj.gaborShiftPix];
-%             obj.yPosPix = [obj.yCenterPix obj.yCenterPix];
-%             
-%             baseRect = [0 0 obj.gaborDimPix obj.gaborDimPix];
-%             obj.allRects = nan(4, obj.numGabors);
-%             for i = 1:obj.numGabors
-%                 obj.allRects(:, i) = CenterRectOnPointd(baseRect, obj.xPosPix(i), obj.yPosPix(i));
-%             end
-%             obj.gaborTex = CreateProceduralGabor(obj.window, obj.gaborDimPix, obj.gaborDimPix, [], ...
-%                 [0.5 0.5 0.5 0.0], 1, 0.5);       
+            drawDot(obj);
         end
         function cleanup(obj)
             sca;
@@ -61,32 +41,20 @@ classdef EOGStimulus
         function clearScreen(obj)
             Screen('Flip', obj.window);
         end
-%         function doFixSpot(obj, color)
-%             drawFixSpot(obj, color);
-%             Screen('Flip', obj.window);
-%         end
-%         function doStimulus(obj, stimParams)
-%             Priority(obj.topPriorityLevel);
-%             propertiesMat = repmat([NaN, obj.gaborFreqPix, obj.gaborSigma, obj.gaborContrast, 1.0, 0, 0, 0], ...
-%                 obj.numGabors, 1);
-%             propertiesMat(:, 1) = [0; 180];
-%             propertiesMat(:, 4) = [stimParams.leftContrast; stimParams.rightContrast];
-%             stimFrames = stimParams.stimDurS / obj.frameDurS;
-%             drawGabors(obj, propertiesMat);
-%             drawFixSpot(obj, obj.whiteColor);
-%             vbl = Screen('Flip', obj.window);
-%             for frame = 1:stimFrames - 1
-%                 drawGabors(obj, propertiesMat);
-%                 drawFixSpot(obj, obj.whiteColor);
-%                 vbl = Screen('Flip', obj.window, vbl + 0.5 * obj.frameDurS);
-%             end
-%             Priority(0);
-%         end
-        function drawDot(obj, offsetPix)
+        function drawDot(obj)
             Screen('BlendFunction', obj.window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
-            Screen('DrawDots', obj.window, [offsetPix; 0], 10, obj.whiteColor, [obj.xCenterPix obj.yCenterPix], 1);
+            Screen('DrawDots', obj.window, [obj.currentOffsetPix; 0], 25, obj.whiteColor, ...
+                                                        [obj.xCenterPix obj.yCenterPix], 1);
             Screen('Flip', obj.window);
         end
-    end
+        function stepSign = stepStimulus(obj, offsetPix)
+            stepSign = -sign(obj.currentOffsetPix);
+            if stepSign == 0
+                stepSign = sign(rand - 0.5);
+            end
+            obj.currentOffsetPix = obj.currentOffsetPix + stepSign * offsetPix;
+            drawDot(obj);
+        end
+    end        
 end
             

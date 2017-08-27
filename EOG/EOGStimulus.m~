@@ -1,8 +1,7 @@
 classdef EOGStimulus
     % Contrast threshold stimuli controller
     properties (GetAccess = private)
-%         allRects
-%         blackColor
+        currentOffsetPix
         frameDurS
 %         gaborTex
         grayColor
@@ -43,6 +42,7 @@ classdef EOGStimulus
             obj.topPriorityLevel = MaxPriority(obj.window);
             [obj.xCenterPix, obj.yCenterPix] = RectCenter(obj.windowRectPix);
             obj.frameDurS = Screen('GetFlipInterval', obj.window);
+            drawDot(obj, 0);
 %             obj.xPosPix = [obj.xCenterPix - obj.gaborShiftPix obj.xCenterPix + obj.gaborShiftPix];
 %             obj.yPosPix = [obj.yCenterPix obj.yCenterPix];
 %             
@@ -83,9 +83,9 @@ classdef EOGStimulus
 %         end
         function drawDot(obj, offsetPix)
             Screen('BlendFunction', obj.window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
-            Screen('DrawDots', obj.window, [offsetPix; 0], 10, obj.whiteColor, [obj.xCenterPix obj.yCenterPix], 1);
+            Screen('DrawDots', obj.window, [offsetPix; 0], 25, obj.whiteColor, [obj.xCenterPix obj.yCenterPix], 1);
             Screen('Flip', obj.window);
         end
-    end
+    end        
 end
             
