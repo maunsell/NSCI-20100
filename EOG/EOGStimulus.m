@@ -35,6 +35,10 @@ classdef EOGStimulus < handle
             obj.frameDurS = Screen('GetFlipInterval', obj.window);
             drawDot(obj);
         end
+        function centerStimulus(obj)
+            obj.currentOffsetPix = 0;
+            drawDot(obj);
+        end
         function cleanup(obj)
             sca;
         end

@@ -236,7 +236,8 @@ else % stop
     stop(timerfind);                                                        % stop/delete timers; pause data stream
     delete(timerfind);        
     stopStream(handles.lbj);
-    set(handles.startbutton, 'String', 'Start','BackgroundColor', 'green')
+    set(handles.startbutton, 'String', 'Start','BackgroundColor', 'green');
+    stepStimulus(visStim, taskData.offsetPix(-visStim.currentOffsetPix));        % recenter fixspot
     drawnow;  
 end
 
@@ -268,14 +269,7 @@ switch taskData.taskState
         end
     case TaskState.taskPrestim
         if etime(clock, taskData.trialStartTimeS) > taskData.stimTimeS
-            taskData.stepSign = -sign(visStim.currentOffsetPix);
-            if taskData.stepSign == 0
-                taskData.stepSign = sign(rand - 0.5);
-            end
-            visStim.currentOffsetPix = visStim.currentOffsetPix + ...
-                    taskData.stepSign * taskData.offsetPix(taskData.offsetIndex);
-%             offsetStimCenter(visStim, taskData.stepSign * taskData.offsetPix(taskData.offsetIndex));
-            drawDot(visStim);
+            taskData.stepSign = stepStimulus(visStim, taskData.offsetPix(taskData.offsetIndex));
             taskData.voltage = visStim.currentOffsetPix / 1000.0;          % debugging- connect DOC0 to AIN Ch0
             analogOut(lbj, 0, 2.5 + taskData.voltage);
             analogOut(lbj, 1, 2.5 - taskData.voltage);

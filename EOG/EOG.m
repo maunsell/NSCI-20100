@@ -27,6 +27,28 @@ else
 % End initialization code
 end
 
+%% clearButton_Callback
+function clearButton_Callback(hObject, eventdata, handles)                  %#ok<DEFNU>
+
+handles
+selection = questdlg('Really clear all data? (This cannot be undone).', 'Clear Data', 'Yes', 'No', 'Yes');
+switch selection
+    case 'Yes'
+    taskData = handles.lbj.UserData;
+    taskData.offsetsDone = zeros (1, taskData.numOffsets);
+    taskData.blocksDone = 0;
+    taskData.numSummed = zeros(1, taskData.numOffsets);
+    taskData.rawData = zeros(taskData.trialSamples, handles.lbj.numChannels);    % raw data
+    taskData.posTrace = zeros(taskData.trialSamples, 1);                         % trial EOG position trace
+    taskData.posSummed = zeros(taskData.saccadeSamples, taskData.numOffsets);    % summed position traces
+    taskData.posAvg = zeros(taskData.saccadeSamples, taskData.numOffsets);       % averaged position traces
+    taskData.velTrace = zeros(taskData.trialSamples, 1);                         % trial EOG velocity trace
+    taskData.velSummed = zeros(taskData.saccadeSamples, taskData.numOffsets);    % summed position traces
+    taskData.velAvg = zeros(taskData.saccadeSamples, taskData.numOffsets);       % averaged position traces
+    handles.lbj.UserData = taskData;                                             % pass to LabJack object
+    guidata(hObject, handles);
+end
+
 %% closeEOG: clean up
 function closeEOG(hObject, eventdata, handles)
 % this function is called  when the user closes the main window
@@ -74,10 +96,7 @@ function varargout = initEOG(hObject, eventdata, handles)               %#ok<*IN
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 varargout{1} = handles.output;
-set(handles.startbutton, 'String', 'Start','BackgroundColor', 'green');
-% set(hObject, 'CloseRequestFcn', {@closeEOG, handles});                  % close function will close LabJack
-% handles.lbj = [];                                                       % the LabJack object
-% guidata(hObject, handles);                                              % save updates to handles
+set(handles.startButton, 'String', 'Start','BackgroundColor', 'green');
 
 % openEOG: just before gui is made visible.
 function openEOG(hObject, eventdata, handles, varargin)
@@ -92,7 +111,7 @@ handles.visStim = EOGStimulus;
 handles.visStim.tag = 'JHRM';
 set(hObject, 'CloseRequestFcn', {@closeEOG, handles});                  % close function will close LabJack
 handles.lbj = [];                                                       % the LabJack object
-% set(handles.startbutton, 'String', 'Start','BackgroundColor', 'green');
+movegui(hObject, 'northeast');
 guidata(hObject, handles);                                              % save the selection
 
 %% processSignals: function to process data from one trial
@@ -170,12 +189,12 @@ if errorCode > 0
 end
 
 %% respond to button presses
-function startbutton_Callback(hObject, eventdata, handles)                  %#ok<DEFNU>
-% hObject    handle to startbutton (see GCBO)
+function startButton_Callback(hObject, eventdata, handles)                  %#ok<DEFNU>
+% hObject    handle to startButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-if strcmp(get(handles.startbutton, 'String'), 'Start') % if start button, do the following
+if strcmp(get(handles.startButton, 'String'), 'Start') % if start button, do the following
     fprintf(1,'\nEOG v1.0\n %s\n', datestr(clock));
     handles.lbj = setupLabJack(handles);
     % Initialize the variables for storing the data that is plotted
@@ -218,7 +237,7 @@ if strcmp(get(handles.startbutton, 'String'), 'Start') % if start button, do the
         'TimerFcn', {@collectData}, 'StartDelay', 0.1); % StartDelay allows other parts of the gui to execute
 
     % set the gui button to "running" state
-    set(handles.startbutton, 'String', 'Stop', 'BackgroundColor', 'red')
+    set(handles.startButton, 'String', 'Stop', 'BackgroundColor', 'red')
       
     % save timers to handles and update the GUI display
     handles.taskTimer = taskTimer;
@@ -236,7 +255,9 @@ else % stop
     stop(timerfind);                                                        % stop/delete timers; pause data stream
     delete(timerfind);        
     stopStream(handles.lbj);
-    set(handles.startbutton, 'String', 'Start','BackgroundColor', 'green')
+    set(handles.startButton, 'String', 'Start','BackgroundColor', 'green');
+    sprintf('stepping dot by %d', -handles.visStim.currentOffsetPix)
+    centerStimulus(handles.visStim);                                        % recenter fixspot
     drawnow;  
 end
 
@@ -269,14 +290,6 @@ switch taskData.taskState
     case TaskState.taskPrestim
         if etime(clock, taskData.trialStartTimeS) > taskData.stimTimeS
             taskData.stepSign = stepStimulus(visStim, taskData.offsetPix(taskData.offsetIndex));
-%             taskData.stepSign = -sign(visStim.currentOffsetPix);
-%             if taskData.stepSign == 0
-%                 taskData.stepSign = sign(rand - 0.5);
-%             end
-%             visStim.currentOffsetPix = visStim.currentOffsetPix + ...
-%                     taskData.stepSign * taskData.offsetPix(taskData.offsetIndex);
-% %             offsetStimCenter(visStim, taskData.stepSign * taskData.offsetPix(taskData.offsetIndex));
-%             drawDot(visStim);
             taskData.voltage = visStim.currentOffsetPix / 1000.0;          % debugging- connect DOC0 to AIN Ch0
             analogOut(lbj, 0, 2.5 + taskData.voltage);
             analogOut(lbj, 1, 2.5 - taskData.voltage);
@@ -343,3 +356,10 @@ function updatePlots(lbj, taskData, daqaxes, maxIndex)
     hold(daqaxes(3), 'off');
 
     drawnow;
+
+
+% --- Executes on button press in clearButton.
+function clearButton_Callback(hObject, eventdata, handles)
+% hObject    handle to clearButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
