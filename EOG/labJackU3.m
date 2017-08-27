@@ -1,6 +1,6 @@
-%LABJACKU6 A class for using the LabJack U6
+%LABJACKU3 A class for using the LabJack U3
 %
-% LBJ = LABJACKU6 constructs an object associated with a LabJack U6.
+% LBJ = LABJACKU3 constructs an object associated with a LabJack U3.
 %
 % This class supports the use of the LabJack Exodriver with MATLAB. The
 %  Exodriver is designed for OS X and Linux, although in theory it could be
@@ -10,7 +10,7 @@
 % Only the Analog IO functions (ADC streaming, ADC read, and DAC set) are 
 %  supported in this version.
 %
-% In order to communicate with the U6, the object must be connected
+% In order to communicate with the U3, the object must be connected
 %  to a LabJack with OPEN. After a connection is opened, the calibration
 %  data will be read from the device and stored as the property "CalVals".
 %  These calibrations are applied to data that is read from the device, so
@@ -18,12 +18,10 @@
 %  to destroy the object (use CLEAR) when finished, in order to avoid USB
 %  issues. See the Examples section below.
 %
-% The LabJack U6 Specifications are here:
-%   http://labjack.com/u6/specs
+% The LabJack U3 Specifications are here:
+%   http://labjack.com/U3/specs
 % And the User's Guide is here:
-%   http://labjack.com/support/u6/users-guide
-%
-%
+%   http://labjack.com/support/u3/users-guide
 %
 % Methods:
 %
@@ -98,7 +96,7 @@
 %       data = analogScan(obj,numScans)
 %   Performs a "scan" of all the channels in the current channel list.
 %    Returns an array of data, one row per scan, one column per channel.
-%    Intended for "manual" streaming, e.g. with U6-Pro high resolution ADC.
+%    Intended for "manual" streaming, e.g. with U3-Pro high resolution ADC.
 %
 %
 % Properties:
@@ -116,42 +114,11 @@
 %   verbose - The level of messages displayed:
 %                   0 (silent) - 3 (debug). Default 1.
 %
-%
-% Example:
-%
-%  >> lbj=labJackU6; open(lbj);
-%  labJackU6: version 1.0
-%  LJU6/open: Device successfully opened.
-%  >> lbj.SampleRateHz=200;
-%  >> addChannel(lbj,[0 1],[10 10],['s' 's']); % add channels 0 & 1, range +/- 10V, single-ended
-%  >> streamConfigure(lbj);
-%  >> startStream(lbj);
-%  LJU6/startStream: Stream started
-%
-%   [use some sort of loop or timer with:
-%        data=getStreamData(lbj);
-%    to process data]
-% 
-%  >> stopStream(lbj);
-%  LJU6/stopStream: stream stopped.
-%  >> clear lbj
-%  LJU6/delete: Closing object
-%  LJU6/close: Device successfully closed.
-% 
-%
 % M.A. Hopcroft
 % mhopeng@gmail.com
 % 
 
-% Oct2012
-% v1.2  added mfilename for compilation
-% Aug2012
-% v1.1  analogScan for "manual streaming"
-% Jul2012
-% v1.0  basic functionality for streaming analog in, DAC output set
-%
-
-classdef labJackU6 < handle
+classdef labJackU3 < handle
 	
     % Use capital letters for set-able properties, per MATLAB convention
 	properties
@@ -168,18 +135,18 @@ classdef labJackU6 < handle
         % desired sample rate for Analog Input
         SampleRateHz = 100
         % Tag
-        Tag='LabJackU6';
+        Tag='LabJackU3';
         % UserData
         UserData
 	end
 	
 	properties (SetAccess = private, GetAccess = public)
         % version of this classdef file
-        versionStr = 'version 1.3'
+        versionStr = 'version 1.0'
         % The handle for the device
         handle = []
-		% The identifier for the model number of the LabJack (6 = U6)
-        deviceID = 6;
+		% The identifier for the model number of the LabJack (3 = U3)
+        deviceID = 3;
         % Exodriver version number
 		driverVersion
         % number of devices connected to USB
@@ -221,11 +188,11 @@ classdef labJackU6 < handle
 	methods
                 
         %% Constructor
-        % return instance of labJackU6 class.
-		function obj = labJackU6(varargin)
-            if obj.verbose >= 1, fprintf(1,'labJackU6: %s\n',obj.versionStr); end
+        % return instance of labJackU3 class.
+		function obj = labJackU3(varargin)
+            if obj.verbose >= 1, fprintf(1,'labJackU3: %s\n',obj.versionStr); end
             if nargin > 0
-                fprintf(1,'labJackU6: Initial property setting is not supported. (n=%d)\n',nargin);
+                fprintf(1,'labJackU3: Initial property setting is not supported. (n=%d)\n',nargin);
             end
 		end
 		
@@ -242,7 +209,7 @@ classdef labJackU6 < handle
                         loadlibrary(obj.ExodriverLibrary, obj.ExodriverHeader);
                     end
                 catch loadEX
-                    fprintf(1,'LJU6/open: ERROR: unable to load Exodriver.\n');
+                    fprintf(1,'LJU3/open: ERROR: unable to load Exodriver.\n');
                     fprintf(1,'  library: %s\n  header: %s\n  "%s"\n\n',obj.ExodriverLibrary,obj.ExodriverHeader,loadEX.message);
                     obj.verbose = 1;
                     return
@@ -250,17 +217,17 @@ classdef labJackU6 < handle
             end
             obj.driverVersion =  calllib('liblabjackusb','LJUSB_GetLibraryVersion');
             obj.deviceCount = calllib('liblabjackusb','LJUSB_GetDevCount', obj.deviceID);
-            if obj.verbose >= 2, fprintf(1,'LJU6/open: %d LabJack U6 devices found.\n',obj.deviceCount); end
+            if obj.verbose >= 2, fprintf(1,'LJU3/open: %d LabJack U3 devices found.\n',obj.deviceCount); end
             % open the connection
             obj.handle = calllib('liblabjackusb','LJUSB_OpenDevice', deviceNum, 0, obj.deviceID);
             obj.validHandle
             if obj.isValidHandle
                 obj.isOpen = 1;
-                if obj.verbose >= 1, fprintf(1,'LJU6/open: Device successfully opened.\n'); end
+                if obj.verbose >= 1, fprintf(1,'LJU3/open: Device successfully opened.\n'); end
                 obj.CalVals = getCal(obj);                
-                if obj.verbose >= 2, fprintf(1,'LJU6/open: Calibration data loaded.\n'); end
+                if obj.verbose >= 2, fprintf(1,'LJU3/open: Calibration data loaded.\n'); end
             else
-                fprintf(1,'LJU6/open: WARNING: Failed to open device.\n');
+                fprintf(1,'LJU3/open: WARNING: Failed to open device.\n');
                 obj.isOpen = 0;
                 obj.handle = [];
             end
@@ -278,9 +245,9 @@ classdef labJackU6 < handle
 				obj.isOpen = 0;
 				obj.handle=[];
 				obj.isValidHandle = 0;
-                if obj.verbose >= 1, fprintf(1,'LJU6/close: Device successfully closed.\n'); end
+                if obj.verbose >= 1, fprintf(1,'LJU3/close: Device successfully closed.\n'); end
             else
-                fprintf(1,'LJU6/close: no handle to close.\n');
+                fprintf(1,'LJU3/close: no handle to close.\n');
 			end
         end
 		
@@ -291,15 +258,15 @@ classdef labJackU6 < handle
             if ~isempty(obj.handle)
                 obj.isValidHandle = calllib('liblabjackusb','LJUSB_IsHandleValid',obj.handle);
                 if obj.isValidHandle
-                    if obj.verbose >= 3, fprintf(1,'LJU6/validHandle: device handle is valid.\n'); end
+                    if obj.verbose >= 3, fprintf(1,'LJU3/validHandle: device handle is valid.\n'); end
                 else
-                    if obj.verbose >= 3, fprintf(1,'LJU6/validHandle: device handle is NOT valid.\n'); end
+                    if obj.verbose >= 3, fprintf(1,'LJU3/validHandle: device handle is NOT valid.\n'); end
                 end
             else
                 obj.isValidHandle = 0;
                 obj.isOpen = 0;
                 obj.handle = [];
-                if obj.verbose >= 2, fprintf(1,'LJU6/validHandle: device handle is NOT a handle.\n'); end
+                if obj.verbose >= 2, fprintf(1,'LJU3/validHandle: device handle is NOT a handle.\n'); end
             end
 		end
 		
@@ -313,11 +280,11 @@ classdef labJackU6 < handle
             %disp('usbWrite')
 			out = calllib('liblabjackusb', 'LJUSB_Write', obj.handle, bytes, length(bytes));
             if isequal(out,0)
-                fprintf(1,'labJackU6: Error on write to device! (zero bytes written)\n');
+                fprintf(1,'labJackU3: Error on write to device! (zero bytes written)\n');
             elseif isequal(out,-1)
-                fprintf(1,'labJackU6: Error on write to device! (error -1)\n');                
-            elseif obj.verbose >= 3
-                fprintf(1,'LJU6/usbWrite: %d bytes written to device.\n',out);
+                fprintf(1,'labJackU3: Error on write to device! (error -1)\n');                
+            elseif obj.verbose >= 4
+                fprintf(1,'LJU3/usbWrite: %d bytes written to device.\n',out);
             end            
 		end
 		
@@ -333,14 +300,14 @@ classdef labJackU6 < handle
 			[in3 in2 bytesRead] =  calllib('liblabjackusb', 'LJUSB_Read', obj.handle, bytesRead, count);
             % detect bad count value
             if in3==0
-                fprintf(1,'LJU6/usbRead: WARNING bad count value (num bytes in==0) detected\n');
+                fprintf(1,'LJU3/usbRead: WARNING bad count value (num bytes in==0) detected\n');
             end
             % detect bad checksum response
             if all(bytesRead(1:2)==184)
-                fprintf(1,'LJU6/usbRead: WARNING bad command checksum detected\n');
+                fprintf(1,'LJU3/usbRead: WARNING bad command checksum detected\n');
                 bytesRead=-1;
             else
-                if obj.verbose >= 3, fprintf(1,'LJU6/usbRead: %d bytes read from device\n',in3); end
+                if obj.verbose >= 4, fprintf(1,'LJU3/usbRead: %d bytes read from device\n',in3); end
                 if obj.verbose >= 4, disp(bytesRead'); end
             end
         end
@@ -406,7 +373,7 @@ classdef labJackU6 < handle
             % each column will have the values for a output device            
             CalVals.MISC=calValArray;
 
-            % read HI-RES values (For U6 Pro)
+            % read HI-RES values (For U3 Pro)
             calValArray=zeros(4,4); m=0;
             for k=6:9
                 m=m+1;
@@ -431,13 +398,13 @@ classdef labJackU6 < handle
             if nargin < 3, gains=zeros(1,length(channels)); end
             gains=gains(:)'; % make sure channels is a row vector
             
-            if obj.verbose >= 1, fprintf(1,'LJU6:/addChannel: add channels: %s\n',num2str(channels)); end
+            if obj.verbose >= 1, fprintf(1,'LJU3:/addChannel: add channels: %s\n',num2str(channels)); end
             
             % does this channel already exist?
             rv=[];
             for k=1:length(channels)
                 if any(channels(k)==obj.analogChannels)
-                    fprintf(1,'LJU6:/addChannel: WARNING channel %d on channel list will be overwritten.\n',channels(k));
+                    fprintf(1,'LJU3:/addChannel: WARNING channel %d on channel list will be overwritten.\n',channels(k));
                     rv=[rv k];                                              %#ok<AGROW>
                 end
             end
@@ -447,7 +414,7 @@ classdef labJackU6 < handle
             
             % add a channel and sort
             [obj.analogChannels, ind]=sort([obj.analogChannels channels]);
-            if obj.verbose >= 2, fprintf(1,'LJU6:/addChannel: analogChannels: %s\n',num2str(obj.analogChannels)); end
+            if obj.verbose >= 2, fprintf(1,'LJU3:/addChannel: analogChannels: %s\n',num2str(obj.analogChannels)); end
 
             % format gain vector
             if length(gains)<2
@@ -460,7 +427,7 @@ classdef labJackU6 < handle
             % add the gain value in the same place
             obj.inputRange=[obj.inputRange gains];
             obj.inputRange=obj.inputRange(ind);
-            if obj.verbose >= 3, fprintf(1,'LJU6:/addChannel: inputRange:     %s\n',num2str(obj.inputRange)); end
+            if obj.verbose >= 3, fprintf(1,'LJU3:/addChannel: inputRange:     %s\n',num2str(obj.inputRange)); end
             
             % format polarity vector
             if length(polar)<2
@@ -475,13 +442,13 @@ classdef labJackU6 < handle
                         bipolar(k)=1;
                     otherwise
                         bipolar(k)=0;
-                        fprintf(1,'LJU6/addchannel: WARNING: polarity value not understood ("%s")\n',num2str(polar(k)));
+                        fprintf(1,'LJU3/addchannel: WARNING: polarity value not understood ("%s")\n',num2str(polar(k)));
                 end
             end
             % add the polarity value in the same place
             obj.inputBipolar=[obj.inputBipolar bipolar(:)'];
             obj.inputBipolar=obj.inputBipolar(ind);
-            if obj.verbose >= 3, fprintf(1,'LJU6:/addChannel: inputBipolar:   %s\n',num2str(obj.inputBipolar)); end
+            if obj.verbose >= 3, fprintf(1,'LJU3:/addChannel: inputBipolar:   %s\n',num2str(obj.inputBipolar)); end
             
             obj.numChannels=length(obj.analogChannels)-sum(obj.inputBipolar==1)/2;
             obj.isStreamConfig=0;
@@ -510,10 +477,10 @@ classdef labJackU6 < handle
                 obj.inputRange(dInd)=[];
                 obj.inputBipolar(dInd)=[];
                 if obj.verbose >= 1
-                    fprintf(1,'LJU6/removeChannel: Channel "%d" removed from channel list\n',channel);
+                    fprintf(1,'LJU3/removeChannel: Channel "%d" removed from channel list\n',channel);
                 end
             else
-                fprintf(1,'LJU6/removeChannel: Channel "%d" not in the list of channels\n',channel);
+                fprintf(1,'LJU3/removeChannel: Channel "%d" not in the list of channels\n',channel);
             end
             
             obj.numChannels=obj.numChannels-1;
@@ -538,7 +505,7 @@ classdef labJackU6 < handle
             %scanRate = 100; % Hertz
             % configure the stream clock. 4 MHz based rate, divided by Scan Interval. 
             if obj.SampleRateHz < 0.25
-                fprintf(1,'LJU6/streamConfigure: ERROR Sample rate minimum is 0.25 Hz. (%g)\n', obj.SampleRateHz);
+                fprintf(1,'LJU3/streamConfigure: ERROR Sample rate minimum is 0.25 Hz. (%g)\n', obj.SampleRateHz);
                 obj.isStreamConfig = 0;
                 return
             elseif obj.SampleRateHz < 100
@@ -549,25 +516,25 @@ classdef labJackU6 < handle
                 clockBit=0;
             end
             if obj.verbose >= 2
-                fprintf(1,'LJU6/streamConfigure:\n');
+                fprintf(1,'LJU3/streamConfigure:\n');
                 fprintf(1,'  Sample Rate: %.2f Hz (ScanInt %d/%d) at ADC resolution level %d\n',...
-                    4e6/scanInt/max(1,(clockBit*128)),scanInt,clockBit,obj.ResolutionADC);
-                fprintf(1,'  Analog Input Channels: %s (%d)\n',num2str(obj.analogChannels),numChannelsScan);
-                fprintf(1,'  Input Polarity (0|1):  %s\n',num2str(obj.inputBipolar));
-                fprintf(1,'  ADC Input Range(gain): %s\n',num2str(obj.inputRange));
-                fprintf(1,'  Samples per packet:  %d\n',obj.samplesPerPacket);
+                    4e6/scanInt/max(1,(clockBit*128)), scanInt, clockBit, obj.ResolutionADC);
+                fprintf(1,'  Analog Input Channels: %s (%d)\n', num2str(obj.analogChannels), numChannelsScan);
+                fprintf(1,'  Input Polarity (0|1):  %s\n', num2str(obj.inputBipolar));
+                fprintf(1,'  ADC Input Range(gain): %s\n', num2str(obj.inputRange));
+                fprintf(1,'  Samples per packet:  %d\n', obj.samplesPerPacket);
             end
             cmdStreamConfig(2)= 248;                        % extended command code 0xF8
-            cmdStreamConfig(3)= numChannelsScan+4;          % NumChannels + 4
+            cmdStreamConfig(3)= numChannelsScan + 4;        % NumChannels + 4
             cmdStreamConfig(4)= 17;                         % configure command code 0x11
             cmdStreamConfig(7)= numChannelsScan;            % NumChannels
-            cmdStreamConfig(8)= obj.ResolutionADC;          % Resolution Index (1-8, + 9-12 for U6 Pro)
+            cmdStreamConfig(8)= obj.ResolutionADC;          % Resolution Index (1-8, + 9-12 for U3 Pro)
             cmdStreamConfig(9)= obj.samplesPerPacket;       % SamplesPerPacket (1-25)
             cmdStreamConfig(10)=0;                          % reserved
             cmdStreamConfig(11)=0;                          % SettlingFactor (use 0 for auto set)
-            cmdStreamConfig(12)=clockBit;                   % ScanConfig (0 = 4MHz clock)
-            cmdStreamConfig(13)=bitand(scanInt,255);        % Scan Interval (low byte)
-            cmdStreamConfig(14)=uint8(floor(scanInt/256));  % Scan Interval (high byte)
+            cmdStreamConfig(12) = clockBit;                 % ScanConfig (0 = 4MHz clock)
+            cmdStreamConfig(13) = bitand(scanInt,255);      % Scan Interval (low byte)
+            cmdStreamConfig(14) = uint8(floor(scanInt/256));% Scan Interval (high byte)
             for k=0:1:numChannelsScan-1
                 % channel number
                 cmdStreamConfig(15 + k*2) = obj.analogChannels(k+1);
@@ -590,11 +557,11 @@ classdef labJackU6 < handle
                 if errorCode == 0
                     obj.isStreamConfig = 1;
                 else
-                    fprintf(1,'LJU6/streamConfigure: LJ returned error %d\n',errorCode);
+                    fprintf(1,'LJU3/streamConfigure: LJ returned error %d\n',errorCode);
                     obj.isStreamConfig = 0;
                 end
             else
-                fprintf(1,'LJU6/streamConfigure: WARNING response checksum not valid. Try again.\n');
+                fprintf(1,'LJU3/streamConfigure: WARNING response checksum not valid. Try again.\n');
                 obj.isStreamConfig = 0;
             end
         end
@@ -611,14 +578,14 @@ classdef labJackU6 < handle
                 % VALIDATE RESPONSE CHECKSUMS
                 errorCode=in(3);
                 if errorCode==0
-                    if obj.verbose >=1, fprintf(1,'LJU6/startStream: Stream started\n'); end
+                    if obj.verbose >=1, fprintf(1,'LJU3/startStream: Stream started\n'); end
                     obj.isStreaming = 1;
                 else
-                    fprintf(1,'labJackU6: Error during startStream (%d)\n', errorCode);
+                    fprintf(1,'labJackU3: Error during startStream (%d)\n', errorCode);
                     obj.isStreaming = 0;
                 end     
             else
-                fprintf(1,'labJackU6: Error: device not configured for streaming. Use streamConfig.\n');
+                fprintf(1,'labJackU3: Error: device not configured for streaming. Use streamConfig.\n');
             end
             
         end
@@ -636,10 +603,10 @@ classdef labJackU6 < handle
                 % VALIDATE RESPONSE CHECKSUMS
                 errorCode=in(3);
                 if errorCode==0
-                    if obj.verbose>=1, fprintf('LJU6/stopStream: stream stopped\n'); end
+                    if obj.verbose>=1, fprintf('LJU3/stopStream: stream stopped\n'); end
                     obj.isStreaming=0;
                 else
-                    fprintf(1,'labJackU6: Error during stopStream (%d)\n',errorCode);
+                    fprintf(1,'labJackU3: Error during stopStream (%d)\n',errorCode);
                 end                
             end
             
@@ -649,55 +616,47 @@ classdef labJackU6 < handle
         %% getStreamData
         % get streaming data
         function [data, errorCode] = getStreamData(obj)
-            %disp('getStreamData')
             if obj.isStreamConfig
                 
-                % number of bytes to read ("5.2.14 - StreamData"):
-                %  14 bytes of packet header info (12 + 2)
-                %  2 bytes per sample
+                % number of bytes to read ("5.2.12 - StreamData"):
+                %  14 bytes of packet header info (12 + 2) + 2 bytes per samples
                 
-                if obj.verbose>=3, tic; end
-                %dataBytes=zeros(obj.samplesPerPacket*2*256,'double'); %
-                %NOTE : big performance hit for using "zeros" here
-
-                %bytesIn=zeros(14 + obj.samplesPerPacket*2,1);
-                count=length(obj.bytesIn);
-                if obj.verbose>=3, fprintf('LJU6/getStreamData: Preparing to read %d bytes from stream\n',count); end
-                
-
+                if obj.verbose >= 3, tic; end
+                count = length(obj.bytesIn);
+                if obj.verbose>=3, fprintf('LJU3/getStreamData: Preparing to read %d bytes from stream\n', count); end
                 
                 [in3 in2 obj.bytesIn] =  calllib('liblabjackusb', 'LJUSB_Stream', obj.handle, obj.bytesIn, count);
                 
 
                 % get key values from packet
-                numSamples=double(obj.bytesIn(3))-4;  % number of samples (from samplesPerPacket)
-                packetNumber=obj.bytesIn(11); % packet counter, 0-255 (8-bit)
-                backlog=obj.bytesIn(end-1);   % 0-255 indicates bytes remaining in buffer
-                errorCode=obj.bytesIn(12);
-                dataBytes=double(obj.bytesIn(13:end-2));
+                numSamples = double(obj.bytesIn(3)) - 4;        % number of samples in packet (from samplesPerPacket)
+                packetNumber = obj.bytesIn(11);                 % packet counter, 0-255 (8-bit)
+                backlog = obj.bytesIn(end - 1);                 % 0-255 indicates bytes remaining in buffer
+                errorCode = obj.bytesIn(12);
+                dataBytes = double(obj.bytesIn(13:end-2));
                 
                 % debug display
                 if obj.verbose>=2
-                    fprintf('LJU6/getStreamData:\n');
+                    fprintf('LJU3/getStreamData:\n');
                 end
                 if obj.verbose>=3
-                    fprintf(1,'  packet %d contains %d/%d samples\n',packetNumber,numSamples,length(obj.bytesIn(13:end-2))/2);
-                    fprintf(1,'  packet size: %d/%d bytes\n',length(obj.bytesIn),in3);
+                    fprintf(1,'  packet %d contains %d of %d (max) samples; %d of %d (max) bytes\n', packetNumber, ...
+                        numSamples, length(obj.bytesIn(13:end-2))/2, in3, length(obj.bytesIn));
                 end
                 if obj.verbose>=2
-                    fprintf(1,'  backlog: %.1f%% (%d) (error %d)\n',double(backlog)/255*100,backlog,errorCode);
+                    fprintf(1,'  backlog: %.1f%% (%d) (error %d)\n',double(backlog) / 255 * 100, backlog, errorCode);
                 end
                 
                 if all(errorCode~=[0 59]) && obj.verbose >= 1
-                    fprintf(1,'LJU6/getStreamData: device returns error %d on stream read (%d)\n',errorCode,packetNumber);
+                    fprintf(1,'LJU3/getStreamData: device returns error %d on stream read (%d)\n',errorCode,packetNumber);
                 end
                 
                 if errorCode==59
-                    if obj.verbose>=1, fprintf(1,'LJU6/getStreamData: WARNING: In auto-recovery mode. Data has been lost.\n'); end
+                    if obj.verbose>=1, fprintf(1,'LJU3/getStreamData: WARNING: In auto-recovery mode. Data has been lost.\n'); end
                 end                
 
                 % read additional packets if there is data remaining in buffer
-                m=1; % count number of packets read
+                m = 1; % count number of packets read
                 while backlog > 0
                     m=m+1;               
                     [in3 in2 obj.bytesIn] =  calllib('liblabjackusb', 'LJUSB_Stream', obj.handle, obj.bytesIn, count);
@@ -707,7 +666,7 @@ classdef labJackU6 < handle
                     errorCode=max(errorCode,obj.bytesIn(12));
                     % debug display
                     if obj.verbose>=3
-                        fprintf(1,'\nlabJackU6: additional stream read %d\n\n',m);
+                        fprintf(1,'\nlabJackU3: additional stream read %d\n\n',m);
                         fprintf(1,'  packet %d contains %d samples\n',packetNumber,numSamples);
                         fprintf(1,'  packet size: %d/%d bytes\n',length(obj.bytesIn),in3);
                         %fprintf(1,'  backlog: %.1f%% (%d)\n',double(backlog)/255*100,backlog);
@@ -718,28 +677,29 @@ classdef labJackU6 < handle
                     dataBytes((m-1)*obj.samplesPerPacket*2+1:m*obj.samplesPerPacket*2)=double(obj.bytesIn(13:end-2));
                     
                     if all(errorCode~=[0 59]) && obj.verbose >= 1
-                        fprintf(1,'LJU6/getStreamData: device returns error %d on stream read\n',errorCode);
+                        fprintf(1,'LJU3/getStreamData: device returns error %d on stream read\n',errorCode);
                     end
                     
                     if m>=255
-                        fprintf(1,'LJU6: WARNING: unable to keep up with data stream rate!\n');
+                        fprintf(1,'LJU3: WARNING: unable to keep up with data stream rate!\n');
                         break
                     end
                 end
                 
                 % interpret the 16-bit data values
                 %  (manual 5.4: "Binary readings are always unsigned integers")
-                dataBytes16=dataBytes(1:m*obj.samplesPerPacket*2);
-                dataBytes16(2:2:end)=dataBytes16(2:2:end)*256;
-                data=dataBytes16(1:2:end)+dataBytes16(2:2:end);
+                dataBytes16 = dataBytes(1: m * obj.samplesPerPacket * 2);
+                dataBytes16(2:2:end) = dataBytes16(2:2:end)*256;
+                data = dataBytes16(1:2:end) + dataBytes16(2:2:end);
                 
-                if length(data)~=numSamples*m
-                    fprintf(1,'labJackU6: WARNING: number of samples read (%d) does not agree with packet info (%d)\n',length(data),numSamples*m);
+                if length(data) ~= numSamples * m
+                    fprintf(1,'labJackU3: WARNING: number of samples read (%d) does not agree with packet info (%d)\n',...
+                        length(data), numSamples * m);
                 end
                 
                 % data is returned in a column for each channel
-                numChannelsScan=length(obj.analogChannels);
-                data=reshape(data,numChannelsScan,[])';
+                numChannelsScan = length(obj.analogChannels);
+                data = reshape(data,numChannelsScan,[])';
 
                 % Apply Calibration (ANALOG IN ONLY)
                 % Choose Regular or Precision
@@ -769,19 +729,17 @@ classdef labJackU6 < handle
                 % (see manual 5.2.14 - StreamData)
                 if errorCode==60
                     scansMissed=double(typecast(uint8(obj.bytesIn(7:10)),'uint32'));
-                    if obj.verbose>=1
-                        fprintf(1,'LJU6/getStreamData: Auto-recovery: backlog now %f%%. %d scans lost\n',...
-                            backlog / 2.55, scansMissed); 
-                    end
+                    if obj.verbose>=1, fprintf(1,'LJU3/getStreamData: Auto-recovery: backlog now %d. %d scans were lost\n',backlog,scansMissed); end
+                
                     dummyData=(ones(scansMissed-1,obj.numChannels)) .* (-9999);
                     data=[data; dummyData];
                 end                    
                 
             else
-                fprintf(1,'labJackU6: Error: device not configured. Use streamConfig.\n');
+                fprintf(1,'labJackU3: Error: device not configured. Use streamConfig.\n');
                 data=[];
             end
-            if obj.verbose>=3, fprintf(1,'getStreamData: '); disp(toc); end
+            if obj.verbose>=3, fprintf(1,'getStreamData execution time (s): '); disp(toc); end
         end
 
 
@@ -790,18 +748,18 @@ classdef labJackU6 < handle
         function analogOut(obj,channel,voltageSet)
             % error check inputs
             if channel > 1 || channel < 0
-                fprintf(1,'LJU6/analogOut: "channel" must be 0 or 1\n');
+                fprintf(1,'LJU3/analogOut: "channel" must be 0 or 1\n');
                 return
             end
             if voltageSet < 0 || voltageSet > 5
-                fprintf(1,'LJU6/analogOut: "voltageSet" must be 0-5 V\n');
+                fprintf(1,'LJU3/analogOut: "voltageSet" must be 0-5 V\n');
                 return
             end
             
             % calculate DAC output setting
-            if obj.verbose >= 2, fprintf(1,'LJU6/analogOut: Set DAC%d to %g V\n',channel,voltageSet); end
+            if obj.verbose >= 1, fprintf(1,'LJU3/analogOut: Set DAC%d to %g V\n',channel,voltageSet); end
             counts=uint16((voltageSet * obj.CalVals.MISC(1,channel+1) ) + obj.CalVals.MISC(2,channel+1));
-            if obj.verbose >= 2, fprintf(1,'LJU6/analogOut: %g V = %d counts\n',voltageSet,counts); end
+            if obj.verbose >= 2, fprintf(1,'LJU3/analogOut: %g V = %d counts\n',voltageSet,counts); end
             counts=typecast(counts,'uint8');
             
             % create command
@@ -825,11 +783,11 @@ classdef labJackU6 < handle
             %  (a zero is added if necessary)
             resp = usbRead(obj,10);
             if resp==-1
-                fprintf(1,'LJU6/analogOut: WARNING Bad command checksum. DAC not set!\n');
+                fprintf(1,'LJU3/analogOut: WARNING Bad command checksum. DAC not set!\n');
                 return
             end
             if resp(7) > 0
-                fprintf(1,'LJU6/analogOut: Command returned error %d\n',resp(7));
+                fprintf(1,'LJU3/analogOut: Command returned error %d\n',resp(7));
             end
             
         end
@@ -846,7 +804,7 @@ classdef labJackU6 < handle
             
             % error check inputs
             if channel > 143 || channel < 0
-                fprintf(1,'LJU6/analogIn: "channel" must be 0-143\n');
+                fprintf(1,'LJU3/analogIn: "channel" must be 0-143\n');
                 return
             end
             switch polarity
@@ -856,7 +814,7 @@ classdef labJackU6 < handle
                     bipolar=1;
                 otherwise
                     bipolar=0;
-                    fprintf(1,'LJU6/analogIn: WARNING: polarity value not understood ("%s")\n',num2str(polar(k)));
+                    fprintf(1,'LJU3/analogIn: WARNING: polarity value not understood ("%s")\n',num2str(polar(k)));
             end
             % format gain vector
             gain(gain==10)=0;
@@ -865,11 +823,11 @@ classdef labJackU6 < handle
             gain(gain==0.01)=3;
             
             if channel==14 && gain~=0
-                fprintf(1,'LJU6/analogIn: WARNING: gain should be +/- 10 V for accurate temperature (ch 14)\n');
+                fprintf(1,'LJU3/analogIn: WARNING: gain should be +/- 10 V for accurate temperature (ch 14)\n');
             end
             
             if obj.isStreaming==0
-                if obj.verbose >= 2, fprintf(1,'LJU6/analogIn: Reading AIN%d\n',channel); end
+                if obj.verbose >= 2, fprintf(1,'LJU3/analogIn: Reading AIN%d\n',channel); end
             
                 % create command
                 cmd=zeros(12,1);
@@ -892,10 +850,10 @@ classdef labJackU6 < handle
                 % read response
                 resp = obj.usbRead(12);
                 if resp(7) > 0
-                    fprintf(1,'LJU6/analogIn: Command returned error %d\n',resp(7));
+                    fprintf(1,'LJU3/analogIn: Command returned error %d\n',resp(7));
                 end
                 if ~any(resp)
-                    fprintf(1,'LJU6/analogIn: Command error (zero response). Recommend close/reopen LJ.\n');
+                    fprintf(1,'LJU3/analogIn: Command error (zero response). Recommend close/reopen LJ.\n');
                 end
                 %disp(uint8([resp(10:end); 0]))
                 data = typecast(uint8([resp(10:end); 0]),'uint32');
@@ -917,13 +875,13 @@ classdef labJackU6 < handle
                 % Temperature?
                 if channel==14
                     data = (data * obj.CalVals.MISC(1,4)) + obj.CalVals.MISC(2,4) - 273; % raw data in is K, return deg C
-                    if obj.verbose >= 2, fprintf(1,'LJU6/analogIn: Read %g C on channel %d (internal temperature)\n',data,channel); end
+                    if obj.verbose >= 2, fprintf(1,'LJU3/analogIn: Read %g C on channel %d (internal temperature)\n',data,channel); end
                 else
-                    if obj.verbose >= 2, fprintf(1,'LJU6/analogIn: Read %g V on channel %d\n',data,channel); end
+                    if obj.verbose >= 2, fprintf(1,'LJU3/analogIn: Read %g V on channel %d\n',data,channel); end
                 end
                 
             else
-                fprintf(1,'LJU6/analogIn: Cannot perform AIN readings while streaming is active!\n');
+                fprintf(1,'LJU3/analogIn: Cannot perform AIN readings while streaming is active!\n');
                 data=[];
             end
             
@@ -935,7 +893,7 @@ classdef labJackU6 < handle
         function data = analogScan(obj,numScans)
             if nargin < 2, numScans=1; end
             if isempty(obj.analogChannels)
-                fprintf(1,'LJU6/analogScan: ERROR no channels in channel list\n');
+                fprintf(1,'LJU3/analogScan: ERROR no channels in channel list\n');
                 return
             else
                 % create a channel list for scan
@@ -948,7 +906,7 @@ classdef labJackU6 < handle
                 gainList(bInd(2:2:end))=[];
                 diffList(bInd(2:2:end))=[];
             end
-            if obj.verbose >= 1, fprintf(1,'LJU6/analogScan: scanning %d channels\n',length(channelList)); end
+            if obj.verbose >= 1, fprintf(1,'LJU3/analogScan: scanning %d channels\n',length(channelList)); end
             
             % do the scans
             data=zeros(numScans,length(channelList));
@@ -963,7 +921,7 @@ classdef labJackU6 < handle
         
        
         %% getInfo
-        % displays device configuration from ConfigU6 (manual 5.2.2)
+        % displays device configuration from ConfigU3 (manual 5.2.2)
         function devInfo = getInfo(obj)
             % create get info command
             cmdGetConfig=cell(26,1);
@@ -977,12 +935,12 @@ classdef labJackU6 < handle
             usbWrite(obj,cmdGetConfig);
             resp = usbRead(obj,38);
             if resp(7)>0
-                fprintf(1,'LJU6/getInfo: Command returned error %d\n',resp(7));
+                fprintf(1,'LJU3/getInfo: Command returned error %d\n',resp(7));
             end
 
             % display the results
             resp=double(resp);
-            fprintf('LJU6: U6 Configuration Settings:\n');
+            fprintf('LJU3: U3 Configuration Settings:\n');
             devInfo.FirmwareVersion=resp(11) + resp(10)/100.0;
             fprintf(' FirmwareVersion: %.3f\n', devInfo.FirmwareVersion);
             devInfo.BootloaderVersion=resp(13) + resp(12)/100.0;
@@ -995,11 +953,11 @@ classdef labJackU6 < handle
             fprintf(' ProductID: %d\n', devInfo.ProductID);
             devInfo.LocalID=resp(22);
             fprintf(' LocalID (deviceNum): %d\n', devInfo.LocalID);
-            devInfo.isU6=((resp(38)/4)&1);
-            devInfo.isU6pro=((resp(38)/8)&1);
+            devInfo.isU3=((resp(38)/4)&1);
+            devInfo.isU3pro=((resp(38)/8)&1);
             fprintf(' Version Info: %d\n', resp(38));
-            fprintf('   U6 (bit 2): %d\n', devInfo.isU6);
-            fprintf('   U6-Pro (bit 3): %d\n', devInfo.isU6pro);
+            fprintf('   U3 (bit 2): %d\n', devInfo.isU3);
+            fprintf('   U3-Pro (bit 3): %d\n', devInfo.isU3pro);
         end
 		
 		
@@ -1023,10 +981,10 @@ classdef labJackU6 < handle
             % read response
 			resp  = obj.usbRead(4);
             if resp(4) > 0
-                fprintf(1,'LJU6/reset: LJ returned error %d\n',resp(4));
+                fprintf(1,'LJU3/reset: LJ returned error %d\n',resp(4));
             else
                 obj.analogChannels=[];
-                if obj.verbose >= 1, fprintf(1,'LJU6/reset: Device reset\n'); end
+                if obj.verbose >= 1, fprintf(1,'LJU3/reset: Device reset\n'); end
             end
         end
         
@@ -1097,7 +1055,7 @@ classdef labJackU6 < handle
         
         %% Fixed-point conversion
         % convert fixed-point calibration values
-        % (see manual 5.4 and FPuint8ArrayToFPDouble in u6.c)
+        % (see manual 5.4 and FPuint8ArrayToFPDouble in u3.c)
         function out=fp2double(in)
             in=uint32(in);
             
@@ -1126,7 +1084,7 @@ classdef labJackU6 < handle
         %% delete
 		% Destructor
 		function delete(obj)
-            if obj.verbose >= 1, fprintf(1,'LJU6/delete: Closing object\n'); end
+            if obj.verbose >= 1, fprintf(1,'LJU3/delete: Closing object\n'); end
 			close(obj);
 		end
     end
