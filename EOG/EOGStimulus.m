@@ -60,7 +60,7 @@ classdef EOGStimulus < handle
         
         function drawDot(obj)
             Screen('BlendFunction', obj.window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
-            Screen('DrawDots', obj.window, [obj.currentOffsetPix; 0], 25, obj.whiteColor, ...
+            Screen('DrawDots', obj.window, [obj.currentOffsetPix; 0], 16 , obj.whiteColor, ...
                                                         [obj.xCenterPix obj.yCenterPix], 1);
             Screen('Flip', obj.window);
         end
