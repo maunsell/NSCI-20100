@@ -1,9 +1,8 @@
 Things to do:
 	GUI: 
         Need a main sequence plot across four offsets
-	Plot in units of degrees
-        After first block, average ends of 4 offsets and then use them for linear regression
-        Plot the average plots using degrees -- plot current trace using volts (on same scale)
+	Plot in units of degrees working -- need to save values for main sequence
+        Move some functions to other files?
 
 See if the focus can be forced to the start/stop button.
 
