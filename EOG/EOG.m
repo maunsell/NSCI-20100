@@ -111,13 +111,11 @@ function openEOG(hObject, eventdata, handles, varargin)
 
 handles.output = hObject;                                               % select default command line output
 handles.visStim = EOGStimulus;
-
 set(hObject, 'CloseRequestFcn', {@closeEOG, handles});                  % close function will close LabJack
-
 handles.lbj = setupLabJack();
     
-taskData.offsetPix = [100 200 300 400];
-taskData.numOffsets = length(taskData.offsetPix);
+taskData.offsetDeg = [4 8 12 16];
+taskData.numOffsets = length(taskData.offsetDeg);
 taskData.stepSign = 1;
 taskData.offsetIndex = 1;
 taskData.offsetsDone = zeros (1, taskData.numOffsets);
@@ -227,33 +225,6 @@ function startButton_Callback(hObject, eventdata, handles)                  %#ok
 if strcmp(get(handles.startButton, 'String'), 'Start') % if start button, do the following
     fprintf(1,'\nEOG v1.0\n %s\n', datestr(clock));
     disp(maxDeg(handles.visStim));
-%     handles.lbj = setupLabJack(handles);
-%     taskData.offsetPix = [100 200 300 400];
-%     taskData.numOffsets = length(taskData.offsetPix);
-%     taskData.stepSign = 1;
-%     taskData.offsetIndex = 0;
-%     taskData.offsetsDone = zeros (1, taskData.numOffsets);
-%     taskData.blocksDone = 0;
-%     taskData.sampleRateHz = handles.lbj.SampleRateHz;
-%     taskData.saccadeDurS = 0.25;
-%     taskData.saccadeSamples = floor(taskData.saccadeDurS * taskData.sampleRateHz);
-%     taskData.trialDurS = max(0.50, 2 * taskData.saccadeDurS);
-%     taskData.trialSamples = floor(taskData.trialDurS * taskData.sampleRateHz);
-%     taskData.prestimDurS = min(taskData.trialDurS / 4, 0.250);
-%     taskData.taskState = TaskState.taskIdle;
-%     taskData.trialStartTimeS = 0;
-%     taskData.samplesRead = 0;
-%     taskData.dataState = DataState.dataIdle;
-%     taskData.numSummed = zeros(1, taskData.numOffsets);
-%     taskData.rawData = zeros(taskData.trialSamples, handles.lbj.numChannels);    % raw data
-%     taskData.posTrace = zeros(taskData.trialSamples, 1);                         % trial EOG position trace
-%     taskData.posSummed = zeros(taskData.saccadeSamples, taskData.numOffsets);    % summed position traces
-%     taskData.posAvg = zeros(taskData.saccadeSamples, taskData.numOffsets);       % averaged position traces
-%     taskData.velTrace = zeros(taskData.trialSamples, 1);                         % trial EOG velocity trace
-%     taskData.velSummed = zeros(taskData.saccadeSamples, taskData.numOffsets);    % summed position traces
-%     taskData.velAvg = zeros(taskData.saccadeSamples, taskData.numOffsets);       % averaged position traces
-%     handles.lbj.UserData = taskData;                                             % pass to LabJack object
-
     setViewDistanceCM(handles.visStim, str2double(get(handles.viewDistanceText, 'string'))); 
     % create timer to control the task
     taskTimer = timer('Name', 'TaskTimer', 'ExecutionMode', 'fixedRate',...
@@ -320,7 +291,7 @@ switch taskData.taskState
         end
     case TaskState.taskPrestim
         if etime(clock, taskData.trialStartTimeS) > taskData.stimTimeS
-            taskData.stepSign = stepStimulus(visStim, taskData.offsetPix(taskData.offsetIndex));
+            taskData.stepSign = stepStimulus(visStim, taskData.offsetDeg(taskData.offsetIndex));
             taskData.voltage = visStim.currentOffsetPix / 1000.0;          % debugging- connect DOC0 to AIN Ch0
             analogOut(lbj, 0, 2.5 + taskData.voltage);
             analogOut(lbj, 1, 2.5 - taskData.voltage);

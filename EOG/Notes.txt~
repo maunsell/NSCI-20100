@@ -5,6 +5,9 @@ Things to do:
         Add GUI for viewing distance
         Add conversion functions to stimulus file
 
+    When distance is changed, it should reset the data (after warning the user).
+        Should also enforce a viewing distance that allows 12° range.
+
 ============================
 Read the Install Instruction to get information on adding Exodriver and UsbLib to the Macs. 
 

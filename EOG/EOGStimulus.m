@@ -5,6 +5,7 @@ classdef EOGStimulus < handle
         tag
     end
     properties (GetAccess = private)
+        currentOffsetMM
         frameDurS
         grayColor
         pixPerMM
@@ -35,7 +36,7 @@ classdef EOGStimulus < handle
             obj.windowRectPix = [obj.marginPix, screenRectPix.height - 200, ...
                                             screenRectPix.width - obj.marginPix, screenRectPix.height - 100];
             [widthMM, ~] = Screen('DisplaySize', obj.screenNumber);
-            obj.pixPerMM = obj.windowRectPix / widthMM;
+            obj.pixPerMM = obj.windowRectPix(3) / widthMM;
             [obj.window, obj.windowRectPix] = PsychImaging('OpenWindow', obj.screenNumber, obj.grayColor, ...
                 obj.windowRectPix, obj.pixelDepth, 2, [], [], kPsychNeed32BPCFloat);
             obj.topPriorityLevel = MaxPriority(obj.window);
@@ -72,12 +73,16 @@ classdef EOGStimulus < handle
             obj.viewDistanceMM = newValueCM * 10.0;
         end
         
-        function stepSign = stepStimulus(obj, offsetPix)
+        function stepSign = stepStimulus(obj, offsetDeg)
             stepSign = -sign(obj.currentOffsetPix);
             if stepSign == 0
                 stepSign = sign(rand - 0.5);
             end
-            obj.currentOffsetPix = obj.currentOffsetPix + stepSign * offsetPix;
+            obj.currentOffsetMM = obj.currentOffsetPix / obj.pixPerMM;
+            currentOffsetDeg = atan2(obj.currentOffsetMM, obj.viewDistanceMM) * 57.2958;
+            newOffsetDeg = currentOffsetDeg + stepSign  * offsetDeg;
+            newOffsetMM = obj.viewDistanceMM * tan(newOffsetDeg / 57.2958);
+            obj.currentOffsetPix = newOffsetMM * obj.pixPerMM;
             drawDot(obj);
         end
     end        
