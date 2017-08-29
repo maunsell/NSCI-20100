@@ -1,0 +1,96 @@
+classdef Saccades < handle
+    % saccades
+    %   Support for processing eye traces and detecting saccades
+    
+    properties
+        thresholdDPS = 0;
+        degPerSPerV = 0;
+        degPerV = 0;
+    end
+    
+    methods
+        
+    %% processSignals: function to process data from one trial
+    function [taskData, validTrial, index] = processSignals(obj, taskData)
+        taskData.posTrace = taskData.rawData(:, 1) - taskData.rawData(:, 2);
+        taskData.posTrace = taskData.posTrace - ...
+                                    mean(taskData.posTrace(1:floor(taskData.sampleRateHz * taskData.prestimDurS)));
+        % Debug: add some noise to make things realistic
+        taskData.posTrace = taskData.posTrace + 0.3 * rand(size(taskData.posTrace)) - 0.15;
+        
+        % do a boxcar filter of the raw signal
+        windowSize = 50;
+        b = (1 / windowSize) * ones(1, windowSize);
+        taskData.posTrace = filter(b, 1, taskData.posTrace);
+        taskData.velTrace(1:end - 1) = diff(taskData.posTrace);
+        taskData.velTrace(end) = taskData.velTrace(end - 1);
+
+        % if we don't have a complete block yet, estimate the degPerV using the
+        % start and end of the trial
+        
+        if sum(taskData.numSummed) < length(taskData.numSummed)
+            DPV = abs(taskData.offsetsDeg(taskData.offsetIndex) /...
+                                            (mean(taskData.posTrace(end - 50:end)) - mean(taskData.posTrace(1:50))));
+        else
+            DPV = obj.degPerV;
+        end
+        DPSPV = DPV * taskData.sampleRateHz;
+        if (taskData.stepSign == 1)
+            fast = taskData.velTrace >= obj.thresholdDPS / DPSPV;
+        else
+            fast = taskData.velTrace <= -obj.thresholdDPS / DPSPV;
+        end
+        index = 1;
+        seq = 0;
+        while (seq < 5 && index < length(fast))                     % find the first sequence of 5 > than threshold
+            if fast(index) == 0 
+                seq = 0;
+            else
+                seq = seq + 1;
+            end
+            index = index + 1;
+        end
+        if index < length(fast)
+        	index = index - 5;
+            saccadeOffset = taskData.saccadeSamples / 2;
+            validTrial = (index >= saccadeOffset) && (index < taskData.trialSamples - saccadeOffset);
+        else
+            validTrial = false;
+        end
+        if ~validTrial
+            index = 0;
+            return;
+        end
+        if (taskData.stepSign == 1)
+            taskData.posSummed(:, taskData.offsetIndex) = taskData.posSummed(:, taskData.offsetIndex)... 
+                        + taskData.posTrace(floor(index - saccadeOffset):floor(index + saccadeOffset - 1));  
+            taskData.velSummed(:, taskData.offsetIndex) = taskData.velSummed(:, taskData.offsetIndex)... 
+                        + taskData.velTrace(floor(index - saccadeOffset):floor(index + saccadeOffset - 1));  
+        else
+            taskData.posSummed(:, taskData.offsetIndex) = taskData.posSummed(:, taskData.offsetIndex)...
+                        - taskData.posTrace(floor(index - saccadeOffset):floor(index + saccadeOffset - 1));  
+            taskData.velSummed(:, taskData.offsetIndex) = taskData.velSummed(:, taskData.offsetIndex)... 
+                        - taskData.velTrace(floor(index - saccadeOffset):floor(index + saccadeOffset - 1));  
+        end
+        taskData.numSummed(taskData.offsetIndex) = taskData.numSummed(taskData.offsetIndex) + 1;
+        taskData.posAvg(:, taskData.offsetIndex) = taskData.posSummed(:, taskData.offsetIndex) ...
+            / taskData.numSummed(taskData.offsetIndex);
+        taskData.velAvg(:, taskData.offsetIndex) = taskData.velSummed(:, taskData.offsetIndex) ...
+            / taskData.numSummed(taskData.offsetIndex);
+        taskData.offsetsDone(taskData.offsetIndex) = taskData.offsetsDone(taskData.offsetIndex) + 1;
+        
+        % now that we've updated all the traces, compute the degrees per volt
+        % (if possible)
+        
+        if sum(taskData.numSummed) < length(taskData.numSummed)
+            obj.degPerV = 0.0;
+       else
+            endPointsV = mean(taskData.posAvg(end - 50:end, :));        % average trace ends to get each endpoint
+            obj.degPerV = mean(taskData.offsetsDeg ./ endPointsV);
+        end
+        obj.degPerSPerV = obj.degPerV * taskData.sampleRateHz;
+    end
+   
+    end
+end
+

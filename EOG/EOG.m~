@@ -295,9 +295,6 @@ function updatePlots(lbj, taskData, daqaxes, saccIndex, saccades)
        hold(daqaxes(1), 'off');
     end
     axis(daqaxes(2), [-inf inf -yLim yLim]);
-    hold(daqaxes(2), 'on');
-    plot(daqaxes(2), [0 0], [-yLim yLim], 'color', 'k', 'linestyle', ':');
-    hold(daqaxes(2), 'off');
     if saccades.degPerV > 0
         yTicks = [fliplr(-taskData.offsetsDeg), 0, taskData.offsetsDeg] / saccades.degPerV;
         for i = 1:length(yTicks)
@@ -332,9 +329,6 @@ function updatePlots(lbj, taskData, daqaxes, saccIndex, saccades)
         hold(daqaxes(3), 'off');
     end
     axis(daqaxes(4), [-inf inf -yLim yLim]);
-    hold(daqaxes(4), 'on');
-    plot(daqaxes(4), [0 0], [-yLim yLim], 'color', 'k', 'linestyle', ':');
-    hold(daqaxes(4), 'off');
     if saccades.degPerSPerV > 0
         maxSpeedDPS = ceil((yLim * saccades.degPerSPerV) / 100.0) * 100;
         yTicks = (-maxSpeedDPS:100:maxSpeedDPS) / saccades.degPerSPerV;
