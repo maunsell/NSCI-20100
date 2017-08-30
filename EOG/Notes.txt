@@ -1,11 +1,5 @@
 Things to do:
     Need a main sequence plot across four offsets
-	Need to save values to plot for main sequence sequence
-
-    Now have Saccades finding start and end of saccades.
-        Should this be done in updatePlots for trial and averages? (Rather than in processData)?
-        Use this to compute and average duration that can be put on the average plots
-    Compute and plot duration based on the average speed plots
     Put big numbers in upper left of each plot so they can be referred to in text
 
     EditText for filter width

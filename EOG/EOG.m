@@ -47,6 +47,7 @@ switch selection
     taskData.velTrace = zeros(taskData.trialSamples, 1);                         % trial EOG velocity trace
     taskData.velSummed = zeros(taskData.saccadeSamples, taskData.numOffsets);    % summed position traces
     taskData.velAvg = zeros(taskData.saccadeSamples, taskData.numOffsets);       % averaged position traces
+    taskData.saccDur = zeros(1, taskData.numOffsets);                            % average saccade duration
     handles.lbj.UserData = taskData;                                             % pass to LabJack object
     updatePlots(handles.lbj, taskData, [handles.axes1 handles.axes2 handles.axes3 handles.axes4], 0);
     guidata(hObject, handles);
@@ -267,9 +268,6 @@ lbj.UserData = taskData;                                                    % sa
     
 %% updatePlots: function to refresh the plots after each trial
 function updatePlots(lbj, taskData, daqaxes, startIndex, endIndex, saccades)
-
-    startIndex
-    endIndex
     
     timestepS = 1 / lbj.SampleRateHz;                                       % time interval of samples
     trialTimes = (0:1:size(taskData.posTrace, 1) - 1) * timestepS;          % make array of trial time points
@@ -311,6 +309,8 @@ function updatePlots(lbj, taskData, daqaxes, startIndex, endIndex, saccades)
         set(daqaxes(2), 'YTickLabel', yLabels);
         ylabel(daqaxes(2),'Average Eye Position (absolute deg.)','FontSize',14);
     end
+    
+    % do the trial averages
     
     plot(daqaxes(3), trialTimes, taskData.velTrace, 'color', colors(taskData.offsetIndex,:));
     a = axis(daqaxes(3));
@@ -360,6 +360,12 @@ function updatePlots(lbj, taskData, daqaxes, startIndex, endIndex, saccades)
         set(daqaxes(4), 'YTick', yTicks);
         set(daqaxes(4), 'YTickLabel', yLabels);
         ylabel(daqaxes(4),'Average Eye Speed (degrees/s)','FontSize',14);
+        midX = length(saccadeTimes) / 2;
+        hold(daqaxes(4), 'on');
+        for i = 1:taskData.numOffsets
+            plot(daqaxes(4), [0, saccadeTimes(length(saccadeTimes) / 2 + taskData.saccDur(i))],...
+                                                -[yLim, yLim] / 5 * i, 'color', colors(i,:));
+        end
+        hold(daqaxes(4), 'off');
     end
-
     drawnow;
