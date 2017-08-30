@@ -36,6 +36,7 @@ selection = questdlg('Really clear all data? (This cannot be undone).', 'Clear D
 set(0, 'DefaultUIControlFontSize', originalSize);
 switch selection
     case 'Yes'
+    clearAll(handles.saccades);
     taskData = handles.lbj.UserData;
     taskData.offsetsDone = zeros (1, taskData.numOffsets);
     taskData.blocksDone = 0;
@@ -49,7 +50,7 @@ switch selection
     taskData.velAvg = zeros(taskData.saccadeSamples, taskData.numOffsets);       % averaged position traces
     taskData.saccDur = zeros(1, taskData.numOffsets);                            % average saccade duration
     handles.lbj.UserData = taskData;                                             % pass to LabJack object
-    updatePlots(handles.lbj, taskData, [handles.axes1 handles.axes2 handles.axes3 handles.axes4], 0);
+    EOGPlots(handles.lbj, taskData, [handles.axes1 handles.axes2 handles.axes3 handles.axes4], 0, 0, handles.saccades);
     guidata(hObject, handles);
 end
 
@@ -181,8 +182,8 @@ function startButton_Callback(hObject, eventdata, handles)                  %#ok
 if strcmp(get(handles.startButton, 'String'), 'Start') % if start button, do the following
     fprintf(1,'\nEOG v1.0\n %s\n', datestr(clock));
     setViewDistanceCM(handles.visStim, str2double(get(handles.viewDistanceText, 'string')));
-%     setThreshold(handles.saccades, str2double(get(handles.thresholdDPSText, 'string')));
     handles.saccades.thresholdDPS = str2double(get(handles.thresholdDPSText, 'string'));
+    handles.saccades.filterWidthMS = str2double(get(handles.filterWidthText, 'string'));
     % create timer to control the task
     taskTimer = timer('Name', 'TaskTimer', 'ExecutionMode', 'fixedRate',...
         'Period', 0.1, 'UserData', handles.lbj, 'ErrorFcn', {@timerErrorFcnStop, handles}, 'TimerFcn',...
@@ -197,6 +198,7 @@ if strcmp(get(handles.startButton, 'String'), 'Start') % if start button, do the
     % set the gui button to "running" state
     set(handles.startButton, 'String', 'Stop', 'BackgroundColor', 'red');
     set(handles.clearButton,'enable','off');
+    set(handles.filterWidthText,'enable','off');
     set(handles.viewDistanceText,'enable','off');
     set(handles.thresholdDPSText,'enable','off');
     % save timers to handles and update the GUI display
@@ -216,6 +218,7 @@ else % stop
     stopStream(handles.lbj);
     set(handles.startButton, 'string', 'Start','backgroundColor', 'green');
     set(handles.clearButton,'enable','on');
+    set(handles.filterWidthText,'enable','on');
     set(handles.viewDistanceText,'enable','on');
     set(handles.thresholdDPSText,'enable','on');
     centerStimulus(handles.visStim);                                        % recenter fixspot
@@ -240,8 +243,8 @@ switch taskData.taskState
             end
             taskData.trialStartTimeS = clock;
             taskData.voltage = visStim.currentOffsetPix / 1000.0;          % debugging- connect DOC0 to AIN Ch0
-            analogOut(lbj,0, 2.5 + taskData.voltage);
-            analogOut(lbj,1, 2.5 - taskData.voltage);
+            analogOut(lbj, 0, 2.5 + taskData.voltage);
+            analogOut(lbj, 1, 2.5 - taskData.voltage);
         elseif etime(clock, taskData.trialStartTimeS) > 0.050               % data settled for one taskTimer cycle
             taskData.trialStartTimeS = clock;                               % reset the trial clock
             taskData.stimTimeS = taskData.prestimDurS + rand() * 0.1250;
@@ -260,112 +263,9 @@ switch taskData.taskState
         % just wait for end of trial
     case TaskState.taskEndtrial
         [taskData, startIndex, endIndex] = processSignals(saccades, taskData);
-        updatePlots(lbj, taskData, daqaxes, startIndex, endIndex, saccades);
+        EOGPlots(lbj, taskData, daqaxes, startIndex, endIndex, saccades);
         taskData.trialStartTimeS = 0;
         taskData.taskState = TaskState.taskIdle;
 end
 lbj.UserData = taskData;                                                    % save new points to UserData
-    
-%% updatePlots: function to refresh the plots after each trial
-function updatePlots(lbj, taskData, daqaxes, startIndex, endIndex, saccades)
-    
-    timestepS = 1 / lbj.SampleRateHz;                                       % time interval of samples
-    trialTimes = (0:1:size(taskData.posTrace, 1) - 1) * timestepS;          % make array of trial time points
-    saccadeTimes = (-(size(taskData.posAvg, 1) / 2):1:(size(taskData.posAvg,1) / 2) - 1) * timestepS;              
-
-    colors = get(daqaxes(1), 'ColorOrder');
-    plot(daqaxes(1), trialTimes, taskData.posTrace, 'color', colors(taskData.offsetIndex,:));
-    title(daqaxes(1), 'Most recent position trace', 'FontSize',12,'FontWeight','Bold')
-    ylabel(daqaxes(1),'Analog Input (V)','FontSize',14);
-
-    plot(daqaxes(2), saccadeTimes, taskData.posAvg, '-');
-    title(daqaxes(2), ['Average position traces (left/right combined; ' sprintf('n>=%d)', taskData.blocksDone)], ...
-                  'FontSize',12,'FontWeight','Bold')
-
-    a1 = axis(daqaxes(1));
-    a2 = axis(daqaxes(2));
-    yLim = max([abs(a1(3)), abs(a1(4)), abs(a2(3)), abs(a2(4))]);
-    axis(daqaxes(1), [-inf inf -yLim yLim]);
-    if (startIndex > 0)
-        hold(daqaxes(1), 'on');
-        plot(daqaxes(1), [startIndex, startIndex] * timestepS, [-yLim yLim], 'color', colors(taskData.offsetIndex,:),...
-            'linestyle', ':');
-        if (endIndex > 0)
-            plot(daqaxes(1), [endIndex, endIndex] * timestepS, [-yLim yLim], 'color', colors(taskData.offsetIndex,:),...
-            'linestyle', ':');
-        end
-        hold(daqaxes(1), 'off');
-    end
-    axis(daqaxes(2), [-inf inf -yLim yLim]);
-    hold(daqaxes(2), 'on');
-    plot(daqaxes(2), [0 0], [-yLim yLim], 'color', 'k', 'linestyle', ':');
-    hold(daqaxes(2), 'off');
-    if saccades.degPerV > 0
-        yTicks = [fliplr(-taskData.offsetsDeg), 0, taskData.offsetsDeg] / saccades.degPerV;
-        for i = 1:length(yTicks)
-            yLabels{i} = num2str(yTicks(i) * saccades.degPerV, '%.0f');
-        end
-        set(daqaxes(2), 'YTick', yTicks);
-        set(daqaxes(2), 'YTickLabel', yLabels);
-        ylabel(daqaxes(2),'Average Eye Position (absolute deg.)','FontSize',14);
-    end
-    
-    % do the trial averages
-    
-    plot(daqaxes(3), trialTimes, taskData.velTrace, 'color', colors(taskData.offsetIndex,:));
-    a = axis(daqaxes(3));
-    yLim = max(abs(a(3)), abs(a(4)));
-    axis(daqaxes(3), [-inf inf -yLim yLim]);
-    title(daqaxes(3), 'Most recent velocity trace', 'FontSize',12,'FontWeight','Bold');
-    ylabel(daqaxes(3),'Analog Input (dV/dt)','FontSize',14);
-    xlabel(daqaxes(3),'Time (s)','FontSize',14);
-
-    plot(daqaxes(4), saccadeTimes, taskData.velAvg, '-');
-    title(daqaxes(4), 'Average velocity traces (left/right combined)', 'FontSize',12,'FontWeight','Bold')
-    ylabel(daqaxes(4),'Analog Input (V)','FontSize',14);
-    xlabel(daqaxes(4),'Time (s)','FontSize',14);
-
-    a1 = axis(daqaxes(3));
-    a2 = axis(daqaxes(4));
-    yLim = max([abs(a1(3)), abs(a1(4)), abs(a2(3)), abs(a2(4))]);
-    axis(daqaxes(3), [-inf inf -yLim yLim]);
-    if (startIndex > 0)
-        hold(daqaxes(3), 'on');
-        plot(daqaxes(3), [startIndex, startIndex] * timestepS, [-yLim yLim], 'color', colors(taskData.offsetIndex,:),...
-                                                                                             'linestyle', ':');
-        if (endIndex > 0)
-            plot(daqaxes(3), [endIndex, endIndex] * timestepS, [-yLim yLim], 'color', colors(taskData.offsetIndex,:),...
-            'linestyle', ':');
-        end
-        hold(daqaxes(3), 'off');
-    end
-    axis(daqaxes(4), [-inf inf -yLim yLim]);
-    hold(daqaxes(4), 'on');
-    plot(daqaxes(4), [0 0], [-yLim yLim], 'color', 'k', 'linestyle', ':');
-    hold(daqaxes(4), 'off');
-    if saccades.degPerSPerV > 0
-        maxSpeedDPS = ceil((yLim * saccades.degPerSPerV) / 100.0) * 100;
-        yTicks = (-maxSpeedDPS:100:maxSpeedDPS) / saccades.degPerSPerV;
-        for i = 1:length(yTicks)
-            yLabels{i} = num2str(yTicks(i) * saccades.degPerSPerV, '%.0f');
-        end
-        hold(daqaxes(3), 'on');
-        plot(daqaxes(3), [a(1) a(2)],...
-               	[saccades.thresholdDPS saccades.thresholdDPS] ./ saccades.degPerSPerV * taskData.stepSign,...
-               	'color', colors(taskData.offsetIndex,:),'linestyle', ':');
-    	hold(daqaxes(3), 'off');
-        set(daqaxes(3), 'YTick', yTicks);
-        set(daqaxes(3), 'YTickLabel', yLabels);
-        ylabel(daqaxes(3),'Average Eye Speed (degrees/s)','FontSize',14);
-        set(daqaxes(4), 'YTick', yTicks);
-        set(daqaxes(4), 'YTickLabel', yLabels);
-        ylabel(daqaxes(4),'Average Eye Speed (degrees/s)','FontSize',14);
-        midX = length(saccadeTimes) / 2;
-        hold(daqaxes(4), 'on');
-        for i = 1:taskData.numOffsets
-            plot(daqaxes(4), [0, saccadeTimes(length(saccadeTimes) / 2 + taskData.saccDur(i))],...
-                                                -[yLim, yLim] / 5 * i, 'color', colors(i,:));
-        end
-        hold(daqaxes(4), 'off');
-    end
-    drawnow;
+   

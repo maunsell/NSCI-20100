@@ -3,12 +3,20 @@ classdef Saccades < handle
     %   Support for processing eye traces and detecting saccades
     
     properties
+        filterWidthMS = 0;
         thresholdDPS = 0;
         degPerSPerV = 0;
         degPerV = 0;
     end
     
     methods
+        
+    %% clearAll
+    function clearAll(obj)
+        obj.degPerV = 0;
+        obj.degPerSPerV = 0;
+    end
+    
     %% findSaccade: extract the saccade timing using speed threshold
     
     function [sIndex, eIndex] = findSaccade(obj, taskData, theTrace, stepSign)
@@ -68,8 +76,8 @@ classdef Saccades < handle
         taskData.posTrace = taskData.posTrace + 0.3 * rand(size(taskData.posTrace)) - 0.15;
         
         % do a boxcar filter of the raw signal
-        windowSize = 50;
-        b = (1 / windowSize) * ones(1, windowSize);
+        filterSamples = floor(taskData.sampleRateHz * obj.filterWidthMS / 1000.0);     
+        b = (1 / filterSamples) * ones(1, filterSamples);
         taskData.posTrace = filter(b, 1, taskData.posTrace);
         taskData.velTrace(1:end - 1) = diff(taskData.posTrace);
         taskData.velTrace(end) = taskData.velTrace(end - 1);
