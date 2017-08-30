@@ -258,19 +258,19 @@ switch taskData.taskState
     case TaskState.taskPoststim
         % just wait for end of trial
     case TaskState.taskEndtrial
-        [taskData, validTrial, saccadeIndex] = processSignals(saccades, taskData);
-%         if validTrial
-            updatePlots(lbj, taskData, daqaxes, saccadeIndex, saccades);
-%         end
+        [taskData, startIndex, endIndex] = processSignals(saccades, taskData);
+        updatePlots(lbj, taskData, daqaxes, startIndex, endIndex, saccades);
         taskData.trialStartTimeS = 0;
         taskData.taskState = TaskState.taskIdle;
 end
 lbj.UserData = taskData;                                                    % save new points to UserData
     
 %% updatePlots: function to refresh the plots after each trial
-function updatePlots(lbj, taskData, daqaxes, saccIndex, saccades)
+function updatePlots(lbj, taskData, daqaxes, startIndex, endIndex, saccades)
 
-%     saccades.degPerV = calibrateEOG(taskData.offsetsDeg, taskData.posAvg, taskData.numSummed);
+    startIndex
+    endIndex
+    
     timestepS = 1 / lbj.SampleRateHz;                                       % time interval of samples
     trialTimes = (0:1:size(taskData.posTrace, 1) - 1) * timestepS;          % make array of trial time points
     saccadeTimes = (-(size(taskData.posAvg, 1) / 2):1:(size(taskData.posAvg,1) / 2) - 1) * timestepS;              
@@ -288,11 +288,15 @@ function updatePlots(lbj, taskData, daqaxes, saccIndex, saccades)
     a2 = axis(daqaxes(2));
     yLim = max([abs(a1(3)), abs(a1(4)), abs(a2(3)), abs(a2(4))]);
     axis(daqaxes(1), [-inf inf -yLim yLim]);
-    if (saccIndex > 0)
-       hold(daqaxes(1), 'on');
-       plot(daqaxes(1), [saccIndex, saccIndex] * timestepS, [-yLim yLim], 'color', colors(taskData.offsetIndex,:),...
+    if (startIndex > 0)
+        hold(daqaxes(1), 'on');
+        plot(daqaxes(1), [startIndex, startIndex] * timestepS, [-yLim yLim], 'color', colors(taskData.offsetIndex,:),...
             'linestyle', ':');
-       hold(daqaxes(1), 'off');
+        if (endIndex > 0)
+            plot(daqaxes(1), [endIndex, endIndex] * timestepS, [-yLim yLim], 'color', colors(taskData.offsetIndex,:),...
+            'linestyle', ':');
+        end
+        hold(daqaxes(1), 'off');
     end
     axis(daqaxes(2), [-inf inf -yLim yLim]);
     hold(daqaxes(2), 'on');
@@ -325,10 +329,14 @@ function updatePlots(lbj, taskData, daqaxes, saccIndex, saccades)
     a2 = axis(daqaxes(4));
     yLim = max([abs(a1(3)), abs(a1(4)), abs(a2(3)), abs(a2(4))]);
     axis(daqaxes(3), [-inf inf -yLim yLim]);
-    if (saccIndex > 0)
+    if (startIndex > 0)
         hold(daqaxes(3), 'on');
-        plot(daqaxes(3), [saccIndex, saccIndex] * timestepS, [-yLim yLim], 'color', colors(taskData.offsetIndex,:),...
+        plot(daqaxes(3), [startIndex, startIndex] * timestepS, [-yLim yLim], 'color', colors(taskData.offsetIndex,:),...
                                                                                              'linestyle', ':');
+        if (endIndex > 0)
+            plot(daqaxes(3), [endIndex, endIndex] * timestepS, [-yLim yLim], 'color', colors(taskData.offsetIndex,:),...
+            'linestyle', ':');
+        end
         hold(daqaxes(3), 'off');
     end
     axis(daqaxes(4), [-inf inf -yLim yLim]);
