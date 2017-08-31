@@ -144,14 +144,7 @@ taskData.velSummed = zeros(taskData.saccadeSamples, taskData.numOffsets);    % s
 taskData.velAvg = zeros(taskData.saccadeSamples, taskData.numOffsets);       % averaged position traces
 
 handles.ampDur = EOGAmpDur(handles.axes5, taskData.offsetsDeg);
-
-
-
-disp('created handles.ampDur');
-
-
-
-
+disp('
 handles.lbj.UserData = taskData;                                             % pass to LabJack object
 movegui(hObject, 'northeast');
 guidata(hObject, handles);                                                   % save the selection
@@ -198,8 +191,7 @@ if strcmp(get(handles.startButton, 'String'), 'Start') % if start button, do the
     % create timer to control the task
     taskTimer = timer('Name', 'TaskTimer', 'ExecutionMode', 'fixedRate',...
         'Period', 0.1, 'UserData', handles.lbj, 'ErrorFcn', {@timerErrorFcnStop, handles}, 'TimerFcn',...
-        {@taskController, handles.visStim, handles.saccades, handles.ampDur, ...
-        [handles.axes1 handles.axes2 handles.axes3 handles.axes4]});
+        {@taskController, handles.visStim, handles.saccades, [handles.axes1 handles.axes2 handles.axes3 handles.axes4]});
     
     % create timer to get data from LabJack
     dataCollectRateHz = 50;                       % Fast enough to prevent overflow w/o blocking other activity
@@ -238,7 +230,7 @@ else % stop
 end
 
 %% taskController: function to collect data from LabJack
-function taskController(obj, events, visStim, saccades, ampDur, daqaxes)
+function taskController(obj, events, visStim, saccades, daqaxes)
 
 lbj = obj.UserData;                                                      % handle to LabJack is in timer UserData
 taskData = lbj.UserData;                                                    % taskData is UserData of LabJack
@@ -276,8 +268,7 @@ switch taskData.taskState
     case TaskState.taskEndtrial
         [taskData, startIndex, endIndex] = processSignals(saccades, taskData);
         EOGPlots(lbj, taskData, daqaxes, startIndex, endIndex, saccades);
-        addAmpDur(ampDur, taskData.offsetIndex, startIndex, endIndex, taskData.sampleRateHz);
-        plotAmpDur(ampDur);
+        addAmpDur(taskData.ampDur, taskData.offsetIndex, startIndex, endIndex, taskData.sampleRateHz);
         taskData.trialStartTimeS = 0;
         taskData.taskState = TaskState.taskIdle;
 end
