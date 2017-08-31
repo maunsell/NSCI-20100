@@ -39,6 +39,9 @@ switch selection
     clearAll(handles.saccades);
     clearAll(handles.ampDur);
     taskData = handles.lbj.UserData;
+    for i = 1:taskData.numOffsets
+        clearAll(handles.rtDists{i});
+    end
     taskData.offsetsDone = zeros (1, taskData.numOffsets);
     taskData.blocksDone = 0;
     taskData.numSummed = zeros(1, taskData.numOffsets);
@@ -62,6 +65,8 @@ function closeEOG(hObject, eventdata, handles)
 %
 fprintf(1,'EOG: close window\n');
 cleanup(handles.visStim);
+delete(handles.visStim);
+try delete(handles.ampDur); catch, end;
 try stop(timerfind); catch, end
 try delete(timerfind); catch, end
 try clear('handles.lbj'); catch, end
@@ -144,14 +149,11 @@ taskData.velSummed = zeros(taskData.saccadeSamples, taskData.numOffsets);    % s
 taskData.velAvg = zeros(taskData.saccadeSamples, taskData.numOffsets);       % averaged position traces
 
 handles.ampDur = EOGAmpDur(handles.axes5, taskData.offsetsDeg);
-
-
-
-disp('created handles.ampDur');
-
-
-
-
+axes = [handles.axes6 handles.axes7 handles.axes8 handles.axes9];
+handles.RTDist = cell(1, taskData.numOffsets);
+for i = 1:length(axes)
+    handles.rtDists{i} = EOGRTDist(i, taskData.offsetsDeg(i), axes(i));
+end
 handles.lbj.UserData = taskData;                                             % pass to LabJack object
 movegui(hObject, 'northeast');
 guidata(hObject, handles);                                                   % save the selection
@@ -198,7 +200,7 @@ if strcmp(get(handles.startButton, 'String'), 'Start') % if start button, do the
     % create timer to control the task
     taskTimer = timer('Name', 'TaskTimer', 'ExecutionMode', 'fixedRate',...
         'Period', 0.1, 'UserData', handles.lbj, 'ErrorFcn', {@timerErrorFcnStop, handles}, 'TimerFcn',...
-        {@taskController, handles.visStim, handles.saccades, handles.ampDur, ...
+        {@taskController, handles.visStim, handles.saccades, handles.ampDur, handles.rtDists...
         [handles.axes1 handles.axes2 handles.axes3 handles.axes4]});
     
     % create timer to get data from LabJack
@@ -238,7 +240,7 @@ else % stop
 end
 
 %% taskController: function to collect data from LabJack
-function taskController(obj, events, visStim, saccades, ampDur, daqaxes)
+function taskController(obj, events, visStim, saccades, ampDur, rtDists, daqaxes)
 
 lbj = obj.UserData;                                                      % handle to LabJack is in timer UserData
 taskData = lbj.UserData;                                                    % taskData is UserData of LabJack
@@ -278,6 +280,18 @@ switch taskData.taskState
         EOGPlots(lbj, taskData, daqaxes, startIndex, endIndex, saccades);
         addAmpDur(ampDur, taskData.offsetIndex, startIndex, endIndex, taskData.sampleRateHz);
         plotAmpDur(ampDur);
+        addRT(rtDists{taskData.offsetIndex}, rand() * 100 * taskData.offsetIndex);
+        needsRescale = plot(rtDists{taskData.offsetIndex})
+        if needsRescale > 0
+             for i = 1:taskData.numOffsets
+                 
+                             disp(sprintf('  rescaling %d to %f', i, needsRescale));
+                 
+                 
+                 rescale(rtDists{i}, needsRescale);
+                 plot(rtDists{i});
+            end
+        end
         taskData.trialStartTimeS = 0;
         taskData.taskState = TaskState.taskIdle;
 end
