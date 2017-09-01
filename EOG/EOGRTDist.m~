@@ -59,10 +59,11 @@ classdef EOGRTDist < handle
             end
             colors = get(obj.fHandle, 'ColorOrder');
             [counts, x] = hist(obj.fHandle, obj.reactTimesMS(1:obj.n));
-            bar(obj.fHandle, x, counts, 1.0, 'facecolor', colors(obj.index,:));
+            bar(obj.fHandle, x, counts, 'facecolor', colors(obj.index,:));
+%             set(h, 'color', colors(obj.index,:));
             hold(obj.fHandle, 'on');
             title(obj.fHandle, sprintf('%0.f degree saccades', obj.offsetDeg), 'FontSize',12,'FontWeight','Bold');
-            if (obj.index == 1)
+            if (obj.index == 4)
                 xlabel(obj.fHandle, 'Reaction Time (ms)', 'FontSize',14);
             end
             a = axis(obj.fHandle);
@@ -73,10 +74,8 @@ classdef EOGRTDist < handle
                 a(2) = obj.maxRT;
                 rescale = 0;
             end
-            a(4) = 1.2 * a(4);
             axis(obj.fHandle, a);
-            text(0.05 * a(2), 0.925 * a(4), sprintf('Mean %.0f ms', mean(obj.reactTimesMS(1:obj.n))),...
-                                'parent', obj.fHandle);
+%             text(obj.fHandle, 0.1 * a(2), 0.9 * a(4), 'Mean 123 ms');
             hold(obj.fHandle, 'off');
        end
 

@@ -85,7 +85,8 @@ classdef EOGAmpDur < handle
         yLim = ylim(obj.fHandle);
         axis(obj.fHandle, [0 obj.offsetsDeg(end) + obj.offsetsDeg(1) 0 1.15 * yLim(2)]);
         a = axis(obj.fHandle);
-        text(0.05 * a(2), 0.9 * a(4), '5', 'parent', obj.fHandle, 'FontSize', 24, 'FontWeight', 'Bold');
+        text(0.05 * (obj.offsetsDeg(end) + obj.offsetsDeg(1)), 0.8 * 1.15 * yLim(2), '5', 'parent', obj.fHandle,...
+            'FontSize', 24, 'FontWeight', 'Bold');
         hold(obj.fHandle, 'off');
     end
     

@@ -281,13 +281,9 @@ switch taskData.taskState
         addAmpDur(ampDur, taskData.offsetIndex, startIndex, endIndex, taskData.sampleRateHz);
         plotAmpDur(ampDur);
         addRT(rtDists{taskData.offsetIndex}, rand() * 100 * taskData.offsetIndex);
-        needsRescale = plot(rtDists{taskData.offsetIndex})
+        needsRescale = plot(rtDists{taskData.offsetIndex});
         if needsRescale > 0
              for i = 1:taskData.numOffsets
-                 
-                             disp(sprintf('  rescaling %d to %f', i, needsRescale));
-                 
-                 
                  rescale(rtDists{i}, needsRescale);
                  plot(rtDists{i});
             end
