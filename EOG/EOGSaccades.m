@@ -19,14 +19,14 @@ classdef EOGSaccades < handle
     
     %% findSaccade: extract the saccade timing using speed threshold
     
-    function [sIndex, eIndex] = findSaccade(obj, taskData, theTrace, stepSign)
-        if sum(taskData.numSummed) < length(taskData.numSummed)
-            DPV = abs(taskData.offsetsDeg(taskData.offsetIndex) /...
-                                            (mean(taskData.posTrace(end - 50:end)) - mean(taskData.posTrace(1:50))));
+    function [sIndex, eIndex] = findSaccade(obj, data, theTrace, stepSign)
+        if sum(data.numSummed) < length(data.numSummed)
+            DPV = abs(data.offsetsDeg(data.offsetIndex) /...
+                                            (mean(data.posTrace(end - 50:end)) - mean(data.posTrace(1:50))));
         else
             DPV = obj.degPerV;
         end
-        DPSPV = DPV * taskData.sampleRateHz;                        % degrees per second per volt unit
+        DPSPV = DPV * data.sampleRateHz;                        % degrees per second per volt unit
         if (stepSign == 1)
             fast = theTrace >= obj.thresholdDPS / DPSPV;
             [~, maxIndex] = max(theTrace);
@@ -68,63 +68,63 @@ classdef EOGSaccades < handle
     end
     
     %% processSignals: function to process data from one trial
-    function [taskData, startIndex, endIndex] = processSignals(obj, taskData)
-        taskData.posTrace = taskData.rawData(:, 1) - taskData.rawData(:, 2);
-        taskData.posTrace = taskData.posTrace - ...
-                                    mean(taskData.posTrace(1:floor(taskData.sampleRateHz * taskData.prestimDurS)));
+    function [data, startIndex, endIndex] = processSignals(obj, data)
+        data.posTrace = data.rawData(:, 1) - data.rawData(:, 2);
+        data.posTrace = data.posTrace - ...
+                                    mean(data.posTrace(1:floor(data.sampleRateHz * data.prestimDurS)));
         % Debug: add some noise to make things realistic
-        taskData.posTrace = taskData.posTrace + 0.3 * rand(size(taskData.posTrace)) - 0.15;
+        data.posTrace = data.posTrace + 0.3 * rand(size(data.posTrace)) - 0.15;
         
         % do a boxcar filter of the raw signal
-        filterSamples = floor(taskData.sampleRateHz * obj.filterWidthMS / 1000.0);     
+        filterSamples = floor(data.sampleRateHz * obj.filterWidthMS / 1000.0);     
         b = (1 / filterSamples) * ones(1, filterSamples);
-        taskData.posTrace = filter(b, 1, taskData.posTrace);
-        taskData.velTrace(1:end - 1) = diff(taskData.posTrace);
-        taskData.velTrace(end) = taskData.velTrace(end - 1);
+        data.posTrace = filter(b, 1, data.posTrace);
+        data.velTrace(1:end - 1) = diff(data.posTrace);
+        data.velTrace(end) = data.velTrace(end - 1);
 
         % if we don't have a complete block yet, estimate the degPerV using the
         % start and end of the trial
-        [startIndex, endIndex] = obj.findSaccade(taskData, taskData.velTrace, taskData.stepSign);
-        saccadeOffset = floor(taskData.saccadeSamples / 2);
-        if (startIndex - saccadeOffset < 1 || startIndex + saccadeOffset > taskData.trialSamples)
+        [startIndex, endIndex] = obj.findSaccade(data, data.velTrace, data.stepSign);
+        saccadeOffset = floor(data.saccadeSamples / 2);
+        if (startIndex - saccadeOffset < 1 || startIndex + saccadeOffset > data.trialSamples)
             startIndex = 0;
         end
         if startIndex == 0
             return;
         end
-        if (taskData.stepSign == 1)
-            taskData.posSummed(:, taskData.offsetIndex) = taskData.posSummed(:, taskData.offsetIndex)... 
-                        + taskData.posTrace(startIndex - saccadeOffset:startIndex + saccadeOffset - 1);  
-            taskData.velSummed(:, taskData.offsetIndex) = taskData.velSummed(:, taskData.offsetIndex)... 
-                        + taskData.velTrace(startIndex - saccadeOffset:startIndex + saccadeOffset - 1);  
+        if (data.stepSign == 1)
+            data.posSummed(:, data.offsetIndex) = data.posSummed(:, data.offsetIndex)... 
+                        + data.posTrace(startIndex - saccadeOffset:startIndex + saccadeOffset - 1);  
+            data.velSummed(:, data.offsetIndex) = data.velSummed(:, data.offsetIndex)... 
+                        + data.velTrace(startIndex - saccadeOffset:startIndex + saccadeOffset - 1);  
         else
-            taskData.posSummed(:, taskData.offsetIndex) = taskData.posSummed(:, taskData.offsetIndex)...
-                        - taskData.posTrace(startIndex - saccadeOffset:startIndex + saccadeOffset - 1);  
-            taskData.velSummed(:, taskData.offsetIndex) = taskData.velSummed(:, taskData.offsetIndex)... 
-                        - taskData.velTrace(startIndex - saccadeOffset:startIndex + saccadeOffset - 1);  
+            data.posSummed(:, data.offsetIndex) = data.posSummed(:, data.offsetIndex)...
+                        - data.posTrace(startIndex - saccadeOffset:startIndex + saccadeOffset - 1);  
+            data.velSummed(:, data.offsetIndex) = data.velSummed(:, data.offsetIndex)... 
+                        - data.velTrace(startIndex - saccadeOffset:startIndex + saccadeOffset - 1);  
         end
-        taskData.numSummed(taskData.offsetIndex) = taskData.numSummed(taskData.offsetIndex) + 1;
-        taskData.posAvg(:, taskData.offsetIndex) = taskData.posSummed(:, taskData.offsetIndex) ...
-            / taskData.numSummed(taskData.offsetIndex);
-        taskData.velAvg(:, taskData.offsetIndex) = taskData.velSummed(:, taskData.offsetIndex) ...
-            / taskData.numSummed(taskData.offsetIndex);
-        taskData.offsetsDone(taskData.offsetIndex) = taskData.offsetsDone(taskData.offsetIndex) + 1;
+        data.numSummed(data.offsetIndex) = data.numSummed(data.offsetIndex) + 1;
+        data.posAvg(:, data.offsetIndex) = data.posSummed(:, data.offsetIndex) ...
+            / data.numSummed(data.offsetIndex);
+        data.velAvg(:, data.offsetIndex) = data.velSummed(:, data.offsetIndex) ...
+            / data.numSummed(data.offsetIndex);
+        data.offsetsDone(data.offsetIndex) = data.offsetsDone(data.offsetIndex) + 1;
         
         % now that we've updated all the traces, compute the degrees per volt if
         % we have enough trials
         
-        if sum(taskData.numSummed) < length(taskData.numSummed)
+        if sum(data.numSummed) < length(data.numSummed)
             obj.degPerV = 0.0;
         else
-            endPointsV = mean(taskData.posAvg(end - 50:end, :));        % average trace ends to get each endpoint
-            obj.degPerV = mean(taskData.offsetsDeg ./ endPointsV);
+            endPointsV = mean(data.posAvg(end - 50:end, :));        % average trace ends to get each endpoint
+            obj.degPerV = mean(data.offsetsDeg ./ endPointsV);
         end
-        obj.degPerSPerV = obj.degPerV * taskData.sampleRateHz;
+        obj.degPerSPerV = obj.degPerV * data.sampleRateHz;
         
         % find the average saccade duration using the average speed trace
         
-        [sAvgIndex, eAvgIndex] = obj.findSaccade(taskData, taskData.velAvg(:, taskData.offsetIndex), 1);
-        taskData.saccDur(taskData.offsetIndex) = eAvgIndex - sAvgIndex;
+        [sAvgIndex, eAvgIndex] = obj.findSaccade(data, data.velAvg(:, data.offsetIndex), 1);
+        data.saccadeDurS(data.offsetIndex) = eAvgIndex - sAvgIndex;
     end
    
     end

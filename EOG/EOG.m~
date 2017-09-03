@@ -38,23 +38,23 @@ switch selection
     case 'Yes'
     clearAll(handles.saccades);
     clearAll(handles.ampDur);
-    taskData = handles.taskData;
-    for i = 1:taskData.numOffsets
+%     taskData = handles.taskData;
+    for i = 1:handles.data.numOffsets
         clearAll(handles.rtDists{i});
     end
-    taskData.offsetsDone = zeros (1, taskData.numOffsets);
-    taskData.blocksDone = 0;
-    taskData.numSummed = zeros(1, taskData.numOffsets);
-    taskData.rawData = zeros(taskData.trialSamples, handles.lbj.numChannels);    % raw data
-    taskData.posTrace = zeros(taskData.trialSamples, 1);                         % trial EOG position trace
-    taskData.posSummed = zeros(taskData.saccadeSamples, taskData.numOffsets);    % summed position traces
-    taskData.posAvg = zeros(taskData.saccadeSamples, taskData.numOffsets);       % averaged position traces
-    taskData.velTrace = zeros(taskData.trialSamples, 1);                         % trial EOG velocity trace
-    taskData.velSummed = zeros(taskData.saccadeSamples, taskData.numOffsets);    % summed position traces
-    taskData.velAvg = zeros(taskData.saccadeSamples, taskData.numOffsets);       % averaged position traces
-    taskData.saccDur = zeros(1, taskData.numOffsets);                            % average saccade duration
-    handles.taskData = taskData;                                             % pass to LabJack object
-    EOGPlots(handles.lbj, taskData, [handles.axes1 handles.axes2 handles.axes3 handles.axes4], 0, 0, handles.saccades);
+    
+%     taskData.offsetsDone = zeros (1, taskData.numOffsets);
+%     taskData.blocksDone = 0;
+%     taskData.numSummed = zeros(1, taskData.numOffsets);
+%     taskData.rawData = zeros(taskData.trialSamples, handles.lbj.numChannels);    % raw data
+%     taskData.posTrace = zeros(taskData.trialSamples, 1);                         % trial EOG position trace
+%     taskData.posSummed = zeros(taskData.saccadeSamples, taskData.numOffsets);    % summed position traces
+%     taskData.posAvg = zeros(taskData.saccadeSamples, taskData.numOffsets);       % averaged position traces
+%     taskData.velTrace = zeros(taskData.trialSamples, 1);                         % trial EOG velocity trace
+%     taskData.velSummed = zeros(taskData.saccadeSamples, taskData.numOffsets);    % summed position traces
+%     taskData.velAvg = zeros(taskData.saccadeSamples, taskData.numOffsets);       % averaged position traces
+%     handles.taskData = taskData;                                             % pass to LabJack object
+    EOGPlots(handles.lbj, handles.data, [handles.axes1 handles.axes2 handles.axes3 handles.axes4], 0, 0, handles.saccades);
     guidata(hObject, handles);
 end
 
@@ -76,36 +76,31 @@ delete(hObject);                                                            % cl
 function collectData(obj, event)                                            %#ok<*INUSD>
 % reads stream data from the LabJack
 
-taskData = obj.UserData;
-display(sprintf('collect: %d', taskData.counter));
-taskData.counter = taskData.counter + 1;
-return;
-
 handles = obj.UserData;
+data = handles.data;
 lbj = handles.lbj;                                                     % obj.UserData is pointer to handles
 [dRaw, errorCode] = getStreamData(lbj);                                     %#ok<*NASGU> % get stream data
-taskData = handles.taskData;                                               % get taskData
-switch taskData.dataState
+switch data.dataState
     case DataState.dataIdle
          disp('dataIdle');
         return;
     case DataState.dataStart
          disp('dataStart');
-       taskData.samplesRead = 0;
-        taskData.dataState = DataState.dataCollect;
+       data.samplesRead = 0;
+        data.dataState = DataState.dataCollect;
     case DataState.dataCollect
         disp('dataCollect');
-        numNew = min(length(dRaw), taskData.trialSamples - taskData.samplesRead);
-        taskData.rawData(taskData.samplesRead + 1:taskData.samplesRead + numNew, :) = dRaw(1:numNew, :);
-        taskData.samplesRead = taskData.samplesRead + numNew;
-        if (taskData.samplesRead == taskData.trialSamples)
-            taskData.dataState = DataState.dataIdle;
-            taskData.taskState = TaskState.taskEndtrial;
+        numNew = min(length(dRaw), data.trialSamples - data.samplesRead);
+        data.rawData(data.samplesRead + 1:data.samplesRead + numNew, :) = dRaw(1:numNew, :);
+        data.samplesRead = data.samplesRead + numNew;
+        if (data.samplesRead == data.trialSamples)
+            data.dataState = DataState.dataIdle;
+            data.taskState = TaskState.taskEndtrial;
         end
 %    case DataState.dataStop
 end
-handles.taskData = taskData;                                                    % save new points to handles
-obj.UserData = handles;                                                     % save handles
+% handles.taskData = taskData;                                                    % save new points to handles
+% obj.UserData = handles;                                                     % save handles
 
 %% initEOG: initialization
 function varargout = initEOG(hObject, eventdata, handles)               %#ok<*INUSL>
@@ -127,47 +122,46 @@ function openEOG(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to EOG (see VARARGIN)
 
-handles.data = EOGTaskData;
-taskData.data.counter = 123;
-
 handles.output = hObject;                                               % select default command line output
 handles.visStim = EOGStimulus;
 handles.saccades = EOGSaccades;
 set(hObject, 'CloseRequestFcn', {@closeEOG, handles});                  % close function will close LabJack
 handles.lbj = setupLabJack();
-    
-taskData.offsetsDeg = [4 8 12 16];
-taskData.numOffsets = length(taskData.offsetsDeg);
-taskData.stepSign = 1;
-taskData.offsetIndex = 1;
-taskData.offsetsDone = zeros (1, taskData.numOffsets);
-taskData.blocksDone = 0;
-taskData.sampleRateHz = handles.lbj.SampleRateHz;
-taskData.saccadeDurS = 0.25;
-taskData.saccadeSamples = floor(taskData.saccadeDurS * taskData.sampleRateHz);
-taskData.trialDurS = max(0.50, 2 * taskData.saccadeDurS);
-taskData.trialSamples = floor(taskData.trialDurS * taskData.sampleRateHz);
-taskData.prestimDurS = min(taskData.trialDurS / 4, 0.250);
-taskData.taskState = TaskState.taskIdle;
-taskData.trialStartTimeS = 0;
-taskData.samplesRead = 0;
-taskData.dataState = DataState.dataIdle;
-taskData.numSummed = zeros(1, taskData.numOffsets);
-taskData.rawData = zeros(taskData.trialSamples, handles.lbj.numChannels);    % raw data
-taskData.posTrace = zeros(taskData.trialSamples, 1);                         % trial EOG position trace
-taskData.posSummed = zeros(taskData.saccadeSamples, taskData.numOffsets);    % summed position traces
-taskData.posAvg = zeros(taskData.saccadeSamples, taskData.numOffsets);       % averaged position traces
-taskData.velTrace = zeros(taskData.trialSamples, 1);                         % trial EOG velocity trace
-taskData.velSummed = zeros(taskData.saccadeSamples, taskData.numOffsets);    % summed position traces
-taskData.velAvg = zeros(taskData.saccadeSamples, taskData.numOffsets);       % averaged position traces
 
-handles.ampDur = EOGAmpDur(handles.axes5, taskData.offsetsDeg);
+handles.data = EOGTaskData(handles.lbj.numChannels, handles.lbj.SampleRateHz);
+  
+% taskData.offsetsDeg = [4 8 12 16];
+% taskData.numOffsets = length(taskData.offsetsDeg);
+% taskData.stepSign = 1;
+% taskData.offsetIndex = 1;
+% taskData.offsetsDone = zeros (1, taskData.numOffsets);
+% taskData.blocksDone = 0;
+% taskData.sampleRateHz = handles.lbj.SampleRateHz;
+% taskData.saccadeDurS = 0.25;
+% taskData.saccadeSamples = floor(taskData.saccadeDurS * taskData.sampleRateHz);
+% taskData.trialDurS = max(0.50, 2 * taskData.saccadeDurS);
+% taskData.trialSamples = floor(taskData.trialDurS * taskData.sampleRateHz);
+% taskData.prestimDurS = min(taskData.trialDurS / 4, 0.250);
+% taskData.taskState = TaskState.taskIdle;
+% taskData.trialStartTimeS = 0;
+% taskData.samplesRead = 0;
+% taskData.dataState = DataState.dataIdle;
+% taskData.numSummed = zeros(1, taskData.numOffsets);
+% taskData.rawData = zeros(taskData.trialSamples, handles.lbj.numChannels);    % raw data
+% taskData.posTrace = zeros(taskData.trialSamples, 1);                         % trial EOG position trace
+% taskData.posSummed = zeros(taskData.saccadeSamples, taskData.numOffsets);    % summed position traces
+% taskData.posAvg = zeros(taskData.saccadeSamples, taskData.numOffsets);       % averaged position traces
+% taskData.velTrace = zeros(taskData.trialSamples, 1);                         % trial EOG velocity trace
+% taskData.velSummed = zeros(taskData.saccadeSamples, taskData.numOffsets);    % summed position traces
+% taskData.velAvg = zeros(taskData.saccadeSamples, taskData.numOffsets);       % averaged position traces
+
+handles.ampDur = EOGAmpDur(handles.axes5, handles.data.offsetsDeg);
 axes = [handles.axes6 handles.axes7 handles.axes8 handles.axes9];
-handles.RTDist = cell(1, taskData.numOffsets);
+handles.RTDist = cell(1, handles.data.numOffsets);
 for i = 1:length(axes)
-    handles.rtDists{i} = EOGRTDist(i, taskData.offsetsDeg(i), axes(i));
+    handles.rtDists{i} = EOGRTDist(i, handles.data.offsetsDeg(i), axes(i));
 end
-handles.taskData = taskData;                                                 % save in handles
+% handles.taskData = taskData;                                                 % save in handles
 movegui(hObject, 'northeast');
 guidata(hObject, handles);                                                   % save the selection
 
@@ -239,17 +233,15 @@ if strcmp(get(handles.startButton, 'String'), 'Start') % if start button, do the
 %         'Period', 1/dataCollectRateHz, 'UserData', handles, 'ErrorFcn', {@timerErrorFcnStop, handles},...
 %         'TimerFcn', {@collectData}, 'StartDelay', 0.1); % StartDelay allows other parts of the gui to execute
 
-    taskData = handles.taskData
-
     taskTimer = timer('Name', 'TaskTimer', 'ExecutionMode', 'fixedRate',...
-        'Period', 0.1, 'UserData', taskData.data, 'ErrorFcn', {@timerErrorFcnStop, handles}, 'TimerFcn',...
-        {@taskController, handles.visStim, handles.saccades, handles.ampDur, handles.rtDists...
+        'Period', 0.1, 'UserData', handles.data, 'ErrorFcn', {@timerErrorFcnStop, handles}, 'TimerFcn',...
+        {@taskController, handles, handles.visStim, handles.saccades, handles.ampDur, handles.rtDists...
         [handles.axes1 handles.axes2 handles.axes3 handles.axes4]});
     
     % create timer to get data from LabJack
     dataCollectRateHz = 50;                       % Fast enough to prevent overflow w/o blocking other activity
     dataTimer = timer('Name', 'LabJackData', 'ExecutionMode', 'fixedRate',...
-        'Period', 1/dataCollectRateHz, 'UserData', taskData.data, 'ErrorFcn', {@timerErrorFcnStop, handles},...
+        'Period', 1/dataCollectRateHz, 'UserData', handles, 'ErrorFcn', {@timerErrorFcnStop, handles},...
         'TimerFcn', {@collectData}, 'StartDelay', 0.1); % StartDelay allows other parts of the gui to execute
 
     % set the gui button to "running" state
@@ -285,54 +277,49 @@ else % stop
 end
 
 %% taskController: function to collect data from LabJack
-function taskController(obj, events, visStim, saccades, ampDur, rtDists, daqaxes)
+function taskController(obj, events, handles, lbj, visStim, saccades, ampDur, rtDists, daqaxes)
 
-taskData = obj.UserData;
-display(sprintf('task: %d', taskData.counter));
-taskData.counter = taskData.counter + 1;
-return;
 
-handles = obj.UserData;
 lbj = handles.lbj;                                                              % get handle to LabJack
-taskData = handles.taskData;                                                    % taskData is UserData of LabJack
-switch taskData.taskState
+data = obj.UserData;                                                    % data is UserData of LabJack
+switch data.taskState
     case TaskState.taskIdle
         disp('idleTask');
-        if taskData.trialStartTimeS == 0                                    % initialize a new trial
-            if sum(taskData.offsetsDone) >= taskData.numOffsets             % finished another block
-                taskData.offsetsDone = zeros(1, taskData.numOffsets);       % clear counters
-                taskData.blocksDone = taskData.blocksDone + 1;              % increment block counter
+        if data.trialStartTimeS == 0                                    % initialize a new trial
+            if sum(data.offsetsDone) >= data.numOffsets             % finished another block
+                data.offsetsDone = zeros(1, data.numOffsets);       % clear counters
+                data.blocksDone = data.blocksDone + 1;              % increment block counter
             end
-            taskData.offsetIndex = ceil(rand() * taskData.numOffsets);
-            while taskData.offsetsDone(taskData.offsetIndex) > 0
-                taskData.offsetIndex = mod(taskData.offsetIndex, taskData.numOffsets) + 1;
+            data.offsetIndex = ceil(rand() * data.numOffsets);
+            while data.offsetsDone(data.offsetIndex) > 0
+                data.offsetIndex = mod(data.offsetIndex, data.numOffsets) + 1;
             end
-            taskData.trialStartTimeS = clock;
-            taskData.voltage = visStim.currentOffsetPix / 1000.0;          % debugging- connect DOC0 to AIN Ch0
-            analogOut(lbj, 0, 2.5 + taskData.voltage);
-            analogOut(lbj, 1, 2.5 - taskData.voltage);
-        elseif etime(clock, taskData.trialStartTimeS) > 0.050               % data settled for one taskTimer cycle
+            data.trialStartTimeS = clock;
+            data.voltage = visStim.currentOffsetPix / 1000.0;          % debugging- connect DOC0 to AIN Ch0
+            analogOut(lbj, 0, 2.5 + data.voltage);
+            analogOut(lbj, 1, 2.5 - data.voltage);
+        elseif etime(clock, data.trialStartTimeS) > 0.050               % data settled for one taskTimer cycle
         disp('startStim');
-            taskData.trialStartTimeS = clock;                               % reset the trial clock
-            taskData.stimTimeS = taskData.prestimDurS + rand() * 0.1250;
-            taskData.dataState = DataState.dataStart;
+            data.trialStartTimeS = clock;                               % reset the trial clock
+            data.stimTimeS = data.prestimDurS + rand() * 0.1250;
+            data.dataState = DataState.dataStart;
             disp(' setting dataState');
-            taskData.taskState = TaskState.taskPrestim;
+            data.taskState = TaskState.taskPrestim;
         end
     case TaskState.taskPrestim
         disp('preStim');
-        if etime(clock, taskData.trialStartTimeS) > taskData.stimTimeS
-            taskData.stepSign = stepStimulus(visStim, taskData.offsetsDeg(taskData.offsetIndex));
-            taskData.voltage = visStim.currentOffsetPix / 1000.0;          % debugging- connect DOC0 to AIN Ch0
-            analogOut(lbj, 0, 2.5 + taskData.voltage);
-            analogOut(lbj, 1, 2.5 - taskData.voltage);
-            taskData.taskState = TaskState.taskPoststim;
+        if etime(clock, data.trialStartTimeS) > data.stimTimeS
+            data.stepSign = stepStimulus(visStim, data.offsetsDeg(data.offsetIndex));
+            data.voltage = visStim.currentOffsetPix / 1000.0;          % debugging- connect DOC0 to AIN Ch0
+            analogOut(lbj, 0, 2.5 + data.voltage);
+            analogOut(lbj, 1, 2.5 - data.voltage);
+            data.taskState = TaskState.taskPoststim;
         end
     case TaskState.taskPoststim
          disp('postStim');
        % just wait for end of trial
     case TaskState.taskEndtrial
-        [taskData, startIndex, endIndex] = processSignals(saccades, taskData);
+        [data, startIndex, endIndex] = processSignals(saccades, data);
         
         
         
@@ -342,19 +329,19 @@ switch taskData.taskState
         
         
         
-        EOGPlots(lbj, taskData, daqaxes, startIndex, endIndex, saccades);
-        addAmpDur(ampDur, taskData.offsetIndex, startIndex, endIndex, taskData.sampleRateHz);
+        EOGPlots(lbj, data, daqaxes, startIndex, endIndex, saccades);
+        addAmpDur(ampDur, data.offsetIndex, startIndex, endIndex, data.sampleRateHz);
         plotAmpDur(ampDur);
-        addRT(rtDists{taskData.offsetIndex}, rand() * 100 * taskData.offsetIndex);
-        needsRescale = plot(rtDists{taskData.offsetIndex});
+        addRT(rtDists{data.offsetIndex}, rand() * 100 * data.offsetIndex);
+        needsRescale = plot(rtDists{data.offsetIndex});
         if needsRescale > 0
-             for i = 1:taskData.numOffsets
+             for i = 1:data.numOffsets
                  rescale(rtDists{i}, needsRescale);
                  plot(rtDists{i});
             end
         end
-        taskData.trialStartTimeS = 0;
-        taskData.taskState = TaskState.taskIdle;
+        data.trialStartTimeS = 0;
+        data.taskState = TaskState.taskIdle;
 end
-handles.taskData = taskData;
-obj.UserData = handles;                                                    % save new points to handles
+% handles.taskData = taskData;
+% obj.UserData = handles;                                                    % save new points to handles

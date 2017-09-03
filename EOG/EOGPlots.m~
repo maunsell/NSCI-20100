@@ -143,7 +143,7 @@ function velPlots(lbj, data, daqaxes, startIndex, endIndex, saccades)
         midX = length(saccadeTimes) / 2;
         hold(daqaxes(4), 'on');
         for i = 1:data.numOffsets
-            plot(daqaxes(4), [0, saccadeTimes(length(saccadeTimes) / 2 + data.saccadeDurS(i))],...
+            plot(daqaxes(4), [0, saccadeTimes(length(saccadeTimes) / 2 + data.saccDur(i))],...
                                                 -[yLim, yLim] / 5 * i, 'color', colors(i,:));
         end
         hold(daqaxes(4), 'off');
