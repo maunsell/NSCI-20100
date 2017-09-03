@@ -71,6 +71,9 @@ classdef EOGAmpDur < handle
     %% plotAmpDur
     function plotAmpDur(obj)
         if sum(obj.n) < obj.numOffsets
+            cla(obj.fHandle);
+            axis(obj.fHandle, [0 1 0 1]);
+            text(0.05, 0.9, '5', 'parent', obj.fHandle, 'FontSize', 24, 'FontWeight', 'Bold');
             return;
         end
         cla(obj.fHandle);

@@ -23,9 +23,6 @@ classdef EOGRTDist < handle
              end
 
              %% Object Initialization %%
-             % Call superclass constructor before accessing object
-             % You cannot conditionalize this statement
-    %          obj = obj@handle(args{:});
              obj = obj@handle();
 
              %% Post Initialization %%
@@ -75,8 +72,9 @@ classdef EOGRTDist < handle
             end
             a(4) = 1.2 * a(4);
             axis(obj.fHandle, a);
-            text(0.05 * a(2), 0.925 * a(4), sprintf('Mean %.0f ms', mean(obj.reactTimesMS(1:obj.n))),...
-                                'parent', obj.fHandle);
+            meanRT = mean(obj.reactTimesMS(1:obj.n));
+            plot(obj.fHandle, [meanRT meanRT], [a(3) a(4)], ':');
+            text(0.05 * a(2), 0.925 * a(4), sprintf('Mean %.0f ms', meanRT), 'parent', obj.fHandle);
             hold(obj.fHandle, 'off');
        end
 

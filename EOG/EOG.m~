@@ -128,7 +128,7 @@ function openEOG(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to EOG (see VARARGIN)
 
 handles.data = EOGTaskData;
-handles.data.counter = 123;
+taskData.data.counter = 123;
 
 handles.output = hObject;                                               % select default command line output
 handles.visStim = EOGStimulus;
@@ -239,15 +239,17 @@ if strcmp(get(handles.startButton, 'String'), 'Start') % if start button, do the
 %         'Period', 1/dataCollectRateHz, 'UserData', handles, 'ErrorFcn', {@timerErrorFcnStop, handles},...
 %         'TimerFcn', {@collectData}, 'StartDelay', 0.1); % StartDelay allows other parts of the gui to execute
 
+    taskData = handles.taskData
+
     taskTimer = timer('Name', 'TaskTimer', 'ExecutionMode', 'fixedRate',...
-        'Period', 0.1, 'UserData', handles.data, 'ErrorFcn', {@timerErrorFcnStop, handles}, 'TimerFcn',...
+        'Period', 0.1, 'UserData', taskData.data, 'ErrorFcn', {@timerErrorFcnStop, handles}, 'TimerFcn',...
         {@taskController, handles.visStim, handles.saccades, handles.ampDur, handles.rtDists...
         [handles.axes1 handles.axes2 handles.axes3 handles.axes4]});
     
     % create timer to get data from LabJack
     dataCollectRateHz = 50;                       % Fast enough to prevent overflow w/o blocking other activity
     dataTimer = timer('Name', 'LabJackData', 'ExecutionMode', 'fixedRate',...
-        'Period', 1/dataCollectRateHz, 'UserData', handles.data, 'ErrorFcn', {@timerErrorFcnStop, handles},...
+        'Period', 1/dataCollectRateHz, 'UserData', taskData.data, 'ErrorFcn', {@timerErrorFcnStop, handles},...
         'TimerFcn', {@collectData}, 'StartDelay', 0.1); % StartDelay allows other parts of the gui to execute
 
     % set the gui button to "running" state
