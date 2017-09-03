@@ -6,101 +6,87 @@ function varargout = EOG(varargin)
 %
 % Derived from LJSteam.m by 
 % M.A. Hopcroft
-% mhopeng@gmail.com
 %
 
-% Begin initialization code
-gui_Singleton = 1;
-gui_State = struct('gui_Name',       mfilename, ...
-                   'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @openEOG, ...
-                   'gui_OutputFcn',  @initEOG, ...
-                   'gui_LayoutFcn',  [] , ...
-                   'gui_Callback',   []);
-if nargin && ischar(varargin{1})
-    gui_State.gui_Callback = str2func(varargin{1});
+    % Initialization code
+    gui_Singleton = 1;
+    gui_State = struct('gui_Name',       mfilename, ...
+                       'gui_Singleton',  gui_Singleton, ...
+                       'gui_OpeningFcn', @openEOG, ...
+                       'gui_OutputFcn',  @initEOG, ...
+                       'gui_LayoutFcn',  [] , ...
+                       'gui_Callback',   []);
+    if nargin && ischar(varargin{1})
+        gui_State.gui_Callback = str2func(varargin{1});
+    end
+    if nargout
+        [varargout{1:nargout}] = gui_mainfcn(gui_State, varargin{:});
+    else
+        gui_mainfcn(gui_State, varargin{:});
+    end
 end
-if nargout
-    [varargout{1:nargout}] = gui_mainfcn(gui_State, varargin{:});
-else
-    gui_mainfcn(gui_State, varargin{:});
-% End initialization code
-end
+
 
 %% clearButton_Callback
 function clearButton_Callback(hObject, eventdata, handles)                  %#ok<DEFNU>
 
-originalSize = get(0, 'DefaultUIControlFontSize');
-set(0, 'DefaultUIControlFontSize', 14);
-selection = questdlg('Really clear all data? (This cannot be undone).', 'Clear Data', 'Yes', 'No', 'Yes');
-set(0, 'DefaultUIControlFontSize', originalSize);
-switch selection
-    case 'Yes'
-    clearAll(handles.saccades);
-    clearAll(handles.ampDur);
-%     taskData = handles.taskData;
-    for i = 1:handles.data.numOffsets
-        clearAll(handles.rtDists{i});
+    originalSize = get(0, 'DefaultUIControlFontSize');
+    set(0, 'DefaultUIControlFontSize', 14);
+    selection = questdlg('Really clear all data? (This cannot be undone).', 'Clear Data', 'Yes', 'No', 'Yes');
+    set(0, 'DefaultUIControlFontSize', originalSize);
+    switch selection
+        case 'Yes'
+        clearAll(handles.saccades);
+        clearAll(handles.ampDur);
+        for i = 1:handles.data.numOffsets
+            clearAll(handles.rtDists{i});
+        end
+        clearAll(handles.data);
+        EOGPlots(handles, 0, 0);
+        guidata(hObject, handles);
     end
-    
-%     taskData.offsetsDone = zeros (1, taskData.numOffsets);
-%     taskData.blocksDone = 0;
-%     taskData.numSummed = zeros(1, taskData.numOffsets);
-%     taskData.rawData = zeros(taskData.trialSamples, handles.lbj.numChannels);    % raw data
-%     taskData.posTrace = zeros(taskData.trialSamples, 1);                         % trial EOG position trace
-%     taskData.posSummed = zeros(taskData.saccadeSamples, taskData.numOffsets);    % summed position traces
-%     taskData.posAvg = zeros(taskData.saccadeSamples, taskData.numOffsets);       % averaged position traces
-%     taskData.velTrace = zeros(taskData.trialSamples, 1);                         % trial EOG velocity trace
-%     taskData.velSummed = zeros(taskData.saccadeSamples, taskData.numOffsets);    % summed position traces
-%     taskData.velAvg = zeros(taskData.saccadeSamples, taskData.numOffsets);       % averaged position traces
-%     handles.taskData = taskData;                                             % pass to LabJack object
-    EOGPlots(handles.lbj, handles.data, [handles.axes1 handles.axes2 handles.axes3 handles.axes4], 0, 0, handles.saccades);
-    guidata(hObject, handles);
 end
+    
 
 %% closeEOG: clean up
 function closeEOG(hObject, eventdata, handles)
-% this function is called  when the user closes the main window
-% close the timer and clear the LabJack handle
-%
-fprintf(1,'EOG: close window\n');
-cleanup(handles.visStim);
-delete(handles.visStim);
-try delete(handles.ampDur); catch, end;
-try stop(timerfind); catch, end
-try delete(timerfind); catch, end
-try clear('handles.lbj'); catch, end
-delete(hObject);                                                            % close the program window
+    % this function is called  when the user closes the main window
+    % close the timer and clear the LabJack handle
+    %
+    fprintf(1,'EOG: close window\n');
+    cleanup(handles.visStim);
+    delete(handles.visStim);
+    try delete(handles.ampDur); catch, end;
+    try stop(timerfind); catch, end
+    try delete(timerfind); catch, end
+    try clear('handles.lbj'); catch, end
+    delete(hObject);                                                            % close the program window
+end
 
 %% collectData: function to collect data from LabJack
 function collectData(obj, event)                                            %#ok<*INUSD>
 % reads stream data from the LabJack
 
-handles = obj.UserData;
-data = handles.data;
-lbj = handles.lbj;                                                     % obj.UserData is pointer to handles
-[dRaw, errorCode] = getStreamData(lbj);                                     %#ok<*NASGU> % get stream data
-switch data.dataState
-    case DataState.dataIdle
-         disp('dataIdle');
-        return;
-    case DataState.dataStart
-         disp('dataStart');
-       data.samplesRead = 0;
-        data.dataState = DataState.dataCollect;
-    case DataState.dataCollect
-        disp('dataCollect');
-        numNew = min(length(dRaw), data.trialSamples - data.samplesRead);
-        data.rawData(data.samplesRead + 1:data.samplesRead + numNew, :) = dRaw(1:numNew, :);
-        data.samplesRead = data.samplesRead + numNew;
-        if (data.samplesRead == data.trialSamples)
-            data.dataState = DataState.dataIdle;
-            data.taskState = TaskState.taskEndtrial;
-        end
-%    case DataState.dataStop
+    handles = obj.UserData;
+    data = handles.data;
+    lbj = handles.lbj;                                                     % obj.UserData is pointer to handles
+    [dRaw, errorCode] = getStreamData(lbj);                                     %#ok<*NASGU> % get stream data
+    switch data.dataState
+        case DataState.dataIdle
+            return;
+        case DataState.dataStart
+           data.samplesRead = 0;
+            data.dataState = DataState.dataCollect;
+        case DataState.dataCollect
+            numNew = min(length(dRaw), data.trialSamples - data.samplesRead);
+            data.rawData(data.samplesRead + 1:data.samplesRead + numNew, :) = dRaw(1:numNew, :);
+            data.samplesRead = data.samplesRead + numNew;
+            if (data.samplesRead == data.trialSamples)
+                data.dataState = DataState.dataIdle;
+                data.taskState = TaskState.taskEndtrial;
+            end        
+    end
 end
-% handles.taskData = taskData;                                                    % save new points to handles
-% obj.UserData = handles;                                                     % save handles
 
 %% initEOG: initialization
 function varargout = initEOG(hObject, eventdata, handles)               %#ok<*INUSL>
@@ -111,8 +97,9 @@ function varargout = initEOG(hObject, eventdata, handles)               %#ok<*IN
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-varargout{1} = handles.output;
-set(handles.startButton, 'String', 'Start','BackgroundColor', 'green');
+    varargout{1} = handles.output;
+    set(handles.startButton, 'String', 'Start','BackgroundColor', 'green');
+end
 
 % openEOG: just before gui is made visible.
 function openEOG(hObject, eventdata, handles, varargin)
@@ -122,48 +109,22 @@ function openEOG(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to EOG (see VARARGIN)
 
-handles.output = hObject;                                               % select default command line output
-handles.visStim = EOGStimulus;
-handles.saccades = EOGSaccades;
-set(hObject, 'CloseRequestFcn', {@closeEOG, handles});                  % close function will close LabJack
-handles.lbj = setupLabJack();
-
-handles.data = EOGTaskData(handles.lbj.numChannels, handles.lbj.SampleRateHz);
-  
-% taskData.offsetsDeg = [4 8 12 16];
-% taskData.numOffsets = length(taskData.offsetsDeg);
-% taskData.stepSign = 1;
-% taskData.offsetIndex = 1;
-% taskData.offsetsDone = zeros (1, taskData.numOffsets);
-% taskData.blocksDone = 0;
-% taskData.sampleRateHz = handles.lbj.SampleRateHz;
-% taskData.saccadeDurS = 0.25;
-% taskData.saccadeSamples = floor(taskData.saccadeDurS * taskData.sampleRateHz);
-% taskData.trialDurS = max(0.50, 2 * taskData.saccadeDurS);
-% taskData.trialSamples = floor(taskData.trialDurS * taskData.sampleRateHz);
-% taskData.prestimDurS = min(taskData.trialDurS / 4, 0.250);
-% taskData.taskState = TaskState.taskIdle;
-% taskData.trialStartTimeS = 0;
-% taskData.samplesRead = 0;
-% taskData.dataState = DataState.dataIdle;
-% taskData.numSummed = zeros(1, taskData.numOffsets);
-% taskData.rawData = zeros(taskData.trialSamples, handles.lbj.numChannels);    % raw data
-% taskData.posTrace = zeros(taskData.trialSamples, 1);                         % trial EOG position trace
-% taskData.posSummed = zeros(taskData.saccadeSamples, taskData.numOffsets);    % summed position traces
-% taskData.posAvg = zeros(taskData.saccadeSamples, taskData.numOffsets);       % averaged position traces
-% taskData.velTrace = zeros(taskData.trialSamples, 1);                         % trial EOG velocity trace
-% taskData.velSummed = zeros(taskData.saccadeSamples, taskData.numOffsets);    % summed position traces
-% taskData.velAvg = zeros(taskData.saccadeSamples, taskData.numOffsets);       % averaged position traces
-
-handles.ampDur = EOGAmpDur(handles.axes5, handles.data.offsetsDeg);
-axes = [handles.axes6 handles.axes7 handles.axes8 handles.axes9];
-handles.RTDist = cell(1, handles.data.numOffsets);
-for i = 1:length(axes)
-    handles.rtDists{i} = EOGRTDist(i, handles.data.offsetsDeg(i), axes(i));
+    handles.output = hObject;                                               % select default command line output
+    handles.visStim = EOGStimulus;
+    handles.saccades = EOGSaccades;
+    set(hObject, 'CloseRequestFcn', {@closeEOG, handles});                  % close function will close LabJack
+    handles.lbj = setupLabJack();
+    handles.posVelPlots = EOGPosVelPlots(handles);
+    handles.data = EOGTaskData(handles.lbj.numChannels, handles.lbj.SampleRateHz);
+    handles.ampDur = EOGAmpDur(handles.axes5, handles.data.offsetsDeg, handles.lbj.SampleRateHz);
+    axes = [handles.axes6 handles.axes7 handles.axes8 handles.axes9];
+    handles.RTDist = cell(1, handles.data.numOffsets);
+    for i = 1:length(axes)
+        handles.rtDists{i} = EOGRTDist(i, handles.data.offsetsDeg(i), axes(i));
+    end
+    movegui(hObject, 'northeast');
+    guidata(hObject, handles);                                                   % save the selection
 end
-% handles.taskData = taskData;                                                 % save in handles
-movegui(hObject, 'northeast');
-guidata(hObject, handles);                                                   % save the selection
 
 % --- Respond to button press in saveButton.
 function saveButton_Callback(hObject, eventdata, handles)
@@ -181,11 +142,12 @@ function saveButton_Callback(hObject, eventdata, handles)
         set(handles.figure1, 'PaperPosition', [1, 5.5, widthInch, heightInch]);
         print(handles.figure1, '-dpdf', '-r600', '-noui', [filePath fileName]);
     end
+end
 
 %% Set up the LabJack
 function lbj = setupLabJack()
 %  get hardware info and do not continue if daq device/drivers unavailable
-% if isempty(handles.lbj)
+
     lbj = labJackU6;                        % create the daq object
     open(lbj);                              % open connection to the daq
     if isempty(lbj.handle)
@@ -209,6 +171,7 @@ function lbj = setupLabJack()
         fprintf(1,'EOG: Unable to configure LabJack. Error %d.\n',errorCode);
         return
     end
+end
 
 %% respond to button presses
 function startButton_Callback(hObject, eventdata, handles)                  %#ok<DEFNU>
@@ -216,132 +179,112 @@ function startButton_Callback(hObject, eventdata, handles)                  %#ok
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-if strcmp(get(handles.startButton, 'String'), 'Start') % if start button, do the following
-    fprintf(1,'\nEOG v1.0\n %s\n', datestr(clock));
-    setViewDistanceCM(handles.visStim, str2double(get(handles.viewDistanceText, 'string')));
-    handles.saccades.thresholdDPS = str2double(get(handles.thresholdDPSText, 'string'));
-    handles.saccades.filterWidthMS = str2double(get(handles.filterWidthText, 'string'));
-    % create timer to control the task
-%     taskTimer = timer('Name', 'TaskTimer', 'ExecutionMode', 'fixedRate',...
-%         'Period', 0.1, 'UserData', handles, 'ErrorFcn', {@timerErrorFcnStop, handles}, 'TimerFcn',...
-%         {@taskController, handles.visStim, handles.saccades, handles.ampDur, handles.rtDists...
-%         [handles.axes1 handles.axes2 handles.axes3 handles.axes4]});
-%     
-%     % create timer to get data from LabJack
-%     dataCollectRateHz = 50;                       % Fast enough to prevent overflow w/o blocking other activity
-%     dataTimer = timer('Name', 'LabJackData', 'ExecutionMode', 'fixedRate',...
-%         'Period', 1/dataCollectRateHz, 'UserData', handles, 'ErrorFcn', {@timerErrorFcnStop, handles},...
-%         'TimerFcn', {@collectData}, 'StartDelay', 0.1); % StartDelay allows other parts of the gui to execute
+    if strcmp(get(handles.startButton, 'String'), 'Start') % if start button, do the following
+        fprintf(1,'\nEOG v1.0\n %s\n', datestr(clock));
+        setViewDistanceCM(handles.visStim, str2double(get(handles.viewDistanceText, 'string')));
+        handles.saccades.thresholdDPS = str2double(get(handles.thresholdDPSText, 'string'));
+        handles.saccades.filterWidthMS = str2double(get(handles.filterWidthText, 'string'));
+        % create timer to control the task
+        taskTimer = timer('Name', 'TaskTimer', 'ExecutionMode', 'fixedRate',...
+            'Period', 0.1, 'UserData', handles, 'ErrorFcn', {@timerErrorFcnStop, handles}, 'TimerFcn',...
+            {@taskController, [handles.axes1 handles.axes2 handles.axes3 handles.axes4]});
 
-    taskTimer = timer('Name', 'TaskTimer', 'ExecutionMode', 'fixedRate',...
-        'Period', 0.1, 'UserData', handles.data, 'ErrorFcn', {@timerErrorFcnStop, handles}, 'TimerFcn',...
-        {@taskController, handles, handles.visStim, handles.saccades, handles.ampDur, handles.rtDists...
-        [handles.axes1 handles.axes2 handles.axes3 handles.axes4]});
-    
-    % create timer to get data from LabJack
-    dataCollectRateHz = 50;                       % Fast enough to prevent overflow w/o blocking other activity
-    dataTimer = timer('Name', 'LabJackData', 'ExecutionMode', 'fixedRate',...
-        'Period', 1/dataCollectRateHz, 'UserData', handles, 'ErrorFcn', {@timerErrorFcnStop, handles},...
-        'TimerFcn', {@collectData}, 'StartDelay', 0.1); % StartDelay allows other parts of the gui to execute
+        % create timer to get data from LabJack
+        dataCollectRateHz = 50;                       % Fast enough to prevent overflow w/o blocking other activity
+        dataTimer = timer('Name', 'LabJackData', 'ExecutionMode', 'fixedRate',...
+            'Period', 1/dataCollectRateHz, 'UserData', handles, 'ErrorFcn', {@timerErrorFcnStop, handles},...
+            'TimerFcn', {@collectData}, 'StartDelay', 0.1); % StartDelay allows other parts of the gui to execute
 
-    % set the gui button to "running" state
-    set(handles.startButton, 'String', 'Stop', 'BackgroundColor', 'red');
-    set(handles.clearButton,'enable','off');
-    set(handles.saveButton,'enable','off');
-    set(handles.filterWidthText,'enable','off');
-    set(handles.viewDistanceText,'enable','off');
-    set(handles.thresholdDPSText,'enable','off');
-    % save timers to handles and update the GUI display
-    handles.taskTimer = taskTimer;
-    handles.dataTimer = dataTimer;
-    guidata(hObject, handles);    
-    
-    %% Start plots, data pickup, and data acquisition 
-	startStream(handles.lbj);
-    start(dataTimer);    
-    start(taskTimer);
+        % set the gui button to "running" state
+        set(handles.startButton, 'String', 'Stop', 'BackgroundColor', 'red');
+        set(handles.clearButton,'enable','off');
+        set(handles.saveButton,'enable','off');
+        set(handles.filterWidthText,'enable','off');
+        set(handles.viewDistanceText,'enable','off');
+        set(handles.thresholdDPSText,'enable','off');
+        % save timers to handles and update the GUI display
+        handles.taskTimer = taskTimer;
+        handles.dataTimer = dataTimer;
+        guidata(hObject, handles);    
 
-%% Stop -- we're already running, so it's a the stop button    
-else % stop
-    stop(timerfind);                                                        % stop/delete timers; pause data stream
-    delete(timerfind);        
-    stopStream(handles.lbj);
-    set(handles.startButton, 'string', 'Start','backgroundColor', 'green');
-    set(handles.clearButton,'enable','on');
-    set(handles.saveButton,'enable','on');
-    set(handles.filterWidthText,'enable','on');
-    set(handles.viewDistanceText,'enable','on');
-    set(handles.thresholdDPSText,'enable','on');
-    centerStimulus(handles.visStim);                                        % recenter fixspot
-    drawnow;
+        %% Start plots, data pickup, and data acquisition 
+        startStream(handles.lbj);
+        start(dataTimer);    
+        start(taskTimer);
+
+    %% Stop -- we're already running, so it's a the stop button    
+    else % stop
+        stop(timerfind);                                                        % stop/delete timers; pause data stream
+        delete(timerfind);        
+        stopStream(handles.lbj);
+        set(handles.startButton, 'string', 'Start','backgroundColor', 'green');
+        set(handles.clearButton,'enable','on');
+        set(handles.saveButton,'enable','on');
+        set(handles.filterWidthText,'enable','on');
+        set(handles.viewDistanceText,'enable','on');
+        set(handles.thresholdDPSText,'enable','on');
+        centerStimulus(handles.visStim);                                        % recenter fixspot
+        drawnow;
+    end
 end
 
 %% taskController: function to collect data from LabJack
-function taskController(obj, events, handles, lbj, visStim, saccades, ampDur, rtDists, daqaxes)
+function taskController(obj, events, daqaxes)
 
-
-lbj = handles.lbj;                                                              % get handle to LabJack
-data = obj.UserData;                                                    % data is UserData of LabJack
-switch data.taskState
-    case TaskState.taskIdle
-        disp('idleTask');
-        if data.trialStartTimeS == 0                                    % initialize a new trial
-            if sum(data.offsetsDone) >= data.numOffsets             % finished another block
-                data.offsetsDone = zeros(1, data.numOffsets);       % clear counters
-                data.blocksDone = data.blocksDone + 1;              % increment block counter
+    handles = obj.UserData;
+    data = handles.data;
+    lbj = handles.lbj;                                                      % get handle to LabJack
+    visStim = handles.visStim;
+    saccades = handles.saccades;
+    ampDur = handles.ampDur;
+    rtDists = handles.rtDists;
+    switch data.taskState
+        case TaskState.taskIdle
+            if data.trialStartTimeS == 0                                    % initialize a new trial
+                if sum(data.offsetsDone) >= data.numOffsets             % finished another block
+                    data.offsetsDone = zeros(1, data.numOffsets);       % clear counters
+                    data.blocksDone = data.blocksDone + 1;              % increment block counter
+                end
+                data.offsetIndex = ceil(rand() * data.numOffsets);
+                while data.offsetsDone(data.offsetIndex) > 0
+                    data.offsetIndex = mod(data.offsetIndex, data.numOffsets) + 1;
+                end
+                data.trialStartTimeS = clock;
+                data.voltage = visStim.currentOffsetPix / 1000.0;          % debugging- connect DOC0 to AIN Ch0
+                analogOut(lbj, 0, 2.5 + data.voltage);
+                analogOut(lbj, 1, 2.5 - data.voltage);
+            elseif etime(clock, data.trialStartTimeS) > 0.050               % data settled for one taskTimer cycle
+                data.trialStartTimeS = clock;                               % reset the trial clock
+                data.stimTimeS = data.prestimDurS + rand() * 0.1250;
+                data.dataState = DataState.dataStart;
+                data.taskState = TaskState.taskPrestim;
             end
-            data.offsetIndex = ceil(rand() * data.numOffsets);
-            while data.offsetsDone(data.offsetIndex) > 0
-                data.offsetIndex = mod(data.offsetIndex, data.numOffsets) + 1;
+        case TaskState.taskPrestim
+            if etime(clock, data.trialStartTimeS) > data.stimTimeS
+                data.stepSign = stepStimulus(visStim, data.offsetsDeg(data.offsetIndex));
+                data.voltage = visStim.currentOffsetPix / 1000.0;          % debugging- connect DOC0 to AIN Ch0
+                analogOut(lbj, 0, 2.5 + data.voltage);
+                analogOut(lbj, 1, 2.5 - data.voltage);
+                data.taskState = TaskState.taskPoststim;
             end
-            data.trialStartTimeS = clock;
-            data.voltage = visStim.currentOffsetPix / 1000.0;          % debugging- connect DOC0 to AIN Ch0
-            analogOut(lbj, 0, 2.5 + data.voltage);
-            analogOut(lbj, 1, 2.5 - data.voltage);
-        elseif etime(clock, data.trialStartTimeS) > 0.050               % data settled for one taskTimer cycle
-        disp('startStim');
-            data.trialStartTimeS = clock;                               % reset the trial clock
-            data.stimTimeS = data.prestimDurS + rand() * 0.1250;
-            data.dataState = DataState.dataStart;
-            disp(' setting dataState');
-            data.taskState = TaskState.taskPrestim;
-        end
-    case TaskState.taskPrestim
-        disp('preStim');
-        if etime(clock, data.trialStartTimeS) > data.stimTimeS
-            data.stepSign = stepStimulus(visStim, data.offsetsDeg(data.offsetIndex));
-            data.voltage = visStim.currentOffsetPix / 1000.0;          % debugging- connect DOC0 to AIN Ch0
-            analogOut(lbj, 0, 2.5 + data.voltage);
-            analogOut(lbj, 1, 2.5 - data.voltage);
-            data.taskState = TaskState.taskPoststim;
-        end
-    case TaskState.taskPoststim
-         disp('postStim');
-       % just wait for end of trial
-    case TaskState.taskEndtrial
-        [data, startIndex, endIndex] = processSignals(saccades, data);
-        
-        
-        
-        
-        disp('endTrial');
-        
-        
-        
-        
-        EOGPlots(lbj, data, daqaxes, startIndex, endIndex, saccades);
-        addAmpDur(ampDur, data.offsetIndex, startIndex, endIndex, data.sampleRateHz);
-        plotAmpDur(ampDur);
-        addRT(rtDists{data.offsetIndex}, rand() * 100 * data.offsetIndex);
-        needsRescale = plot(rtDists{data.offsetIndex});
-        if needsRescale > 0
-             for i = 1:data.numOffsets
-                 rescale(rtDists{i}, needsRescale);
-                 plot(rtDists{i});
+        case TaskState.taskPoststim
+           % just wait for end of trial
+        case TaskState.taskEndtrial
+            [startIndex, endIndex] = processSignals(saccades, data);
+            EOGPlots(handles, startIndex, endIndex);
+            addAmpDur(ampDur, data.offsetIndex, startIndex, endIndex);
+            plotAmpDur(ampDur);
+            addRT(rtDists{data.offsetIndex}, rand() * 100 * data.offsetIndex);
+            needsRescale = plot(rtDists{data.offsetIndex});
+            if needsRescale > 0
+                 for i = 1:data.numOffsets
+                     rescale(rtDists{i}, needsRescale);
+                     plot(rtDists{i});
+                end
             end
-        end
-        data.trialStartTimeS = 0;
-        data.taskState = TaskState.taskIdle;
+            data.trialStartTimeS = 0;
+            data.taskState = TaskState.taskIdle;
+    end
 end
-% handles.taskData = taskData;
-% obj.UserData = handles;                                                    % save new points to handles
+
+

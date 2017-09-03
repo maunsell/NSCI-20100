@@ -4,7 +4,6 @@ classdef EOGTaskData < handle
     
     properties
         blocksDone;
-        counter = 0;
         dataState;
         numChannels;
         numOffsets;

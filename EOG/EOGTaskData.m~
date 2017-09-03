@@ -3,31 +3,34 @@ classdef EOGTaskData < handle
     %   Support for processing eye traces and detecting saccades
     
     properties
-        counter = 0;
-     	offsetsDeg;
-        numOffsets;
-        stepSign;
-        offsetIndex;
-        offsetsDone;
         blocksDone;
+        dataState;
+        numChannels;
+        numOffsets;
+        numSummed;
+        offsetIndex;
+     	offsetsDeg;
+        offsetsDone;
+        posAvg;
+        posSummed;
+        posTrace;
+        prestimDurS;
+        rawData;
         sampleRateHz;
+        samplesRead;
         saccadeDurS;
         saccadeSamples;
+        startStimS;
+        stepSign;
+        stimTimeS;
         trialDurS;
         trialSamples;
-        prestimDurS;
         taskState;
         trialStartTimeS;
-        samplesRead;
-        dataState;
-        numSummed;
-        rawData;
-        posTrace;
-        posSummed;
-        posAvg;
         velTrace;
         velSummed;
         velAvg;
+        voltage;
     end
     
     methods
@@ -53,7 +56,10 @@ classdef EOGTaskData < handle
             obj.dataState = DataState.dataIdle;
             obj.trialStartTimeS = 0;
             obj.samplesRead = 0;
+            obj.startStimS = 0;
+            obj.stimTimeS = 0;
             obj.numSummed = zeros(1, obj.numOffsets);
+            obj.numChannels = numChannels;
             obj.rawData = zeros(obj.trialSamples, numChannels);             % raw data
             obj.posTrace = zeros(obj.trialSamples, 1);                     	% trial EOG position trace
             obj.posSummed = zeros(obj.saccadeSamples, obj.numOffsets);      % summed position traces
@@ -61,24 +67,23 @@ classdef EOGTaskData < handle
             obj.velTrace = zeros(obj.trialSamples, 1);                      % trial EOG velocity trace
             obj.velSummed = zeros(obj.saccadeSamples, obj.numOffsets);      % summed position traces
             obj.velAvg = zeros(obj.saccadeSamples, obj.numOffsets);         % averaged position traces
+            obj.voltage = 0;
         end
 
         %% clearAll
         function clearAll(obj)
-            taskData.offsetsDone = zeros (1, taskData.numOffsets);
-            taskData.blocksDone = 0;
-            taskData.numSummed = zeros(1, taskData.numOffsets);
-            taskData.rawData = zeros(taskData.trialSamples, handles.lbj.numChannels);    % raw data
-            taskData.posTrace = zeros(taskData.trialSamples, 1);                         % trial EOG position trace
-            taskData.posSummed = zeros(taskData.saccadeSamples, taskData.numOffsets);    % summed position traces
-            taskData.posAvg = zeros(taskData.saccadeSamples, taskData.numOffsets);       % averaged position traces
-            taskData.velTrace = zeros(taskData.trialSamples, 1);                         % trial EOG velocity trace
-            taskData.velSummed = zeros(taskData.saccadeSamples, taskData.numOffsets);    % summed position traces
-            taskData.velAvg = zeros(taskData.saccadeSamples, taskData.numOffsets);       % averaged position traces
-            taskData.saccDur = zeros(1, taskData.numOffsets);                            % average saccade duration
-            handles.taskData = taskData;                                                     end
+            obj.offsetsDone = zeros(1, obj.numOffsets);
+            obj.blocksDone = 0;
+            obj.numSummed = zeros(1, obj.numOffsets);
+            obj.rawData = zeros(obj.trialSamples, obj.numChannels);       % raw data
+            obj.posTrace = zeros(obj.trialSamples, 1);                    % trial EOG position trace
+            obj.posSummed = zeros(obj.saccadeSamples, obj.numOffsets);    % summed position traces
+            obj.posAvg = zeros(obj.saccadeSamples, obj.numOffsets);       % averaged position traces
+            obj.velTrace = zeros(obj.trialSamples, 1);                    % trial EOG velocity trace
+            obj.velSummed = zeros(obj.saccadeSamples, obj.numOffsets);    % summed position traces
+            obj.velAvg = zeros(obj.saccadeSamples, obj.numOffsets);       % averaged position traces
+        end
     end
-    
     
 end
 

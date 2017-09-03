@@ -11,8 +11,7 @@ Helpful notes about the code:
 The UserData for gui elements is a call by value, not call by reference.  This makes it hard to pass app-wide data
 in.  If it's loaded into a struct, that's a copy of the struct.  This is particularly a problem for Timers, which 
 are executing at times that are relatively unpredictable for other threads.  The solution here is to create a data
-Class (EOGTaskData).  Classes are passed by reference in UserData, so it's simple to keep an instance that has current
-data for the entire app.  It, and most handles, are accessible through "handles", which is the guiData handles struct.
+Class (EOGTaskData).  Classes are passed by refe
 
 ============================
 Read the Install Instruction to get information on adding Exodriver and UsbLib to the Macs. 

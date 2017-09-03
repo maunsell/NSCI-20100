@@ -1,16 +1,20 @@
-function EOGPlots(lbj, data, daqaxes, startIndex, endIndex, saccades)
+function EOGPlots(handles, startIndex, endIndex)
 %EOGPlots Updata all plots for EOG
 
-    posPlots(lbj, data, daqaxes, startIndex, endIndex, saccades)
-    velPlots(lbj, data, daqaxes, startIndex, endIndex, saccades)
+    posPlots(handles, startIndex, endIndex)
+    velPlots(handles, startIndex, endIndex)
     drawnow;
 
 end
 
 %% posPlots: do the trial and average position plots
-function posPlots(lbj, data, daqaxes, startIndex, endIndex, saccades)
+function posPlots(handles, startIndex, endIndex)
     
-    timestepS = 1 / lbj.SampleRateHz;                                       % time interval of samples
+    daqaxes = [handles.axes1 handles.axes2];
+    data = handles.data;
+    saccades = handles.saccades;
+
+    timestepS = 1 / data.sampleRateHz;                                       % time interval of samples
     trialTimes = (0:1:size(data.posTrace, 1) - 1) * timestepS;          % make array of trial time points
     saccadeTimes = (-(size(data.posAvg, 1) / 2):1:(size(data.posAvg,1) / 2) - 1) * timestepS;             
     colors = get(daqaxes(1), 'ColorOrder');
@@ -67,55 +71,59 @@ end
 
 
 %% velPlots: do the trial and average velocity plots
-function velPlots(lbj, data, daqaxes, startIndex, endIndex, saccades)
+function velPlots(handles, startIndex, endIndex)
     
-    timestepS = 1 / lbj.SampleRateHz;                                       % time interval of samples
+    daqaxes = [handles.axes3 handles.axes4];
+    data = handles.data;
+    saccades = handles.saccades;
+
+    timestepS = 1 / data.sampleRateHz;                                       % time interval of samples
     trialTimes = (0:1:size(data.posTrace, 1) - 1) * timestepS;          % make array of trial time points
     saccadeTimes = (-(size(data.posAvg, 1) / 2):1:(size(data.posAvg,1) / 2) - 1) * timestepS;              
     colors = get(daqaxes(1), 'ColorOrder');
    
     % plot the trial velocity trace
-    cla(daqaxes(3));
-    plot(daqaxes(3), trialTimes, data.velTrace, 'color', colors(data.offsetIndex,:));
-    a = axis(daqaxes(3));
+    cla(daqaxes(1));
+    plot(daqaxes(1), trialTimes, data.velTrace, 'color', colors(data.offsetIndex,:));
+    a = axis(daqaxes(1));
     yLim = max(abs(a(3)), abs(a(4)));
-    axis(daqaxes(3), [-inf inf -yLim yLim]);
-    title(daqaxes(3), 'Most recent velocity trace', 'FontSize',12,'FontWeight','Bold');
-    ylabel(daqaxes(3),'Analog Input (dV/dt)','FontSize',14);
-    xlabel(daqaxes(3),'Time (s)','FontSize',14);
+    axis(daqaxes(1), [-inf inf -yLim yLim]);
+    title(daqaxes(1), 'Most recent velocity trace', 'FontSize',12,'FontWeight','Bold');
+    ylabel(daqaxes(1),'Analog Input (dV/dt)','FontSize',14);
+    xlabel(daqaxes(1),'Time (s)','FontSize',14);
 
     % plot the average velcotiy traces
-    cla(daqaxes(4));
-    plot(daqaxes(4), saccadeTimes, data.velAvg, '-');
-    title(daqaxes(4), 'Average velocity traces (left/right combined)', 'FontSize',12,'FontWeight','Bold')
-    ylabel(daqaxes(4),'Analog Input (V)','FontSize',14);
-    xlabel(daqaxes(4),'Time (s)','FontSize',14);
+    cla(daqaxes(2));
+    plot(daqaxes(2), saccadeTimes, data.velAvg, '-');
+    title(daqaxes(2), 'Average velocity traces (left/right combined)', 'FontSize',12,'FontWeight','Bold')
+    ylabel(daqaxes(2),'Analog Input (V)','FontSize',14);
+    xlabel(daqaxes(2),'Time (s)','FontSize',14);
 
     % put both plots on the same y scale
-    a1 = axis(daqaxes(3));
-    a2 = axis(daqaxes(4));
+    a1 = axis(daqaxes(1));
+    a2 = axis(daqaxes(2));
     yLim = max([abs(a1(3)), abs(a1(4)), abs(a2(3)), abs(a2(4))]);
-    text(0.025, 0.8 * yLim, '3', 'parent', daqaxes(3), 'FontSize', 24, 'FontWeight', 'Bold');
-    text(-0.112, 0.8 * yLim, '4', 'parent', daqaxes(4), 'FontSize', 24, 'FontWeight', 'Bold');
-    axis(daqaxes(3), [-inf inf -yLim yLim]);
-    axis(daqaxes(4), [-inf inf -yLim yLim]);
+    text(0.025, 0.8 * yLim, '3', 'parent', daqaxes(1), 'FontSize', 24, 'FontWeight', 'Bold');
+    text(-0.112, 0.8 * yLim, '4', 'parent', daqaxes(2), 'FontSize', 24, 'FontWeight', 'Bold');
+    axis(daqaxes(1), [-inf inf -yLim yLim]);
+    axis(daqaxes(2), [-inf inf -yLim yLim]);
     
     % if a saccade was detected, mark its start (and end, if end was detected
     if (startIndex > 0)
-        hold(daqaxes(3), 'on');
-        plot(daqaxes(3), [startIndex, startIndex] * timestepS, [-yLim yLim], 'color', colors(data.offsetIndex,:),...
+        hold(daqaxes(1), 'on');
+        plot(daqaxes(1), [startIndex, startIndex] * timestepS, [-yLim yLim], 'color', colors(data.offsetIndex,:),...
                                                                                              'linestyle', ':');
         if (endIndex > 0)
-            plot(daqaxes(3), [endIndex, endIndex] * timestepS, [-yLim yLim], 'color', colors(data.offsetIndex,:),...
+            plot(daqaxes(1), [endIndex, endIndex] * timestepS, [-yLim yLim], 'color', colors(data.offsetIndex,:),...
             'linestyle', ':');
         end
-        hold(daqaxes(3), 'off');
+        hold(daqaxes(1), 'off');
     end
     
     % averages are always aligned on onset, so draw a vertical line at that point
-    hold(daqaxes(4), 'on');
-    plot(daqaxes(4), [0 0], [-yLim yLim], 'color', 'k', 'linestyle', ':');
-    hold(daqaxes(4), 'off');
+    hold(daqaxes(2), 'on');
+    plot(daqaxes(2), [0 0], [-yLim yLim], 'color', 'k', 'linestyle', ':');
+    hold(daqaxes(2), 'off');
 
     % if eye position has been calibrated, change the y scaling on the average to degrees rather than volts
     if saccades.degPerSPerV > 0
@@ -124,29 +132,28 @@ function velPlots(lbj, data, daqaxes, startIndex, endIndex, saccades)
         for i = 1:length(yTicks)
             yLabels{i} = num2str(yTicks(i) * saccades.degPerSPerV, '%.0f');
         end
-        hold(daqaxes(3), 'on');
+        hold(daqaxes(1), 'on');
         
         %draw horizontal lines at +/-threshold for the trial velocity
-        plot(daqaxes(3), [a(1) a(2)], [saccades.thresholdDPS saccades.thresholdDPS] ./ saccades.degPerSPerV,...
+        plot(daqaxes(1), [a(1) a(2)], [saccades.thresholdDPS saccades.thresholdDPS] ./ saccades.degPerSPerV,...
                	'color', colors(data.offsetIndex,:),'linestyle', ':');
-        plot(daqaxes(3), [a(1) a(2)], -[saccades.thresholdDPS saccades.thresholdDPS] ./ saccades.degPerSPerV,...
+        plot(daqaxes(1), [a(1) a(2)], -[saccades.thresholdDPS saccades.thresholdDPS] ./ saccades.degPerSPerV,...
                	'color', colors(data.offsetIndex,:),'linestyle', ':');
-    	hold(daqaxes(3), 'off');
-        set(daqaxes(3), 'YTick', yTicks);
-        set(daqaxes(3), 'YTickLabel', yLabels);
-        ylabel(daqaxes(3),'Average Eye Speed (degrees/s)','FontSize',14);
-        set(daqaxes(4), 'YTick', yTicks);
-        set(daqaxes(4), 'YTickLabel', yLabels);
-        ylabel(daqaxes(4),'Average Eye Speed (degrees/s)','FontSize',14);
+    	hold(daqaxes(1), 'off');
+        set(daqaxes(1), 'YTick', yTicks);
+        set(daqaxes(1), 'YTickLabel', yLabels);
+        ylabel(daqaxes(1),'Average Eye Speed (degrees/s)','FontSize',14);
+        set(daqaxes(2), 'YTick', yTicks);
+        set(daqaxes(2), 'YTickLabel', yLabels);
+        ylabel(daqaxes(2),'Average Eye Speed (degrees/s)','FontSize',14);
         
         % draw lines sowing the duration of the above-threshold part of the average traces.
-        midX = length(saccadeTimes) / 2;
-        hold(daqaxes(4), 'on');
+        hold(daqaxes(2), 'on');
         for i = 1:data.numOffsets
-            plot(daqaxes(4), [0, saccadeTimes(length(saccadeTimes) / 2 + data.saccadeDurS(i))],...
+            plot(daqaxes(2), [0, saccadeTimes(length(saccadeTimes) / 2 + data.saccadeDurS(i))],...
                                                 -[yLim, yLim] / 5 * i, 'color', colors(i,:));
         end
-        hold(daqaxes(4), 'off');
+        hold(daqaxes(2), 'off');
     end
 end
 
