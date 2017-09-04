@@ -109,6 +109,7 @@ function openEOG(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to EOG (see VARARGIN)
 
+    % test mode requires connecting DAC0 to AIN0 and DAC1 to AIN1 on the LabJack
     if ~isempty(varargin)
         testMode = strcmp(varargin{1}, 'debug') || strcmp(varargin{1}, 'test');
     else

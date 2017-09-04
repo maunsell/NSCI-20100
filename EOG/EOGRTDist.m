@@ -51,7 +51,8 @@ classdef EOGRTDist < handle
         %% plotAmpDur
         function rescale = plot(obj)
             cla(obj.fHandle);
-            if obj.n == 0 
+            if obj.n == 0
+                rescale = 0;
                 return
             end
             colors = get(obj.fHandle, 'ColorOrder');

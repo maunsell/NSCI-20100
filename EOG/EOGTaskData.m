@@ -27,6 +27,7 @@ classdef EOGTaskData < handle
         trialDurS;
         trialSamples;
         taskState;
+        testMode;
         trialStartTimeS;
         velTrace;
         velSummed;
@@ -66,6 +67,7 @@ classdef EOGTaskData < handle
             obj.posTrace = zeros(obj.trialSamples, 1);                     	% trial EOG position trace
             obj.posSummed = zeros(obj.saccadeSamples, obj.numOffsets);      % summed position traces
             obj.posAvg = zeros(obj.saccadeSamples, obj.numOffsets);         % averaged position traces
+            obj.testMode = false;
             obj.velTrace = zeros(obj.trialSamples, 1);                      % trial EOG velocity trace
             obj.velSummed = zeros(obj.saccadeSamples, obj.numOffsets);      % summed position traces
             obj.velAvg = zeros(obj.saccadeSamples, obj.numOffsets);         % averaged position traces

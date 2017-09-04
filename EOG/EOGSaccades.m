@@ -36,7 +36,7 @@ classdef EOGSaccades < handle
             end
             sIndex = 1;
             seq = 0;
-            while (seq < 5 && sIndex < length(fast))                     % find the first sequence of 5 > than threshold
+            while (seq < 5 && sIndex < length(fast))                % find the first sequence of 5 > than threshold
                 if fast(sIndex) == 0 
                     seq = 0;
                 else
@@ -72,9 +72,12 @@ classdef EOGSaccades < handle
             data.posTrace = data.rawData(:, 1) - data.rawData(:, 2);
             data.posTrace = data.posTrace - ...
                                         mean(data.posTrace(1:floor(data.sampleRateHz * data.prestimDurS)));
+            
             % Debug: add some noise to make things realistic
-            data.posTrace = data.posTrace + 0.3 * rand(size(data.posTrace)) - 0.15;
-
+            if data.testMode
+                data.posTrace = data.posTrace + 0.3 * rand(size(data.posTrace)) - 0.15;
+            end
+            
             % do a boxcar filter of the raw signal
             filterSamples = floor(data.sampleRateHz * obj.filterWidthMS / 1000.0);     
             b = (1 / filterSamples) * ones(1, filterSamples);
@@ -127,9 +130,7 @@ classdef EOGSaccades < handle
             if eAvgIndex > sAvgIndex 
                 data.saccadeDurS(data.offsetIndex) = eAvgIndex - sAvgIndex;
             else
-                disp('ff');
                 data.saccadeDurS(data.offsetIndex) = 0;
-                disp('gg');
             end
         end
    

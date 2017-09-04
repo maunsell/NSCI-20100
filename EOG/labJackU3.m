@@ -294,10 +294,10 @@ classdef labJackU3 < handle
         % Reads a response from the LabJack
         % OBJ    Device object
         % COUNT  Number of bytes expected in the response
-		function bytesRead = usbRead(obj,count)
+		function bytesRead = usbRead(obj, count)
             %disp('usbRead')
             bytesRead=zeros(count,1);
-			[in3 in2 bytesRead] =  calllib('liblabjackusb', 'LJUSB_Read', obj.handle, bytesRead, count);
+			[in3, ~, bytesRead] =  calllib('liblabjackusb', 'LJUSB_Read', obj.handle, bytesRead, count);
             % detect bad count value
             if in3==0
                 fprintf(1,'LJU3/usbRead: WARNING bad count value (num bytes in==0) detected\n');
@@ -368,8 +368,11 @@ classdef labJackU3 < handle
                 end
             end
             calValArray = reshape(calValArray, 2, 2);
-            % each column will have the values for a output device            
-            CalVals.DAC = calValArray;
+            % When LabJack U3-HV went to Revision 1.30, they went from 8-bit DACs to 10-bit DACs.  
+            % The calibration stored is still for 8-bit, however, so we must multiply the slope
+            % and offset by 256 to bring them into alignment with 10-bit DACs (See 2.7 - DAC)
+
+            CalVals.DAC = calValArray * 256;
             
             % read MISC values
             calValArray = zeros(4,1); m=0;
@@ -393,50 +396,8 @@ classdef labJackU3 < handle
                     calValArray(n, m) = obj.fp2double(block((n-1)*8+1:n*8));
                 end
             end
-            calValArray=reshape(calValArray, 4, 2)
+            calValArray=reshape(calValArray, 4, 2);
             CalVals.HVAIN = calValArray;
-
-            
-            % read AIN values
-%             calValArray=zeros(4,4); m=0;
-%             for k=0:3
-%                 m=m+1;
-%                 block=obj.readCalMem(k);
-%                 for n=1:4
-%                     calValArray(n,m)=obj.fp2double(block((n-1)*8+1:n*8));
-%                 end
-%             end
-            %disp(calValArray)
-%             calValArray=reshape(calValArray,2,8);
-%             % each column will have the values for a gain setting
-%             CalVals.AIN=[calValArray(:,1:4); calValArray(:,5:8)];
-            
-            % read MISC values ("Misc")
-%             calValArray=zeros(4,2); m=0;
-%             for k=4:5
-%                 m=m+1;
-%                 block=obj.readCalMem(k);
-%                 for n=1:4
-%                     calValArray(n,m)=obj.fp2double(block((n-1)*8+1:n*8));
-%                 end
-%             end
-%             calValArray=reshape(calValArray,2,4);
-%             % each column will have the values for a output device            
-%             CalVals.MISC=calValArray;
-% 
-%             % read HI-RES values (For U3 Pro)
-%             calValArray=zeros(4,4); m=0;
-%             for k=6:9
-%                 m=m+1;
-%                 block=obj.readCalMem(k);
-%                 for n=1:4
-%                     calValArray(n,m)=obj.fp2double(block((n-1)*8+1:n*8));
-%                 end
-%             end
-%             calValArray=reshape(calValArray,2,8);
-%             % each column will have the values for a gain setting
-%             CalVals.HIRES=[calValArray(:,1:4); calValArray(:,5:8)];
-            
         end
         
         
@@ -683,7 +644,7 @@ classdef labJackU3 < handle
                 count = length(obj.bytesIn);
                 if obj.verbose>=3, fprintf('LJU3/getStreamData: Preparing to read %d bytes from stream\n', count); end
                 
-                [in3 in2 obj.bytesIn] =  calllib('liblabjackusb', 'LJUSB_Stream', obj.handle, obj.bytesIn, count);
+                [in3, ~, obj.bytesIn] =  calllib('liblabjackusb', 'LJUSB_Stream', obj.handle, obj.bytesIn, count);
                 
 
                 % get key values from packet
@@ -717,7 +678,7 @@ classdef labJackU3 < handle
                 m = 1; % count number of packets read
                 while backlog > 0
                     m=m+1;               
-                    [in3 in2 obj.bytesIn] =  calllib('liblabjackusb', 'LJUSB_Stream', obj.handle, obj.bytesIn, count);
+                    [in3, ~, obj.bytesIn] =  calllib('liblabjackusb', 'LJUSB_Stream', obj.handle, obj.bytesIn, count);
                     numSamples=double(obj.bytesIn(3))-4;  % number of samples (from samplesPerPacket)
                     packetNumber=obj.bytesIn(11); % packet counter, 0-255 (8-bit)
                     backlog=obj.bytesIn(end-1);   % 0-255 indicates bytes remaining in buffer
@@ -821,23 +782,12 @@ classdef labJackU3 < handle
             
             % calculate DAC output setting
             if obj.verbose >= 2, fprintf(1,'LJU3/analogOut: Set DAC%d to %g V\n',channel,voltageSet); end
-                   
-            voltageSet
-            obj.CalVals.DAC
-            
             counts = uint16((voltageSet * obj.CalVals.DAC(1, channel + 1) ) + obj.CalVals.DAC(2, channel + 1));
             if obj.verbose >= 2, fprintf(1,'LJU3/analogOut: %g V = %d counts\n',voltageSet,counts); end
             counts = typecast(counts, 'uint8');
-            
-            counts
-%             counts
-            
             % create command
             cmd = obj.cmdDACSet;
             cmd(9:10) = counts;
-            
-            cmd(9) = counts(2);
-            cmd(10) = counts(1);
             
             % 5.2.5.16 - DAC# (16-bit): IOType=38,39
             if channel == 0

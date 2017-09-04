@@ -25,7 +25,6 @@ classdef EOGPosVelPlots < handle
         %EOGPlots Updata all plots for EOG
             posPlots(obj, handles, startIndex, endIndex)
             velPlots(obj, handles, startIndex, endIndex)
-            disp('5.1.3');
             drawnow;
         end
 
@@ -170,15 +169,11 @@ classdef EOGPosVelPlots < handle
                 % draw lines sowing the duration of the above-threshold part of the average traces.
                 hold(obj.velAvgAxes, 'on');
                 for i = 1:data.numOffsets
-                    disp('g');
                     limitIndex = min(length(saccadeTimes), length(saccadeTimes) / 2 + data.saccadeDurS(i));
                     plot(obj.velAvgAxes, [0, saccadeTimes(limitIndex)], -[yLim, yLim] / 5 * i, 'color', colors(i,:));
                 end
                 hold(obj.velAvgAxes, 'off');
-             disp('h');
-
             end
-             disp('i');
         end
     end
 end
