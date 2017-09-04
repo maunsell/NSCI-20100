@@ -20,6 +20,7 @@ classdef EOGTaskData < handle
         samplesRead;
         saccadeDurS;
         saccadeSamples;
+        saccadeTraceS;
         startStimS;
         stepSign;
         stimTimeS;
@@ -47,9 +48,10 @@ classdef EOGTaskData < handle
             obj.offsetsDone = zeros(1, obj.numOffsets);
             obj.blocksDone = 0;
             obj.sampleRateHz = sampleRateHz;
-            obj.saccadeDurS = 0.25;
-            obj.saccadeSamples = floor(obj.saccadeDurS * obj.sampleRateHz);
-            obj.trialDurS = max(0.50, 2 * obj.saccadeDurS);
+            obj.saccadeDurS = zeros(1, obj.numOffsets);                     % average saccade durations
+            obj.saccadeTraceS = 0.250;                                      % duratoin of saccade trace
+            obj.saccadeSamples = floor(obj.saccadeTraceS * obj.sampleRateHz);
+            obj.trialDurS = max(0.50, 2 * obj.saccadeTraceS);
             obj.trialSamples = floor(obj.trialDurS * obj.sampleRateHz);
             obj.prestimDurS = min(obj.trialDurS / 4, 0.250);
             obj.taskState = TaskState.taskIdle;

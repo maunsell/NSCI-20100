@@ -124,7 +124,13 @@ classdef EOGSaccades < handle
             % find the average saccade duration using the average speed trace
 
             [sAvgIndex, eAvgIndex] = obj.findSaccade(data, data.velAvg(:, data.offsetIndex), 1);
-            data.saccadeDurS(data.offsetIndex) = eAvgIndex - sAvgIndex;
+            if eAvgIndex > sAvgIndex 
+                data.saccadeDurS(data.offsetIndex) = eAvgIndex - sAvgIndex;
+            else
+                disp('ff');
+                data.saccadeDurS(data.offsetIndex) = 0;
+                disp('gg');
+            end
         end
    
     end

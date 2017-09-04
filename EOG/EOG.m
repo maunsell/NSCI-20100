@@ -148,7 +148,7 @@ end
 function lbj = setupLabJack()
 %  get hardware info and do not continue if daq device/drivers unavailable
 
-    lbj = labJackU6;                        % create the daq object
+    lbj = labJackU3;                        % create the daq object
     open(lbj);                              % open connection to the daq
     if isempty(lbj.handle)
         error('No USB connection to a LabJack was found. Check connections and try again.');
@@ -241,7 +241,7 @@ function taskController(obj, events, daqaxes)
     switch data.taskState
         case TaskState.taskIdle
             if data.trialStartTimeS == 0                                    % initialize a new trial
-                if sum(data.offsetsDone) >= data.numOffsets             % finished another block
+               if sum(data.offsetsDone) >= data.numOffsets             % finished another block
                     data.offsetsDone = zeros(1, data.numOffsets);       % clear counters
                     data.blocksDone = data.blocksDone + 1;              % increment block counter
                 end
@@ -254,13 +254,13 @@ function taskController(obj, events, daqaxes)
                 analogOut(lbj, 0, 2.5 + data.voltage);
                 analogOut(lbj, 1, 2.5 - data.voltage);
             elseif etime(clock, data.trialStartTimeS) > 0.050               % data settled for one taskTimer cycle
-                data.trialStartTimeS = clock;                               % reset the trial clock
+               data.trialStartTimeS = clock;                               % reset the trial clock
                 data.stimTimeS = data.prestimDurS + rand() * 0.1250;
                 data.dataState = DataState.dataStart;
                 data.taskState = TaskState.taskPrestim;
             end
         case TaskState.taskPrestim
-            if etime(clock, data.trialStartTimeS) > data.stimTimeS
+           if etime(clock, data.trialStartTimeS) > data.stimTimeS
                 data.stepSign = stepStimulus(visStim, data.offsetsDeg(data.offsetIndex));
                 data.voltage = visStim.currentOffsetPix / 1000.0;          % debugging- connect DOC0 to AIN Ch0
                 analogOut(lbj, 0, 2.5 + data.voltage);

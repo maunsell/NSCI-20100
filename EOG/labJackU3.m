@@ -174,7 +174,7 @@ classdef labJackU3 < handle
         cmdStartStream = hex2dec(['A8';'A8']);
         cmdStopStream = hex2dec(['B0';'B0']);
         % command templates
-        cmdDACSet = hex2dec(['00'; 'F8'; '02'; '00'; '00'; '00'; '00'; '00'; '00'; '00']); % (5.2.5.16 - DAC# (16-bit): IOType=38,39)
+        cmdDACSet = hex2dec(['00'; 'F8'; '02'; '00'; '00'; '00'; '00'; '00'; '00'; '00']); % (5.2.5.14 - DAC# (16-bit): IOType=38,39)
 % 		cmdAINsingle = hex2dec(['00'; 'f8'; '02'; '00'; '00'; '00'; '00'; '00'; '00'; '00']);
         % streaming buffer
         bytesIn=zeros(64,1);
@@ -345,46 +345,97 @@ classdef labJackU3 < handle
         % Each field has a column with the relevant values
         % (manual 5.4)      
         function CalVals = getCal(obj)
-                        
-            % read AIN values
-            calValArray=zeros(4,4); m=0;
-            for k=0:3
-                m=m+1;
-                block=obj.readCalMem(k);
+                     
+            % Read LV-AIN values
+            calValArray = zeros(4, 1); m=0;
+            for k=0:0
+                m = m + 1;
+                block = obj.readCalMem(k);
                 for n=1:4
                     calValArray(n,m)=obj.fp2double(block((n-1)*8+1:n*8));
                 end
             end
+            calValArray = reshape(calValArray, 2, 2);
+            CalVals.LVAIN = calValArray;
+            
+            % read DAC values
+            calValArray = zeros(4,1); m=0;
+            for k=1:1
+                m = m + 1;
+                block = obj.readCalMem(k);
+                for n=1:4
+                    calValArray(n,m) = obj.fp2double(block((n-1)*8+1:n*8));
+                end
+            end
+            calValArray = reshape(calValArray, 2, 2);
+            % each column will have the values for a output device            
+            CalVals.DAC = calValArray;
+            
+            % read MISC values
+            calValArray = zeros(4,1); m=0;
+            for k=2:2
+                m = m + 1;
+                block = obj.readCalMem(k);
+                for n = 1:4
+                    calValArray(n,m) = obj.fp2double(block((n-1)*8+1:n*8));
+                end
+            end
+            calValArray = reshape(calValArray, 2, 2);
+            % each column will have the values for a output device            
+            CalVals.MISC = calValArray;
+
+            % read HVAIN values
+            calValArray = zeros(4, 2); m = 0;
+            for k=3:4
+                m = m + 1;
+                block = obj.readCalMem(k);
+                for n = 1:4
+                    calValArray(n, m) = obj.fp2double(block((n-1)*8+1:n*8));
+                end
+            end
+            calValArray=reshape(calValArray, 4, 2)
+            CalVals.HVAIN = calValArray;
+
+            
+            % read AIN values
+%             calValArray=zeros(4,4); m=0;
+%             for k=0:3
+%                 m=m+1;
+%                 block=obj.readCalMem(k);
+%                 for n=1:4
+%                     calValArray(n,m)=obj.fp2double(block((n-1)*8+1:n*8));
+%                 end
+%             end
             %disp(calValArray)
-            calValArray=reshape(calValArray,2,8);
-            % each column will have the values for a gain setting
-            CalVals.AIN=[calValArray(:,1:4); calValArray(:,5:8)];
+%             calValArray=reshape(calValArray,2,8);
+%             % each column will have the values for a gain setting
+%             CalVals.AIN=[calValArray(:,1:4); calValArray(:,5:8)];
             
             % read MISC values ("Misc")
-            calValArray=zeros(4,2); m=0;
-            for k=4:5
-                m=m+1;
-                block=obj.readCalMem(k);
-                for n=1:4
-                    calValArray(n,m)=obj.fp2double(block((n-1)*8+1:n*8));
-                end
-            end
-            calValArray=reshape(calValArray,2,4);
-            % each column will have the values for a output device            
-            CalVals.MISC=calValArray;
-
-            % read HI-RES values (For U3 Pro)
-            calValArray=zeros(4,4); m=0;
-            for k=6:9
-                m=m+1;
-                block=obj.readCalMem(k);
-                for n=1:4
-                    calValArray(n,m)=obj.fp2double(block((n-1)*8+1:n*8));
-                end
-            end
-            calValArray=reshape(calValArray,2,8);
-            % each column will have the values for a gain setting
-            CalVals.HIRES=[calValArray(:,1:4); calValArray(:,5:8)];
+%             calValArray=zeros(4,2); m=0;
+%             for k=4:5
+%                 m=m+1;
+%                 block=obj.readCalMem(k);
+%                 for n=1:4
+%                     calValArray(n,m)=obj.fp2double(block((n-1)*8+1:n*8));
+%                 end
+%             end
+%             calValArray=reshape(calValArray,2,4);
+%             % each column will have the values for a output device            
+%             CalVals.MISC=calValArray;
+% 
+%             % read HI-RES values (For U3 Pro)
+%             calValArray=zeros(4,4); m=0;
+%             for k=6:9
+%                 m=m+1;
+%                 block=obj.readCalMem(k);
+%                 for n=1:4
+%                     calValArray(n,m)=obj.fp2double(block((n-1)*8+1:n*8));
+%                 end
+%             end
+%             calValArray=reshape(calValArray,2,8);
+%             % each column will have the values for a gain setting
+%             CalVals.HIRES=[calValArray(:,1:4); calValArray(:,5:8)];
             
         end
         
@@ -525,23 +576,30 @@ classdef labJackU3 < handle
                 fprintf(1,'  Samples per packet:  %d\n', obj.samplesPerPacket);
             end
             cmdStreamConfig(2)= 248;                        % extended command code 0xF8
-            cmdStreamConfig(3)= numChannelsScan + 4;        % NumChannels + 4
+            cmdStreamConfig(3)= numChannelsScan + 3;        % NumChannels + 3       !!!! DIFFERENT THAN U6
             cmdStreamConfig(4)= 17;                         % configure command code 0x11
             cmdStreamConfig(7)= numChannelsScan;            % NumChannels
-            cmdStreamConfig(8)= obj.ResolutionADC;          % Resolution Index (1-8, + 9-12 for U3 Pro)
-            cmdStreamConfig(9)= obj.samplesPerPacket;       % SamplesPerPacket (1-25)
-            cmdStreamConfig(10)=0;                          % reserved
-            cmdStreamConfig(11)=0;                          % SettlingFactor (use 0 for auto set)
-            cmdStreamConfig(12) = clockBit;                 % ScanConfig (0 = 4MHz clock)
-            cmdStreamConfig(13) = bitand(scanInt,255);      % Scan Interval (low byte)
-            cmdStreamConfig(14) = uint8(floor(scanInt/256));% Scan Interval (high byte)
-            for k=0:1:numChannelsScan-1
-                % channel number
-                cmdStreamConfig(15 + k*2) = obj.analogChannels(k+1);
-                % set gain and differential (bit 7 and bits 4-5)
-                cmdStreamConfig(15 + k*2+1) = (obj.inputBipolar(k+1) * 64 + obj.inputRange(k+1) * 8);
-            end
+            cmdStreamConfig(8)= obj.samplesPerPacket;       % SamplesPerPacket (1-25)
+            cmdStreamConfig(10) = clockBit;                 % ScanConfig (0 = 4MHz clock)
+            cmdStreamConfig(11) = bitand(scanInt,255);      % Scan Interval (low byte)
+            cmdStreamConfig(12) = uint8(floor(scanInt/256));% Scan Interval (high byte)
+         
 
+%             cmdStreamConfig(8)= obj.ResolutionADC;          % Resolution Index (1-8, + 9-12 for U3 Pro)
+%             cmdStreamConfig(9)= obj.samplesPerPacket;       % SamplesPerPacket (1-25)
+%             cmdStreamConfig(10)=0;                          % reserved
+%             cmdStreamConfig(11)=0;                          % SettlingFactor (use 0 for auto set)
+%             cmdStreamConfig(12) = clockBit;                 % ScanConfig (0 = 4MHz clock)
+%             cmdStreamConfig(13) = bitand(scanInt,255);      % Scan Interval (low byte)
+%             cmdStreamConfig(14) = uint8(floor(scanInt/256));% Scan Interval (high byte)
+             
+            
+            for k=0:1:numChannelsScan-1
+                cmdStreamConfig(13 + k*2) = obj.analogChannels(k+1);  % positive channel
+                % set gain and differential (bit 7 and bits 4-5)
+%                 cmdStreamConfig(13 + k*2+1) = (obj.inputBipolar(k+1) * 64 + obj.inputRange(k+1) * 8);
+                cmdStreamConfig(13 + k*2+1) = 31;             % set to single-ended
+            end
             % do checksums
             cmdStreamConfig = obj.addChecksum(cmdStreamConfig);
             if obj.verbose >= 4, disp(cmdStreamConfig'); end
@@ -703,15 +761,20 @@ classdef labJackU3 < handle
 
                 % Apply Calibration (ANALOG IN ONLY)
                 % Choose Regular or Precision
-                % -- Regular cal
-%                 for k=1:numChannelsScan
-%                     data(:,k) = ( data(:,k) .* obj.CalVals.AIN(1,obj.inputRange(k)+1) ) + obj.CalVals.AIN(2,obj.inputRange(k)+1);
-%                 end
+                % -- Apply slope and offset for the each AIN channel
+%                      disp(data(1:1))
+%                      disp(obj.CalVals.HVAIN)
+%                     disp(obj.CalVals.HVAIN(1, 1))
+%                     disp(obj.CalVals.HVAIN(1, 2))
+%                     disp((data(1,1) .* obj.CalVals.HVAIN(1, 1)) + obj.CalVals.HVAIN(1, 2))
+               for k = 1:numChannelsScan
+                    data(:,k) = (data(:,k) .* obj.CalVals.HVAIN(k, 1)) + obj.CalVals.HVAIN(k, 2);
+                end
                 % -- Precision cal
-                for k=1:numChannelsScan
-                    data(data(:,k)< obj.CalVals.AIN(4,obj.inputRange(k)+1),k) = ( obj.CalVals.AIN(4,obj.inputRange(k)+1) - data(data(:,k)< obj.CalVals.AIN(4,obj.inputRange(k)+1),k) ) .* obj.CalVals.AIN(3,obj.inputRange(k)+1);
-                    data(data(:,k)>=obj.CalVals.AIN(4,obj.inputRange(k)+1),k) = ( data(data(:,k)>=obj.CalVals.AIN(4,obj.inputRange(k)+1),k) - obj.CalVals.AIN(4,obj.inputRange(k)+1) ) .* obj.CalVals.AIN(1,obj.inputRange(k)+1);
-                end            
+%                 for k=1:numChannelsScan
+%                     data(data(:,k) < obj.CalVals.HVAIN(4,obj.inputRange(k)+1),k) = ( obj.CalVals.HVAIN(4,obj.inputRange(k)+1) - data(data(:,k)< obj.CalVals.HVAIN(4,obj.inputRange(k)+1),k) ) .* obj.CalVals.HVAIN(3,obj.inputRange(k)+1);
+%                     data(data(:,k) >= obj.CalVals.HVAIN(4,obj.inputRange(k)+1),k) = ( data(data(:,k)>=obj.CalVals.HVAIN(4,obj.inputRange(k)+1),k) - obj.CalVals.HVAIN(4,obj.inputRange(k)+1) ) .* obj.CalVals.HVAIN(1,obj.inputRange(k)+1);
+%                 end            
 
                 if obj.verbose>=4, disp(data); end
                 
@@ -757,14 +820,25 @@ classdef labJackU3 < handle
             end
             
             % calculate DAC output setting
-            if obj.verbose >= 1, fprintf(1,'LJU3/analogOut: Set DAC%d to %g V\n',channel,voltageSet); end
-            counts=uint16((voltageSet * obj.CalVals.MISC(1,channel+1) ) + obj.CalVals.MISC(2,channel+1));
+            if obj.verbose >= 2, fprintf(1,'LJU3/analogOut: Set DAC%d to %g V\n',channel,voltageSet); end
+                   
+            voltageSet
+            obj.CalVals.DAC
+            
+            counts = uint16((voltageSet * obj.CalVals.DAC(1, channel + 1) ) + obj.CalVals.DAC(2, channel + 1));
             if obj.verbose >= 2, fprintf(1,'LJU3/analogOut: %g V = %d counts\n',voltageSet,counts); end
-            counts=typecast(counts,'uint8');
+            counts = typecast(counts, 'uint8');
+            
+            counts
+%             counts
             
             % create command
-            cmd=obj.cmdDACSet;
-            cmd(9:10)=counts;
+            cmd = obj.cmdDACSet;
+            cmd(9:10) = counts;
+            
+            cmd(9) = counts(2);
+            cmd(10) = counts(1);
+            
             % 5.2.5.16 - DAC# (16-bit): IOType=38,39
             if channel == 0
                 cmd(8)=uint8(38);
@@ -866,10 +940,10 @@ classdef labJackU3 < handle
                         data = ( data - obj.CalVals.HIRES(4,gain+1) ) * obj.CalVals.HIRES(1,gain+1);
                     end
                 else
-                    if data < obj.CalVals.AIN(4,gain+1)
-                        data = ( obj.CalVals.AIN(4,gain+1) - data ) * obj.CalVals.AIN(3,gain+1);
+                    if data < obj.CalVals.HVAIN(4,gain+1)
+                        data = ( obj.CalVals.HVAIN(4,gain+1) - data ) * obj.CalVals.HVAIN(3,gain+1);
                     else
-                        data = ( data - obj.CalVals.AIN(4,gain+1) ) * obj.CalVals.AIN(1,gain+1);
+                        data = ( data - obj.CalVals.HVAIN(4,gain+1) ) * obj.CalVals.HVAIN(1,gain+1);
                     end
                 end
                 % Temperature?

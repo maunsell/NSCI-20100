@@ -25,6 +25,7 @@ classdef EOGPosVelPlots < handle
         %EOGPlots Updata all plots for EOG
             posPlots(obj, handles, startIndex, endIndex)
             velPlots(obj, handles, startIndex, endIndex)
+            disp('5.1.3');
             drawnow;
         end
 
@@ -158,22 +159,26 @@ classdef EOGPosVelPlots < handle
                         'color', colors(data.offsetIndex,:),'linestyle', ':');
                 plot(obj.velAxes, [a(1) a(2)], -[saccades.thresholdDPS saccades.thresholdDPS] ./ saccades.degPerSPerV,...
                         'color', colors(data.offsetIndex,:),'linestyle', ':');
-                hold(obj.velAxes, 'off');
+               hold(obj.velAxes, 'off');
                 set(obj.velAxes, 'YTick', yTicks);
                 set(obj.velAxes, 'YTickLabel', yLabels);
                 ylabel(obj.velAxes,'Average Eye Speed (degrees/s)','FontSize',14);
                 set(obj.velAvgAxes, 'YTick', yTicks);
                 set(obj.velAvgAxes, 'YTickLabel', yLabels);
-                ylabel(obj.velAvgAxes,'Average Eye Speed (degrees/s)','FontSize',14);
+                ylabel(obj.velAvgAxes, 'Average Eye Speed (degrees/s)', 'FontSize', 14);
 
                 % draw lines sowing the duration of the above-threshold part of the average traces.
                 hold(obj.velAvgAxes, 'on');
                 for i = 1:data.numOffsets
-                    plot(obj.velAvgAxes, [0, saccadeTimes(length(saccadeTimes) / 2 + data.saccadeDurS(i))],...
-                                                        -[yLim, yLim] / 5 * i, 'color', colors(i,:));
+                    disp('g');
+                    limitIndex = min(length(saccadeTimes), length(saccadeTimes) / 2 + data.saccadeDurS(i));
+                    plot(obj.velAvgAxes, [0, saccadeTimes(limitIndex)], -[yLim, yLim] / 5 * i, 'color', colors(i,:));
                 end
                 hold(obj.velAvgAxes, 'off');
+             disp('h');
+
             end
+             disp('i');
         end
     end
 end
