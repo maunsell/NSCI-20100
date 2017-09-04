@@ -109,6 +109,7 @@ function openEOG(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to EOG (see VARARGIN)
 
+    % test mode requires connecting DAC0 to AIN0 and DAC1 to AIN1 on the LabJack
     if ~isempty(varargin)
         testMode = strcmp(varargin{1}, 'debug') || strcmp(varargin{1}, 'test');
     else
@@ -139,9 +140,33 @@ function openEOG(hObject, eventdata, handles, varargin)
     guidata(hObject, handles);                                                   % save the selection
 end
 
-% --- Respond to button press in saveButton.
-function saveButton_Callback(hObject, eventdata, handles)
-% hObject    handle to saveButton (see GCBO)
+% --- Executes on button press in saveDataButton.
+function saveDataButton_Callback(hObject, eventdata, handles)
+% Saving the workspace for a GUI isn't simple.  What we have accessible in this
+% environment is mostly the handles.  If we save, it's an attempt to save
+% handles, which doesn't work.  Instead, we get a list of all the properties
+% from the EOGTaskData class, and then use eval statement to assign those to
+% local variable and save them (one by one).
+
+    [fileName, filePath] = uiputfile('*.mat', 'Save Matlab Data Workspace', '~/EOGData.mat');
+    if fileName ~= 0
+        d = handles.data;
+        p = properties(d);
+        for i = 1:length(p)
+            eval([p{i} '= d.' p{i} ';']);
+            if i == 1
+                eval(['save ' filePath fileName ' ' p{i} ';']);
+            else
+             	eval(['save ' filePath fileName ' ' p{i} ' -append ;']);
+            end
+            eval(['clear ' p{i} ';']);
+        end
+    end
+end
+
+% --- Respond to button press in savePlotsButton.
+function savePlotsButton_Callback(hObject, eventdata, handles)
+% hObject    handle to savePlotsButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     [fileName, filePath] = uiputfile('*.pdf', 'Save Window Plots as PDF', '~/EOGData.pdf');
@@ -208,7 +233,8 @@ function startButton_Callback(hObject, eventdata, handles)                  %#ok
         % set the gui button to "running" state
         set(handles.startButton, 'String', 'Stop', 'BackgroundColor', 'red');
         set(handles.clearButton,'enable','off');
-        set(handles.saveButton,'enable','off');
+        set(handles.savePlotsButton,'enable','off');
+        set(handles.saveDataButton,'enable','off');
         set(handles.filterWidthText,'enable','off');
         set(handles.viewDistanceText,'enable','off');
         set(handles.thresholdDPSText,'enable','off');
@@ -229,7 +255,8 @@ function startButton_Callback(hObject, eventdata, handles)                  %#ok
         stopStream(handles.lbj);
         set(handles.startButton, 'string', 'Start','backgroundColor', 'green');
         set(handles.clearButton,'enable','on');
-        set(handles.saveButton,'enable','on');
+        set(handles.savePlotsButton,'enable','on');
+        set(handles.saveDataButton,'enable','on');
         set(handles.filterWidthText,'enable','on');
         set(handles.viewDistanceText,'enable','on');
         set(handles.thresholdDPSText,'enable','on');
@@ -306,5 +333,3 @@ function taskController(obj, events, daqaxes)
             data.taskState = TaskState.taskIdle;
     end
 end
-
-

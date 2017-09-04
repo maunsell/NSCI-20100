@@ -1,7 +1,5 @@
 Things to do:
 
-Need a way to save/print -- needs the button and a hook up to the code;
-Is there any matlab workspace to save?
 Need a script to launch without a big Matlab window.
 
 ============================
