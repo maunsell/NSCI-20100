@@ -372,9 +372,7 @@ end
 function windowCloseRequest(hObject, eventdata, handles)
 
     % fist check whether the task is running
-    if strcmp(get(handles.runButton, 'String'), 'Stop')
-        return;
-    end
+    if strcmp(get(hObject, 'String'), 'Stop')
 
 %     selection = questdlg('Really exit Contrast Threshold?', 'Exit Request', 'Yes', 'No', 'Yes');
 
