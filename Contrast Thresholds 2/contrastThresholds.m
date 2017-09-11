@@ -49,7 +49,7 @@ function clearDataCallback(hObject, ~, handles)
                 sprintf('Really clear data for %s base contrast? (This cannot be undone).', strings{baseIndex}),...
                 'Clear Data', 'Yes', 'No', 'Yes');
     set(0, 'DefaultUIControlFontSize', originalSize);
-    if selection == 'Yes'
+    if strcmp(selection, 'Yes')
         baseIndex = get(handles.baseContrastMenu, 'value');
         handles.trialsDone(baseIndex, :) = 0;
         handles.hits(baseIndex, :) = 0;
@@ -142,19 +142,21 @@ function drawStatusText(handles, status)
 end
 
 % --- Outputs from this function are returned to the command line.
-function varargout = initContrastThresholds(hObject, eventdata, handles)
+function varargout = initContrastThresholds(~, ~, handles)
     % varargout  cell array for returning output args (see VARARGOUT);
     % hObject    handle to figure
     % eventdata  reserved - to be defined in a future version of MATLAB
     % handles    structure with handles and user data (see GUIDATA)
 
     % Get default command line output from handles structure
-    varargout{1} = handles.output;
-    set(handles.runButton, 'String', 'Start','BackgroundColor', 'green');
+    varargout{1} = handles.output;  
+        get(handles.runButton, 'UserData')
+    buttonStruct.keyDown = '';                                            % UserDate needs to be a struct
+    set(handles.runButton, 'UserData', buttonStruct, 'String', 'Start','BackgroundColor', 'green');
 end
 
 % --- Executes just before contrastThresholds is made visible.
-function openContrastThresholds(hObject, eventdata, handles, varargin)
+function openContrastThresholds(hObject, ~, handles, varargin)
 
     audioFiles = {'Tone0250.wav', 'Tone2000.wav', 'Tone4000.wav'};
 
@@ -184,36 +186,34 @@ function openContrastThresholds(hObject, eventdata, handles, varargin)
     handles.blocksFit = zeros(1, handles.numBases);
     handles.curveFits = zeros(handles.numBases, handles.numMultipliers);
 
-    drawStatusText(handles, 'idle')
+    drawStatusText(handles, 'idle');
     movegui(handles.figure1,'southeast')
     set(handles.figure1, 'visible', 'on');
     guidata(hObject, handles);                                                   % save the selection
 end
 
 % --- Executes on button press in runButton.
-function runButton_Callback(hObject, eventdata, handles)
+function runButton_Callback(hObject, ~, handles)
 
-    set(handles.runButton, 'string', '(esc to stop)');
-    set(handles.runButton, 'string', 'Stop','backgroundColor', 'red');
-    set(handles.runButton, 'enable', 'off');
+%     set(handles.runButton, 'string', '(esc to stop)');
+    set(hObject, 'string', 'Stop','backgroundColor', 'red');
+%     set(handles.runButton, 'enable', 'off');
     set(handles.stimRepsTextBox, 'enable', 'off');
     set(handles.stimDurText, 'enable', 'off');
     set(handles.preStimTimeText, 'enable', 'off');
     set(handles.baseContrastMenu, 'enable', 'off');
     set(handles.clearDataButton, 'enable', 'off');
     drawnow;
-%     handles = guidata(hObject); 
-
-    handles
-    
-    
     
     stimParams.stimReps = get(handles.stimRepsTextBox, 'value');
     stimParams.stimDurS = get(handles.stimDurText, 'value');
     baseIndex = get(handles.baseContrastMenu, 'value');
     baseContrast = handles.baseContrasts(baseIndex);
-    stopStimuli = false;
-    while (~stopStimuli)
+    stopTimer = timer('name', 'stopTimer', 'executionMode', 'fixedRate', 'period', 0.1, 'UserData', ...
+        hObject, 'errorFcn', {@timerErrorFcnStop, handles}, 'timerFcn', {@stopCheck}, 'startDelay', 0.1); 
+    start(stopTimer);
+    theKey = '';
+    while ~strcmp(theKey, 'abort')
         % Pick a trial to do
         blocksDone = min(handles.trialsDone(baseIndex, :));
         undone = find(handles.trialsDone(baseIndex, :) == blocksDone);
@@ -226,26 +226,18 @@ function runButton_Callback(hObject, eventdata, handles)
             doFixSpot(handles.stimuli, 0.65);
             drawStatusText(handles, 'wait')
         end
-        [keyIsDown, ~, keyCode] = KbCheck(-1);
-        while (~handles.testMode && ~keyIsDown)
-            [keyIsDown, ~, keyCode] = KbCheck(-1);
+        while ~handles.testMode && currentKey(hObject) == ''
         end
-        if keyCode(KbName('escape')) || keyCode(KbName('space'))
-            stopStimuli = true;
-        else
+        theKey = currentKey(hObject);
+        if ~strcmp(theKey, 'abort') && handles.doStim
         % Draw the base stimuli with a white fixspot
-            if handles.doStim
-                drawStatusText(handles, 'run')
-                stimParams.leftContrast = baseContrast;
-                stimParams.rightContrast = baseContrast;
-                doStimulus(handles.stimuli, stimParams);
-            end
-            [~, ~, keyCode] = KbCheck(-1);
-        if keyCode(KbName('escape')) || keyCode(KbName('space'))
-                stopStimuli = true;
-            end
+            drawStatusText(handles, 'run')
+            stimParams.leftContrast = baseContrast;
+            stimParams.rightContrast = baseContrast;
+            doStimulus(handles.stimuli, stimParams);                        % takes some time, so get new theKey
+            theKey = currentKey(hObject);
         end
-        if ~stopStimuli
+        if ~strcmp(theKey, 'abort')
         % Draw the test stimuli, followed by the gray fixspot
             if (changeSide == 0)
                 stimParams.leftContrast = baseContrast * handles.multipliers(multIndex);
@@ -258,10 +250,11 @@ function runButton_Callback(hObject, eventdata, handles)
                 doStimulus(handles.stimuli, stimParams);
                 doFixSpot(handles.stimuli, 0.0);
                 drawStatusText(handles, 'response')
+                theKey = currentKey(hObject);
            end
         end
         % Get reponse from subject
-        if ~stopStimuli
+        if ~strcmp(theKey, 'abort')
             hit = -1;
             responsePending = true;
             if handles.testMode
@@ -270,14 +263,13 @@ function runButton_Callback(hObject, eventdata, handles)
                 responsePending = false;
             end
             while responsePending
-                [~, ~, keyCode] = KbCheck(-1);
-                if keyCode(KbName('escape')) || keyCode(KbName('space'))
+                theKey = currentKey(hObject);
+                if strcmp(theKey, 'abort')
                     responsePending = false;
-                    stopStimuli = true;
                 else
-                    if keyCode(KbName('LeftArrow'))
+                    if strcmp(theKey, 'left')
                         hit = changeSide == 0;
-                    elseif keyCode(KbName('RightArrow'))
+                    elseif strcmp(theKey, 'right')
                         hit = changeSide == 1;
                     end
                     responsePending = false;
@@ -291,9 +283,6 @@ function runButton_Callback(hObject, eventdata, handles)
                     sound(handles.tones(1, :), handles.sampFreqHz);
                 end
                 handles.trialsDone(baseIndex, multIndex) = handles.trialsDone(baseIndex, multIndex) + 1;
-%                 display(sprintf('mIndex %d side %d base %f mult %f contrasts %f %f', multIndex, changeSide, ...
-%                     baseContrast, handles.multipliers(multIndex), ...
-%                     stimParams.leftContrast, stimParams.rightContrast));
             end
         end
         if handles.doStim
@@ -301,13 +290,13 @@ function runButton_Callback(hObject, eventdata, handles)
         end
         handles = drawHitRates(handles);
         % Check whether we are done with all the trials
-        stimReps = get(handles.stimRepsTextBox, 'value');
+%         stimReps = get(handles.stimRepsTextBox, 'value');
         if sum(handles.trialsDone(baseIndex, :)) >= stimParams.stimReps * handles.numMultipliers
             if (~handles.testMode)                      % if we're not in test mode, we're done testing
-                stopStimuli = true;
+                theKey = 'abort';
             else                                        % if we're testing, see if there are more to do
                 if sum(sum(handles.trialsDone)) >=  stimParams.stimReps * handles.numMultipliers * handles.numBases
-                    stopStimuli = true;
+                    theKey = 'abort';
                 else                                    % more to do, try the next multiplier
                     while sum(handles.trialsDone(baseIndex, :)) >= stimParams.stimReps * handles.numMultipliers
                         baseIndex = mod(baseIndex, handles.numBases) + 1;
@@ -317,15 +306,10 @@ function runButton_Callback(hObject, eventdata, handles)
             end
         end
         % Update the status text
-        if (~stopStimuli)
+        if ~strcmp(theKey, 'abort')
             drawStatusText(handles, 'intertrial')
             if (~handles.testMode && handles.doStim)
                 pause(get(handles.preStimTimeText, 'value'));          % interstimulus interval
-            end
-            [~, ~, keyCode] = KbCheck(-1);
-            if keyCode(KbName('escape')) || keyCode(KbName('space'))
-                stopStimuli = true;
-                break;
             end
         end
     end
@@ -333,6 +317,9 @@ function runButton_Callback(hObject, eventdata, handles)
         clearScreen(handles.stimuli);
     end
     
+    stop(stopTimer);                                                        % stop/delete timer
+    delete(stopTimer);        
+
     set(handles.stimRepsTextBox, 'enable', 'on');
     set(handles.stimDurText, 'enable', 'on');
     set(handles.preStimTimeText, 'enable', 'on');
@@ -344,6 +331,29 @@ function runButton_Callback(hObject, eventdata, handles)
     set(handles.runButton, 'enable', 'on');
     drawnow;
     guidata(hObject, handles);                          % save the changes
+end
+
+function keyDown = currentKey(hObject)
+   
+    buttonStruct = get(hObject, 'UserData');
+    keyDown = buttonStruct.keyDown;
+end
+
+%% stopTimer: function to check for stop commands from keyboard
+function stopCheck(obj, event)                                            %#ok<*INUSD>
+
+    [~, ~, keyCode] = KbCheck(-1);
+    if keyCode(KbName('Escape')) || keyCode(KbName('Space'));
+        buttonStruct.keyDown = 'abort';
+    elseif keyCode(KbName('LeftArrow'))
+        buttonStruct.keyDown = 'left';
+    elseif keyCode(KbName('RightArrow'))
+        buttonStruct.keyDown = 'right';
+    else
+        buttonStruct.keyDown = '';
+    end
+    runButton = get(obj, 'UserData');
+    set(runButton, 'UserData', buttonStruct);
 end
 
 % --- Executes when user attempts to close the gui.
