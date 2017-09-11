@@ -1,15 +1,15 @@
 function varargout = contrastThresholds(varargin)
-    % CONTRASTTHRESHOLDS MATLAB code for contrastThresholds.fig
-    %      CONTRASTTHRESHOLDS, by itself, creates a new CONTRASTTHRESHOLDS or raises the existing
+    % contrastThreshold MATLAB code for contrastThresholds.fig
+    %      contrastThreshold, by itself, creates a new contrastThreshold or raises the existing
     %      singleton*.
     %
-    %      H = CONTRASTTHRESHOLDS returns the handle to a new CONTRASTTHRESHOLDS or the handle to
+    %      H = contrastThreshold returns the handle to a new contrastThreshold or the handle to
     %      the existing singleton*.
     %
-    %      CONTRASTTHRESHOLDS('CALLBACK',hObject,eventData,handles,...) calls the local
-    %      function named CALLBACK in CONTRASTTHRESHOLDS.M with the given input arguments.
+    %      contrastThreshold('CALLBACK',hObject,eventData,handles,...) calls the local
+    %      function named CALLBACK in contrastThreshold.M with the given input arguments.
     %
-    %      CONTRASTTHRESHOLDS('Property','Value',...) creates a new CONTRASTTHRESHOLDS or raises
+    %      contrastThreshold('Property','Value',...) creates a new contrastThreshold or raises
     %      the existing singleton*.  Starting from the left, property value pairs are
     %      applied to the GUI before contrastThresholds_OpeningFcn gets called.  An
     %      unrecognized property name or invalid value makes property application
@@ -20,9 +20,7 @@ function varargout = contrastThresholds(varargin)
     %
     % See also: GUIDE, GUIDATA, GUIHANDLES
 
-    % Edit the above text to modify the response to help contrastThresholds
-
-    % Last Modified by GUIDE v2.5 10-Sep-2017 16:54:07
+    % Last Modified by GUIDE v2.5 10-Sep-2017 20:46:42
 
     gui_Singleton = 1;
     gui_State = struct('gui_Name',       mfilename, ...
@@ -34,11 +32,37 @@ function varargout = contrastThresholds(varargin)
     if nargin && ischar(varargin{1})
         gui_State.gui_Callback = str2func(varargin{1});
     end
-
     if nargout
         [varargout{1:nargout}] = gui_mainfcn(gui_State, varargin{:});
     else
         gui_mainfcn(gui_State, varargin{:});
+    end
+end
+
+% --- Executes on button press in clearDataButton.
+function clearDataCallback(hObject, ~, handles)
+    baseIndex = get(handles.baseContrastMenu, 'value');
+    strings = get(handles.baseContrastMenu, 'string');
+    originalSize = get(0, 'DefaultUIControlFontSize');
+    set(0, 'DefaultUIControlFontSize', 14);
+    selection = questdlg(...
+                sprintf('Really clear data for %s base contrast? (This cannot be undone).', strings{baseIndex}),...
+                'Clear Data', 'Yes', 'No', 'Yes');
+    set(0, 'DefaultUIControlFontSize', originalSize);
+    if selection == 'Yes'
+        baseIndex = get(handles.baseContrastMenu, 'value');
+        handles.trialsDone(baseIndex, :) = 0;
+        handles.hits(baseIndex, :) = 0;
+        handles.blocksFit(baseIndex) = 0;
+        handles.curveFits(baseIndex, :) = 0;
+        tableData = get(handles.resultsTable,'Data');
+        tableData{1, baseIndex} = '0';
+        tableData{2, baseIndex} = '--';
+        tableData{3, baseIndex} = '--';
+        tableData{4, baseIndex} = '--';
+        set(handles.resultsTable, 'Data', tableData); 
+        drawHitRates(handles);
+        guidata(hObject, handles);
     end
 end
 
@@ -131,11 +155,7 @@ end
 
 % --- Executes just before contrastThresholds is made visible.
 function openContrastThresholds(hObject, eventdata, handles, varargin)
-    % This function has no output args, see OutputFcn.
-    % hObject    handle to figure
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    structure with handles and user data (see GUIDATA)
-    % varargin   command line arguments to contrastThresholds (see VARARGIN)
+
     audioFiles = {'Tone0250.wav', 'Tone2000.wav', 'Tone4000.wav'};
 
     rng('shuffle');
@@ -149,8 +169,6 @@ function openContrastThresholds(hObject, eventdata, handles, varargin)
     handles.doStim = true;
     handles.sampFreqHz = sampFreqHz;
     handles.tones = tones';
-%     handles.axes1 = ha;
-%     handles.baseContrastMenu = baseContrastMenu;
     contrastStrings = get(handles.baseContrastMenu, 'string');
     handles.numBases = length(contrastStrings);                             % number of base contrasts from menu
     handles.baseContrasts = zeros(1, handles.numBases);                     % memory for the base contrasts
@@ -161,43 +179,28 @@ function openContrastThresholds(hObject, eventdata, handles, varargin)
     handles.numMultipliers = length(handles.multipliers);
     handles.trialsDone = zeros(handles.numBases, handles.numMultipliers);
     handles.hits = zeros(handles.numBases, handles.numMultipliers);
-%     handles.hStatusText = hStatusText;
     handles.stimuli = ctStimuli;
     handles.output = hObject;                                                   % select default command line output
-
-    % parameters related to plotting curve fits
     handles.blocksFit = zeros(1, handles.numBases);
     handles.curveFits = zeros(handles.numBases, handles.numMultipliers);
-%     handles.resultsTable = resultsTable;
-%     handles.f = f;
-%     guidata(hGo, handles);
 
     drawStatusText(handles, 'idle')
-    set(handles.figure1, 'visible', 'on');
     movegui(handles.figure1,'southeast')
+    set(handles.figure1, 'visible', 'on');
     guidata(hObject, handles);                                                   % save the selection
 end
-% UIWAIT makes contrastThresholds wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
 
-% --- Executes on button press in ClearDataButton.
-function ClearDataButton_Callback(hObject, eventdata, handles)
-    % hObject    handle to ClearDataButton (see GCBO)
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    structure with handles and user data (see GUIDATA)
-% 
-end
 % --- Executes on button press in runButton.
 function runButton_Callback(hObject, eventdata, handles)
-    % hObject    handle to runButton (see GCBO)
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    structure with handles and user data (see GUIDATA)
 
-%     initialize_gui(gcbf, handles, true);
-
-    set(handles.runButton, 'enable', 'off');
     set(handles.runButton, 'string', '(esc to stop)');
-    set(handles.runButton, 'string', 'Run','backgroundColor', 'red');
+    set(handles.runButton, 'string', 'Stop','backgroundColor', 'red');
+    set(handles.runButton, 'enable', 'off');
+    set(handles.stimRepsTextBox, 'enable', 'off');
+    set(handles.stimDurText, 'enable', 'off');
+    set(handles.preStimTimeText, 'enable', 'off');
+    set(handles.baseContrastMenu, 'enable', 'off');
+    set(handles.clearDataButton, 'enable', 'off');
     drawnow;
 %     handles = guidata(hObject); 
 
@@ -329,6 +332,13 @@ function runButton_Callback(hObject, eventdata, handles)
     if handles.doStim
         clearScreen(handles.stimuli);
     end
+    
+    set(handles.stimRepsTextBox, 'enable', 'on');
+    set(handles.stimDurText, 'enable', 'on');
+    set(handles.preStimTimeText, 'enable', 'on');
+    set(handles.baseContrastMenu, 'enable', 'on');
+    set(handles.clearDataButton, 'enable', 'on');
+
     drawStatusText(handles, 'idle')
     set(handles.runButton, 'string', 'Run','backgroundColor', 'green');
     set(handles.runButton, 'enable', 'on');
@@ -336,90 +346,9 @@ function runButton_Callback(hObject, eventdata, handles)
     guidata(hObject, handles);                          % save the changes
 end
 
-% --- Executes on selection change in baseContrastMenu.
-function baseContrastMenu_Callback(hObject, eventdata, handles)
-    % hObject    handle to baseContrastMenu (see GCBO)
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    structure with handles and user data (see GUIDATA)
-
-    % Hints: contents = cellstr(get(hObject,'String')) returns baseContrastMenu contents as cell array
-    %        contents{get(hObject,'Value')} returns selected item from baseContrastMenu
-end
-
-function stimRepsTextBox_Callback(hObject, eventdata, handles)
-    % hObject    handle to stimRepsTextBox (see GCBO)
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    structure with handles and user data (see GUIDATA)
-
-    % Hints: get(hObject,'String') returns contents of stimRepsTextBox as text
-    %        str2double(get(hObject,'String')) returns contents of stimRepsTextBox as a double
-end
-
-% --- Executes during object creation, after setting all properties.
-function stimRepsTextBox_CreateFcn(hObject, eventdata, handles)
-    % hObject    handle to stimRepsTextBox (see GCBO)
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    empty - handles not created until after all CreateFcns called
-
-    % Hint: edit controls usually have a white background on Windows.
-    %       See ISPC and COMPUTER.
-    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-        set(hObject,'BackgroundColor','white');
-    end
-end
-
-
-function stimDurText_Callback(hObject, eventdata, handles)
-% hObject    handle to stimDurText (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of stimDurText as text
-%        str2double(get(hObject,'String')) returns contents of stimDurText as a double
-end
-
-% --- Executes during object creation, after setting all properties.
-function stimDurText_CreateFcn(hObject, eventdata, handles)
-    % hObject    handle to stimDurText (see GCBO)
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    empty - handles not created until after all CreateFcns called
-
-    % Hint: edit controls usually have a white background on Windows.
-    %       See ISPC and COMPUTER.
-    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-        set(hObject,'BackgroundColor','white');
-    end
-end
-
-
-function preStimTimeText_Callback(hObject, eventdata, handles)
-    % hObject    handle to preStimTimeText (see GCBO)
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    structure with handles and user data (see GUIDATA)
-
-    % Hints: get(hObject,'String') returns contents of preStimTimeText as text
-    %        str2double(get(hObject,'String')) returns contents of preStimTimeText as a double
-end
-
-% --- Executes during object creation, after setting all properties.
-function preStimTimeText_CreateFcn(hObject, eventdata, handles)
-    % hObject    handle to preStimTimeText (see GCBO)
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    empty - handles not created until after all CreateFcns called
-
-    % Hint: edit controls usually have a white background on Windows.
-    %       See ISPC and COMPUTER.
-    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-        set(hObject,'BackgroundColor','white');
-    end
-end
-
-% --- Executes when user attempts to close figure1.
+% --- Executes when user attempts to close the gui.
 function windowCloseRequest(hObject, eventdata, handles)
-% hObject    handle to figure1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-% Clean up the stimulus window when the GUI is closed.
+
 %     selection = questdlg('Really exit Contrast Threshold?', 'Exit Request', 'Yes', 'No', 'Yes');
 
     selection = 'Yes';
@@ -432,5 +361,4 @@ function windowCloseRequest(hObject, eventdata, handles)
     case 'No'
         return
     end
-
 end
