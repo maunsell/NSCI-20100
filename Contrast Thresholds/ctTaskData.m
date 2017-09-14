@@ -1,7 +1,5 @@
 classdef ctTaskData < handle
-    % saccades
-    %   Support for processing eye traces and detecting saccades
-    
+    % ctTaskData: common data for Contrasts Thresholds
     properties
         baseContrasts;
         blocksFit;
@@ -14,8 +12,13 @@ classdef ctTaskData < handle
         output;
         resultsTable;
         sampFreqHz;
+        stimStartTimeS;
+        stimParams;
+        taskState;
         trialsDone;
+        trialStartTimeS;
         testMode;
+        theKey;
         tones;
     end
     
@@ -26,7 +29,7 @@ classdef ctTaskData < handle
             obj = obj@handle();                                            % object initialization
             %% Post Initialization %%
             
-            obj.testMode = true;
+            obj.testMode = false;
             obj.doStim = true;
            
             tones = [];
@@ -49,6 +52,10 @@ classdef ctTaskData < handle
             obj.hits = zeros(obj.numBases, obj.numMultipliers);
             obj.blocksFit = zeros(1, obj.numBases);
             obj.curveFits = zeros(obj.numBases, obj.numMultipliers);
+            obj.taskState = ctTaskState.taskStopped;
+            obj.trialStartTimeS = 0;
+            obj.theKey = '';
+            obj.stimParams = struct;
         end
 
         %% clearAll

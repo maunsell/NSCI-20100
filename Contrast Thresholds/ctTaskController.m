@@ -1,0 +1,151 @@
+
+%% taskController: function to handle transition of task state.
+function ctTaskController(obj, events)
+
+    handles = obj.UserData;
+    data = handles.data;
+    switch data.taskState
+        case ctTaskState.taskStopped
+            % do nothing
+        case ctTaskState.taskStartRunning
+            disp('task running');
+            set(handles.runButton, 'string', 'Stop','backgroundColor', 'red');
+            set(handles.runButton, 'enable', 'off');
+            set(handles.stimRepsTextBox, 'enable', 'off');
+            set(handles.stimDurText, 'enable', 'off');
+            set(handles.preStimTimeText, 'enable', 'off');
+            set(handles.baseContrastMenu, 'enable', 'off');
+            set(handles.clearDataButton, 'enable', 'off');
+            set(handles.savePlotsButton, 'enable', 'off');
+            set(handles.saveDataButton, 'enable', 'off');
+            drawnow;
+            data.trialStartTimeS = 0;
+            data.stimStartTimeS = 0;
+            data.taskState = ctTaskState.taskStartTrial;
+        case ctTaskState.taskStartTrial
+           if data.trialStartTimeS == 0                                     % start the trial
+                disp('task start trial');
+                data.trialStartTimeS = clock;
+                data.stimParams.stimReps = get(handles.stimRepsTextBox, 'value');
+                data.stimParams.stimDurS = get(handles.stimDurText, 'value');
+                baseIndex = get(handles.baseContrastMenu, 'value');
+                data.stimParams.changeSide = floor(2 * rand(1, 1));
+            elseif etime(clock, data.trialStartTimeS) > get(handles.preStimTimeText, 'value')
+                % Draw dark gray fixspot and wait for keystroke
+                 disp('task stim');
+               sound(data.tones(3, :), data.sampFreqHz);
+                if data.doStim
+                    doFixSpot(handles.stimuli, 0.65);
+                    ctDrawStatusText(handles, 'wait');
+                end
+                if ~data.testMode
+                    data.taskState = ctTaskState.taskWaitGoKey;
+                     disp('taskWaitGoKey');
+
+                else
+                    data.taskState = ctTaskState.taskDoStim;
+                                         disp('taskDoStim');
+
+                end
+            end
+        case ctTaskState.taskWaitGoKey
+           % just wait for the state to be changed
+        case ctTaskState.taskDoStim
+           if data.stimStartTimeS == 0                                     % start the stimulus
+                disp('task doStim');
+                baseIndex = get(handles.baseContrastMenu, 'value');
+                baseContrast = data.baseContrasts(baseIndex);
+                data.stimStartTimeS = clock;
+                if data.doStim
+                    % Draw the base stimuli with a white fixspot
+                    ctDrawStatusText(handles, 'run')
+                    data.stimParams.leftContrast = baseContrast;
+                    data.stimParams.rightContrast = baseContrast;
+                    doStimulus(handles.stimuli, data.stimParams);            % takes some time to get new theKey
+                end
+            elseif etime(clock, data.stimStartTimeS) > get(handles.stimDurText, 'value')
+                  disp('task do change');
+               % Draw the test stimuli, followed by the gray fixspot
+                baseIndex = get(handles.baseContrastMenu, 'value');
+                baseContrast = data.baseContrasts(baseIndex);
+                blocksDone = min(data.trialsDone(baseIndex, :));
+                undone = find(data.trialsDone(baseIndex, :) == blocksDone);
+                multIndex = undone(ceil(length(undone) * (rand(1, 1))));
+                if (data.stimParams.changeSide == 0)
+                    data.stimParams.leftContrast = baseContrast * data.multipliers(multIndex);
+                    data.stimParams.rightContrast = baseContrast;
+                else
+                    data.stimParams.leftContrast = baseContrast;
+                    data.stimParams.rightContrast = baseContrast * data.multipliers(multIndex);
+                end
+                if data.doStim
+                    doStimulus(handles.stimuli, data.stimParams);
+                    doFixSpot(handles.stimuli, 0.0);
+                    ctDrawStatusText(handles, 'response');
+                end
+                data.taskState = ctTaskState.taskWaitResponse;
+            end
+        case ctTaskState.taskWaitResponse
+            % just wait for resposne
+        case ctTaskState.taskProcessResponse
+            disp('task do response');
+            if strcmp(data.theKey, 'left')
+                hit = data.stimParams.changeSide == 0;
+            elseif strcmp(data.theKey, 'right')
+                hit = data.stimParams.changeSide == 1;
+            end
+            baseIndex = get(handles.baseContrastMenu, 'value');
+            blocksDone = min(data.trialsDone(baseIndex, :));
+            undone = find(data.trialsDone(baseIndex, :) == blocksDone);
+            multIndex = undone(ceil(length(undone) * (rand(1, 1))));
+            if (hit == 1)
+                data.hits(baseIndex, multIndex) = data.hits(baseIndex, multIndex) + hit;
+                sound(data.tones(2, :), data.sampFreqHz);
+            else
+                sound(data.tones(1, :), data.sampFreqHz);
+            end
+            data.trialsDone(baseIndex, multIndex) = data.trialsDone(baseIndex, multIndex) + 1;
+            data.trialStartTimeS = 0;
+            data.stimStartTimeS = 0;
+            data.taskState = ctTaskState.taskStartTrial;
+            if data.doStim
+                clearScreen(handles.stimuli);
+            end
+            handles = ctDrawHitRates(handles);
+            % Check whether we are done with all the trials
+    %         stimReps = get(handles.stimRepsTextBox, 'value');
+            if sum(data.trialsDone(baseIndex, :)) >= data.stimParams.stimReps * data.numMultipliers
+                if (~data.testMode)                      % if we're not in test mode, we're done testing
+                    data.taskState = ctTaskState.stopRunning;
+                else                                        % if we're testing, see if there are more to do
+                    if sum(sum(data.trialsDone)) >=  data.stimParams.stimReps * data.numMultipliers * handles.numBases
+                        data.taskState = ctTaskState.stopRunning;
+                    else                                    % more to do, try the next multiplier
+                        while sum(data.trialsDone(baseIndex, :)) >= data.stimParams.stimReps * data.numMultipliers
+                            baseIndex = mod(baseIndex, handles.numBases) + 1;
+                        end
+                        set(handles.baseContrastMenu, 'value', baseIndex);
+                    end
+                end
+            end
+            
+        case ctTaskState.taskStopRunning
+           disp('task stop');
+           if data.doStim
+                clearScreen(handles.stimuli);
+            end
+            ctDrawStatusText(handles, 'idle');
+            set(handles.stimRepsTextBox, 'enable', 'on');
+            set(handles.stimDurText, 'enable', 'on');
+            set(handles.preStimTimeText, 'enable', 'on');
+            set(handles.baseContrastMenu, 'enable', 'on');
+            set(handles.clearDataButton, 'enable', 'on');
+            set(handles.savePlotsButton, 'enable', 'on');
+            set(handles.saveDataButton, 'enable', 'on');
+            set(handles.runButton, 'string', 'Run','backgroundColor', 'green');
+            set(handles.runButton, 'enable', 'on');
+            drawnow;
+
+            data.taskState = ctTaskState.taskStopped;
+    end
+end
