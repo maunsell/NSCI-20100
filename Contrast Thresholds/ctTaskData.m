@@ -29,7 +29,7 @@ classdef ctTaskData < handle
             obj = obj@handle();                                            % object initialization
             %% Post Initialization %%
             
-            obj.testMode = false;
+            obj.testMode = true;
             obj.doStim = true;
            
             tones = [];
@@ -44,7 +44,7 @@ classdef ctTaskData < handle
             obj.numBases = length(contrastStrings);                             % number of base contrasts from menu
             obj.baseContrasts = zeros(1, obj.numBases);                     % memory for the base contrasts
             for i = 1:obj.numBases
-                obj.baseContrasts(i) = sscanf(contrastStrings{i}, '%d') / 100.0;
+                obj.baseContrasts(i) = sscanf(contrastStrings{i}, '%f') / 100.0;
             end
             obj.multipliers = [1.0625 1.125 1.25 1.5 2.0];
             obj.numMultipliers = length(obj.multipliers);

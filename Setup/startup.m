@@ -1,0 +1,5 @@
+addpath('~/Desktop/NSCI-20100 Code/Setup')
+addpath('~/Desktop/NSCI-20100 Code/Contrast Thresholds')
+addpath('~/Desktop/NSCI-20100 Code/EOG')
+addpath(genpath('~/Desktop/NSCI-20100 Code/Contrast Thresholds'))
+addpath(genpath('/Users/Shared/Psychtoolbox'))
