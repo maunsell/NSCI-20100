@@ -9,18 +9,21 @@ function ctTaskController(obj, events)
             % do nothing
         case ctTaskState.taskStartRunning
             set(handles.runButton, 'string', 'Stop','backgroundColor', 'red');
-%             set(handles.runButton, 'enable', 'off');
-            set(handles.stimRepsText, 'enable', 'off');
-            set(handles.stimDurText, 'enable', 'off');
-            set(handles.intertrialDurText, 'enable', 'off');
-            set(handles.prestimDurText, 'enable', 'off');
-            set(handles.baseContrastMenu, 'enable', 'off');
-            set(handles.clearDataButton, 'enable', 'off');
-            set(handles.savePlotsButton, 'enable', 'off');
-            set(handles.loadDataButton, 'enable', 'off');
-            set(handles.saveDataButton, 'enable', 'off');
-            set(handles.showHideButton, 'enable', 'off');
-            drawnow;
+                    
+%             set(handles.stimRepsText, 'enable', 'off');
+%             set(handles.stimDurText, 'enable', 'off');
+%             set(handles.intertrialDurText, 'enable', 'off');
+%             set(handles.prestimDurText, 'enable', 'off');
+%             set(handles.baseContrastMenu, 'enable', 'off');
+%             set(handles.clearDataButton, 'enable', 'off');
+%             set(handles.savePlotsButton, 'enable', 'off');
+%             set(handles.loadDataButton, 'enable', 'off');
+%             set(handles.saveDataButton, 'enable', 'off');
+%             set(handles.showHideButton, 'enable', 'off');
+%             drawnow;
+            ctControlState(handles, 'off', {handles.runButton});
+
+        
             data.trialStartTimeS = 0;
             data.stimStartTimeS = 0;
             data.taskState = ctTaskState.taskStartTrial;
@@ -135,18 +138,22 @@ function ctTaskController(obj, events)
                 clearScreen(handles.stimuli);
             end
             ctDrawStatusText(handles, 'idle');
-            set(handles.stimRepsText, 'enable', 'on');
-            set(handles.stimDurText, 'enable', 'on');
-            set(handles.intertrialDurText, 'enable', 'on');
-            set(handles.prestimDurText, 'enable', 'on');
-            set(handles.baseContrastMenu, 'enable', 'on');
-            set(handles.clearDataButton, 'enable', 'on');
-            set(handles.savePlotsButton, 'enable', 'on');
-            set(handles.loadDataButton, 'enable', 'on');
-            set(handles.saveDataButton, 'enable', 'on');
-            set(handles.showHideButton, 'enable', 'on');
             set(handles.runButton, 'string', 'Run','backgroundColor', 'green');
-            drawnow;
+            ctControlState(handles, 'on', {handles.runButton});
             data.taskState = ctTaskState.taskStopped;
+      
+%             set(handles.stimRepsText, 'enable', 'on');
+%             set(handles.stimDurText, 'enable', 'on');
+%             set(handles.intertrialDurText, 'enable', 'on');
+%             set(handles.prestimDurText, 'enable', 'on');
+%             set(handles.baseContrastMenu, 'enable', 'on');
+%             set(handles.clearDataButton, 'enable', 'on');
+%             set(handles.savePlotsButton, 'enable', 'on');
+%             set(handles.loadDataButton, 'enable', 'on');
+%             set(handles.saveDataButton, 'enable', 'on');
+%             set(handles.showHideButton, 'enable', 'on');
+%             drawnow;
+
+            
     end
 end

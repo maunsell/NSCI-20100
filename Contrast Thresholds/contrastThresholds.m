@@ -84,7 +84,6 @@ function keyboardCheck(obj, event)                                              
     [~, ~, keyCode] = KbCheck(-1);
     if keyCode(KbName('ESCAPE'))
         data.taskState = ctTaskState.taskStopRunning;
-        disp('ESCAPE')
     elseif data.taskState == ctTaskState.taskWaitGoKey
         if keyCode(KbName('DownArrow'))
             data.taskState = ctTaskState.taskDoStim;
@@ -103,6 +102,7 @@ end
 % --- Executes on button press in readDataButton.
 function loadDataButton_Callback(hObject, ~, handles)
     cleanup(handles.stimuli);                       % remove stimulus display
+    ctControlState(handles, 'off', {handles.loadDataButton});
     [fileName, filePath] = uigetfile('*.mat', 'Load Matlab Data Workspace');
     if fileName ~= 0
         d = handles.data;
@@ -115,6 +115,8 @@ function loadDataButton_Callback(hObject, ~, handles)
         end
     end
     handles.stimuli = ctStimuli();                  % restore stimulus display
+    set(handles.runButton, 'backgroundColor', 'green');
+    ctControlState(handles, 'on', {handles.loadDataButton});
     ctDrawHitRates(handles);
 end
 
@@ -141,7 +143,7 @@ end
 function runButton_Callback(hObject, ~, handles)      
     if strcmp(get(hObject, 'String'), 'Stop')           % if we are running, just set the abort flag
         handles.data.taskState = ctTaskState.taskStopRunning;
-    else 
+    else
         handles.data.taskState = ctTaskState.taskStartRunning;
     end
     guidata(hObject, handles);                          % save the changes
@@ -150,6 +152,7 @@ end
 % --- Executes on button press in saveDataButton.
 function saveDataButton_Callback(hObject, ~, handles)
     cleanup(handles.stimuli);
+    ctControlState(handles, 'off', {handles.saveDataButton});
     [fileName, filePath] = uiputfile('*.mat', 'Save Matlab Data Workspace', '~/ContrastData.mat');
     if fileName ~= 0
         d = handles.data;
@@ -165,11 +168,14 @@ function saveDataButton_Callback(hObject, ~, handles)
         end
     end
     handles.stimuli = ctStimuli();    
+    set(handles.runButton, 'backgroundColor', 'green');
+    ctControlState(handles, 'on', {handles.saveDataButton});
 end
 
 %% --- Respond to button press in savePlotsButton.
 function savePlotsButton_Callback(hObject, ~, handles)
     cleanup(handles.stimuli);
+    ctControlState(handles, 'off', {handles.savePlotsButton});
     [fileName, filePath] = uiputfile('*.pdf', 'Save Window Image as PDF', '~/ContrastThresholds.pdf');
     if fileName ~= 0
         figurePos = get(handles.figure1, 'position');
@@ -184,6 +190,8 @@ function savePlotsButton_Callback(hObject, ~, handles)
         print(handles.figure1, '-dpdf', '-r600', [filePath fileName]);
     end
     handles.stimuli = ctStimuli();
+    set(handles.runButton, 'backgroundColor', 'green');
+    ctControlState(handles, 'on', {handles.savePlotsButton});
 end
 
 %% respond to the showHideButton
@@ -199,17 +207,7 @@ function showHideButton_Callback(hObject, ~, handles)
         set(handles.runButton, 'string', 'Run','backgroundColor', 'green');
         state = 'on';
     end
-    set(handles.stimRepsText, 'enable', state);
-    set(handles.stimDurText, 'enable', state);
-    set(handles.intertrialDurText, 'enable', state);
-    set(handles.prestimDurText, 'enable', state);
-    set(handles.baseContrastMenu, 'enable', state);
-    set(handles.clearDataButton, 'enable', state);
-    set(handles.savePlotsButton, 'enable', state);
-    set(handles.loadDataButton, 'enable', state);
-    set(handles.saveDataButton, 'enable', state);
-    set(handles.runButton, 'enable', state);
-    drawnow;
+    ctControlState(handles, state, {handles.showHideButton});
     guidata(hObject, handles);                          % save the changes
 end
 
