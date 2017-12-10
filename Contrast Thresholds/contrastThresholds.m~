@@ -83,11 +83,7 @@ function keyboardCheck(obj, event)                                              
     data = handles.data;
     [~, ~, keyCode] = KbCheck(-1);
     if keyCode(KbName('ESCAPE'))
-        if data.taskState ~= ctTaskState.taskStopped
-            data.taskState = ctTaskState.taskStopRunning;
-        elseif keyCode(KbName('LeftShift'))
-            showHideButton_Callback(handles.showHideButton, 0, handles);      
-        end
+        data.taskState = ctTaskState.taskStopRunning;
     elseif data.taskState == ctTaskState.taskWaitGoKey
         if keyCode(KbName('DownArrow'))
             data.taskState = ctTaskState.taskDoStim;
@@ -137,7 +133,6 @@ function openContrastThresholds(hObject, ~, handles, varargin)
     
     taskTimer = timer('name', 'TaskTimer', 'executionMode', 'fixedRate', 'period', 0.1,... 
         'UserData', handles, 'errorFcn', {@timerErrorFcnStop, handles}, 'timerFcn', {@ctTaskController});
-    KbName('UnifyKeyNames');
     keyTimer = timer('name', 'KeyTimer', 'executionMode', 'fixedRate', 'period', 0.1,... 
         'UserData', handles, 'errorFcn', {@timerErrorFcnStop, handles}, 'timerFcn', {@keyboardCheck});
     start(keyTimer);
