@@ -9,21 +9,7 @@ function ctTaskController(obj, events)
             % do nothing
         case ctTaskState.taskStartRunning
             set(handles.runButton, 'string', 'Stop','backgroundColor', 'red');
-                    
-%             set(handles.stimRepsText, 'enable', 'off');
-%             set(handles.stimDurText, 'enable', 'off');
-%             set(handles.intertrialDurText, 'enable', 'off');
-%             set(handles.prestimDurText, 'enable', 'off');
-%             set(handles.baseContrastMenu, 'enable', 'off');
-%             set(handles.clearDataButton, 'enable', 'off');
-%             set(handles.savePlotsButton, 'enable', 'off');
-%             set(handles.loadDataButton, 'enable', 'off');
-%             set(handles.saveDataButton, 'enable', 'off');
-%             set(handles.showHideButton, 'enable', 'off');
-%             drawnow;
             ctControlState(handles, 'off', {handles.runButton});
-
-        
             data.trialStartTimeS = 0;
             data.stimStartTimeS = 0;
             data.taskState = ctTaskState.taskStartTrial;
@@ -57,8 +43,7 @@ function ctTaskController(obj, events)
                 baseIndex = get(handles.baseContrastMenu, 'value');
                 baseContrast = data.baseContrasts(baseIndex);
                 data.stimStartTimeS = clock;
-                if data.doStim
-                    % Draw the base stimuli with a white fixspot
+                if data.doStim                              % Draw the base stimuli with a white fixspot
                     ctDrawStatusText(handles, 'run')
                     data.stimParams.leftContrast = baseContrast;
                     data.stimParams.rightContrast = baseContrast;
@@ -70,13 +55,13 @@ function ctTaskController(obj, events)
                 baseContrast = data.baseContrasts(baseIndex);
                 blocksDone = min(data.trialsDone(baseIndex, :));
                 undone = find(data.trialsDone(baseIndex, :) == blocksDone);
-                multIndex = undone(ceil(length(undone) * (rand(1, 1))));
+                data.multIndex = undone(ceil(length(undone) * (rand(1, 1))));
                 if (data.stimParams.changeSide == 0)
-                    data.stimParams.leftContrast = baseContrast * data.multipliers(multIndex);
+                    data.stimParams.leftContrast = baseContrast * data.multipliers(data.multIndex);
                     data.stimParams.rightContrast = baseContrast;
                 else
                     data.stimParams.leftContrast = baseContrast;
-                    data.stimParams.rightContrast = baseContrast * data.multipliers(multIndex);
+                    data.stimParams.rightContrast = baseContrast * data.multipliers(data.multIndex);
                 end
                 if data.doStim
                     doStimulus(handles.stimuli, data.stimParams);           % display the increment stimulus
@@ -90,12 +75,13 @@ function ctTaskController(obj, events)
                 data.taskState = ctTaskState.taskProcessResponse;
             end
         case ctTaskState.taskProcessResponse
-            baseIndex = get(handles.baseContrastMenu, 'value');
+            baseIndex = get(handles.baseContrastMenu, 'value')
             blocksDone = min(data.trialsDone(baseIndex, :));
             undone = find(data.trialsDone(baseIndex, :) == blocksDone);
-            multIndex = undone(ceil(length(undone) * (rand(1, 1))));
+%             multIndex = undone(ceil(length(undone) * (rand(1, 1))));
+            disp(data.multIndex);
             if data.testMode
-                prob = 0.5 + 0.5 / (1.0 + exp(-10.0 * (data.multipliers(multIndex) - data.multipliers(3))));
+                prob = 0.5 + 0.5 / (1.0 + exp(-10.0 * (data.multipliers(data.multIndex) - data.multipliers(3))));
                 hit = rand(1,1) < prob;
             else
                 if strcmp(data.theKey, 'left')
@@ -105,12 +91,12 @@ function ctTaskController(obj, events)
                 end
             end
             if (hit == 1)
-                data.hits(baseIndex, multIndex) = data.hits(baseIndex, multIndex) + hit;
+                data.hits(baseIndex, data.multIndex) = data.hits(baseIndex, data.multIndex) + hit;
                 sound(data.tones(2, :), data.sampFreqHz);
             else
                 sound(data.tones(1, :), data.sampFreqHz);
             end
-            data.trialsDone(baseIndex, multIndex) = data.trialsDone(baseIndex, multIndex) + 1;
+            data.trialsDone(baseIndex, data.multIndex) = data.trialsDone(baseIndex, data.multIndex) + 1;
             data.trialStartTimeS = 0;
             data.stimStartTimeS = 0;
             data.taskState = ctTaskState.taskStartTrial;
@@ -141,19 +127,5 @@ function ctTaskController(obj, events)
             set(handles.runButton, 'string', 'Run','backgroundColor', 'green');
             ctControlState(handles, 'on', {handles.runButton});
             data.taskState = ctTaskState.taskStopped;
-      
-%             set(handles.stimRepsText, 'enable', 'on');
-%             set(handles.stimDurText, 'enable', 'on');
-%             set(handles.intertrialDurText, 'enable', 'on');
-%             set(handles.prestimDurText, 'enable', 'on');
-%             set(handles.baseContrastMenu, 'enable', 'on');
-%             set(handles.clearDataButton, 'enable', 'on');
-%             set(handles.savePlotsButton, 'enable', 'on');
-%             set(handles.loadDataButton, 'enable', 'on');
-%             set(handles.saveDataButton, 'enable', 'on');
-%             set(handles.showHideButton, 'enable', 'on');
-%             drawnow;
-
-            
     end
 end

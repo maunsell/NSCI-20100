@@ -17,14 +17,6 @@ function handles = ctDrawHitRates(handles)
 % If we've just finished a block, and we have enough blocks, fit a logistic function.
 % We force 0.5 performace at the base contrast.
             if blocksDone > handles.data.blocksFit(i) && blocksDone > 3 
-%                 xData = [handles.data.baseContrasts(i) (handles.data.baseContrasts(i) * handles.data.multipliers)];
-%                 yData = [0.5 hitRate(i,:)];
-%                 x0 = [xData(ceil(length(xData) / 2)); 5];
-%                 lowBounds = [handles.data.baseContrasts(i); 1];
-%                 highBounds = [5; 1000];
-%                 fun=@(params, xData) 0.5 + 0.5 ./ (1.0 + exp(-params(2) * (xData - params(1))));
-%                 options = optimset('Display', 'off');
-%                 [params, ~] = lsqcurvefit(fun, x0, xData, yData, lowBounds, highBounds, options);
                 fun = @(params, xData) 0.5 + 0.5 ./ (1.0 + exp(-params(2) * (xData - params(1))));
                 xData = [handles.data.baseContrasts(i) (handles.data.baseContrasts(i) * handles.data.multipliers)];
                 yData = [0.5 hitRate(i,:)];
@@ -47,7 +39,6 @@ function handles = ctDrawHitRates(handles)
     errorbar(handles.axes1, x', hitRate', errNeg', errPos', 'o');
     hold(handles.axes1, 'on');
     if (post2015)
-        disp('setting color order index');
         set(handles.axes1, 'ColorOrderIndex', 1)                % reset the color order post 2014 version
     end
     plot(handles.axes1, x', handles.data.curveFits', '-');

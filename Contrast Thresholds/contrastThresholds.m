@@ -183,15 +183,16 @@ function savePlotsButton_Callback(hObject, ~, handles)
     ctControlState(handles, 'off', {handles.savePlotsButton});
     [fileName, filePath] = uiputfile('*.pdf', 'Save Window Image as PDF', '~/ContrastThresholds.pdf');
     if fileName ~= 0
-        figurePos = get(handles.figure1, 'position');
-        widthInch = figurePos(3) / 72;
-        heightInch = figurePos(4) / 72;
-        set(handles.figure1, 'PaperOrientation', 'landscape');
         set(handles.figure1, 'PaperUnits', 'inches');
+%         set(handles.figure1, 'PaperPositionMode', 'auto');
+        figurePos = get(handles.figure1, 'position')
+        widthInch = figurePos(3) / 72
+        heightInch = figurePos(4) / 72
+%         set(handles.figure1, 'PaperOrientation', 'landscape');
 %         set(handles.figure1, 'PaperSize', [heightInch + 2, widthInch + 2]);
 %         set(handles.figure1, 'PaperPosition', [1, 5.5, widthInch, heightInch]);
-        set(handles.figure1, 'PaperSize', [heightInch + 0.5, widthInch + 1.5]);
-        set(handles.figure1, 'PaperPosition', [0.75, -2, widthInch, heightInch]);
+        set(handles.figure1, 'PaperSize', [widthInch + 1.0, heightInch + 1.0]);
+        set(handles.figure1, 'PaperPosition', [0.5, 0.5, widthInch, heightInch]);
         print(handles.figure1, '-dpdf', '-r600', [filePath fileName]);
     end
     handles.stimuli = ctStimuli();
