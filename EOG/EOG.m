@@ -115,6 +115,10 @@ function openEOG(hObject, eventdata, handles, varargin)
     else
         testMode = false;
     end
+    
+    testMode = true;
+    
+    
     handles.output = hObject;                                               % select default command line output
     handles.visStim = EOGStimulus;
     handles.saccades = EOGSaccades;
@@ -186,10 +190,14 @@ end
 function lbj = setupLabJack()
 %  get hardware info and do not continue if daq device/drivers unavailable
 
-    lbj = labJackU3;                        % create the daq object
+    lbj = labJackU6;                        % create the daq object
     open(lbj);                              % open connection to the daq
     if isempty(lbj.handle)
-        error('No USB connection to a LabJack was found. Check connections and try again.');
+        originalSize = get(0, 'DefaultUIControlFontSize');
+        set(0, 'DefaultUIControlFontSize', 14);
+        questdlg('Exit and check USB connections.', ...
+            'No LabJack Device Found', 'OK', 'OK');
+        set(0, 'DefaultUIControlFontSize', originalSize);
     else
         fprintf(1,'EOG: LabJack Ready.\n\n');
     end
