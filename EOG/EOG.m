@@ -108,27 +108,12 @@ function loadDataButton_Callback(hObject, ~, handles)
         load([filePath fileName]);
         handles.data = d;
         handles.ampDur = a;
+        handles.saccades = s;
         handles.rtDists{1} = r1;
         handles.rtDists{2} = r2;
         handles.rtDists{3} = r3;
         handles.rtDists{4} = r4;
         guidata(hObject, handles);                                                   % save the selection
-
-%         d = handles.data;
-%         p = properties(d);
-%         for i = 1:length(p)
-%             eval(['clear d.' p{i} ';']);
-%             eval(['load ' filePath fileName ' ' p{i} ';']);
-%             eval(['d.' p{i} ' = ' p{i} ';']);
-%             eval(['clear ' p{i} ';']);
-%         end
-%         eval(['load ' filePath fileName ' tempN tempReactTimeMS tempRTN tempRTReactTimeMS;']);
-%         handles.ampDur.n = tempN;
-%         handles.ampDur.reactTimesMS = tempReactTimeMS;
-%         for i = 1:4
-%             handles.rtDists{i}.n = tempRTN(i);
-%             ahandles.rtDists.reactTimesMS = tempRTReactTimeMS(i, :);
-%         end
         [startIndex, endIndex] = processSignals(handles.saccades, d);
         plot(handles.posVelPlots, handles, startIndex, endIndex);
         plotAmpDur(handles.ampDur);
@@ -188,37 +173,16 @@ function saveDataButton_Callback(hObject, eventdata, handles)
 % handles, which doesn't work.  Instead, we get a list of all the properties
 % from the EOGTaskData class, and then use eval statement to assign those to
 % local variable and save them (one by one).
-
     [fileName, filePath] = uiputfile('*.mat', 'Save Matlab Data Workspace', '~/Desktop/EOGData.mat');
     if fileName ~= 0
         d = handles.data;
         a = handles.ampDur;
+        s = handles.saccades;
         r1 = handles.rtDists{1};
         r2 = handles.rtDists{2};
         r3 = handles.rtDists{3};
         r4 = handles.rtDists{4};
-       save([filePath fileName], 'd', 'a', 'r1', 'r2', 'r3', 'r4');
-        
-        
-%         d = handles.data;
-%         p = properties(d);
-%         for i = 1:length(p)
-%             eval([p{i} '= d.' p{i} ';']);
-%             if i == 1
-%                 eval(['save ' filePath fileName ' ' p{i} ';']);
-%             else
-%              	eval(['save ' filePath fileName ' ' p{i} ' -append ;']);
-%             end
-% %             eval(['clear ' p{i} ';']);
-%         end
-% %         tempN = handles.ampDur.n;
-% %         tempReactTimeMS = handles.ampDur.reactTimesMS;
-% %         tempRTReactTimeMS = zeros(4, 10000);
-% %         for i = 1:4
-% %             tempRTN(i) = handles.rtDists{i}.n;
-% %             tempRTReactTimeMS(i, :) = handles.rtDists{i}.reactTimesMS;
-% %         end
-% %         eval(['save ' filePath fileName ' tempN tempReactTimeMS tempRTN tempRTReactTimeMS -append ;']);
+       save([filePath fileName], 'd', 'a', 's', 'r1', 'r2', 'r3', 'r4');
     end
 end
 
