@@ -103,11 +103,11 @@ function keyboardCheck(obj, event)                                              
     end    
 end
 
-% --- Executes on button press in loadDataButton.
+% --- Executes on button press in DataButton.
 function loadDataButton_Callback(hObject, ~, handles)
     cleanup(handles.stimuli);                       % remove stimulus display
     ctControlState(handles, 'off', {handles.loadDataButton});
-    [fileName, filePath] = uigetfile('*.mat', 'Load Matlab Data Workspace', '~/Desktop/');
+    [fileName, filePath] = uigetfile('*.mat', 'Load Matlab Data Workspace');
     if fileName ~= 0
         d = handles.data;
         p = properties(d);
@@ -158,7 +158,7 @@ end
 function saveDataButton_Callback(hObject, ~, handles)
     cleanup(handles.stimuli);
     ctControlState(handles, 'off', {handles.saveDataButton});
-    [fileName, filePath] = uiputfile('*.mat', 'Save Matlab Data Workspace', '~/Desktop/ContrastData.mat');
+    [fileName, filePath] = uiputfile('*.mat', 'Save Matlab Data Workspace', '~/ContrastData.mat');
     if fileName ~= 0
         d = handles.data;
         p = properties(d);
@@ -181,7 +181,7 @@ end
 function savePlotsButton_Callback(hObject, ~, handles)
     cleanup(handles.stimuli);
     ctControlState(handles, 'off', {handles.savePlotsButton});
-    [fileName, filePath] = uiputfile('*.pdf', 'Save Window Image as PDF', '~/Desktop/ContrastThresholds.pdf');
+    [fileName, filePath] = uiputfile('*.pdf', 'Save Window Image as PDF', '~/ContrastThresholds.pdf');
     if fileName ~= 0
         set(handles.figure1, 'PaperUnits', 'inches');
         figurePos = get(handles.figure1, 'position')

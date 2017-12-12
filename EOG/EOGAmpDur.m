@@ -56,8 +56,15 @@ classdef EOGAmpDur < handle
             cla(obj.fHandle);
         end
 
-        %% confidenceInterval
-        % return the 95% confidence interval
+        %% saveData
+        % append all properties to a given file
+
+        function saveData(obj, filePath)
+            p = properties(obj);
+            for i = 1:length(p)
+                eval(['save ' filePath ' obj.' p{i} ' -append;']);
+            end
+        end
 
         function [yMean, sem] = stats(~, y)
 

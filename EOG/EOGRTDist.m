@@ -48,7 +48,7 @@ classdef EOGRTDist < handle
             cla(obj.fHandle);
         end
 
-        %% plotAmpDur
+        %% plot
         function rescale = plot(obj)
             cla(obj.fHandle);
             if obj.n == 0

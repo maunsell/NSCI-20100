@@ -107,11 +107,7 @@ function loadDataButton_Callback(hObject, ~, handles)
     if fileName ~= 0
         load([filePath fileName]);
         handles.data = d;
-        handles.ampDur = a;
-        handles.rtDists{1} = r1;
-        handles.rtDists{2} = r2;
-        handles.rtDists{3} = r3;
-        handles.rtDists{4} = r4;
+        
         guidata(hObject, handles);                                                   % save the selection
 
 %         d = handles.data;
@@ -129,7 +125,7 @@ function loadDataButton_Callback(hObject, ~, handles)
 %             handles.rtDists{i}.n = tempRTN(i);
 %             ahandles.rtDists.reactTimesMS = tempRTReactTimeMS(i, :);
 %         end
-        [startIndex, endIndex] = processSignals(handles.saccades, d);
+%         [startIndex, endIndex] = processSignals(handles.saccades, d);
         plot(handles.posVelPlots, handles, startIndex, endIndex);
         plotAmpDur(handles.ampDur);
         for i = 1:4
@@ -192,12 +188,8 @@ function saveDataButton_Callback(hObject, eventdata, handles)
     [fileName, filePath] = uiputfile('*.mat', 'Save Matlab Data Workspace', '~/Desktop/EOGData.mat');
     if fileName ~= 0
         d = handles.data;
-        a = handles.ampDur;
-        r1 = handles.rtDists{1};
-        r2 = handles.rtDists{2};
-        r3 = handles.rtDists{3};
-        r4 = handles.rtDists{4};
-       save([filePath fileName], 'd', 'a', 'r1', 'r2', 'r3', 'r4');
+        save([filePath fileName], d);
+        a
         
         
 %         d = handles.data;
