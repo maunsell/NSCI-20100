@@ -69,24 +69,23 @@ classdef EOGSaccades < handle
 
         %% processSignals: function to process data from one trial
         function [startIndex, endIndex] = processSignals(obj, data)
+            % take the difference between the electrodes, and then normalize to
+            % prestim voltage
             data.posTrace = data.rawData(:, 1) - data.rawData(:, 2);
             data.posTrace = data.posTrace - ...
                                         mean(data.posTrace(1:floor(data.sampleRateHz * data.prestimDurS)));
-            
-            % Debug: add some noise to make things realistic
+            % debug: add some noise to make things realistic
             if data.testMode
                 data.posTrace = data.posTrace + 0.3 * rand(size(data.posTrace)) - 0.15;
             end
-            
-            % do a boxcar filter of the raw signal
+            % boxcar filter of the raw signal and make the velocity trace
             filterSamples = floor(data.sampleRateHz * obj.filterWidthMS / 1000.0);     
             b = (1 / filterSamples) * ones(1, filterSamples);
             data.posTrace = filter(b, 1, data.posTrace);
             data.velTrace(1:end - 1) = diff(data.posTrace);
             data.velTrace(end) = data.velTrace(end - 1);
-
-            % if we don't have a complete block yet, estimate the degPerV using the
-            % start and end of the trial
+            % find a saccade and make sure we have enough samples before and
+            % after its start
             [startIndex, endIndex] = obj.findSaccade(data, data.velTrace, data.stepSign);
             saccadeOffset = floor(data.saccadeSamples / 2);
             if (startIndex - saccadeOffset < 1 || startIndex + saccadeOffset > data.trialSamples)
@@ -95,6 +94,7 @@ classdef EOGSaccades < handle
             if startIndex == 0
                 return;
             end
+            % sum into the average pos and vel plot, inverting for negative steps
             if (data.stepSign == 1)
                 data.posSummed(:, data.offsetIndex) = data.posSummed(:, data.offsetIndex)... 
                             + data.posTrace(startIndex - saccadeOffset:startIndex + saccadeOffset - 1);  
@@ -106,16 +106,15 @@ classdef EOGSaccades < handle
                 data.velSummed(:, data.offsetIndex) = data.velSummed(:, data.offsetIndex)... 
                             - data.velTrace(startIndex - saccadeOffset:startIndex + saccadeOffset - 1);  
             end
+            % tally the sums and compute the averages
             data.numSummed(data.offsetIndex) = data.numSummed(data.offsetIndex) + 1;
             data.posAvg(:, data.offsetIndex) = data.posSummed(:, data.offsetIndex) ...
                 / data.numSummed(data.offsetIndex);
             data.velAvg(:, data.offsetIndex) = data.velSummed(:, data.offsetIndex) ...
                 / data.numSummed(data.offsetIndex);
             data.offsetsDone(data.offsetIndex) = data.offsetsDone(data.offsetIndex) + 1;
-
             % now that we've updated all the traces, compute the degrees per volt if
             % we have enough trials
-
             if sum(data.numSummed) < length(data.numSummed)
                 obj.degPerV = 0.0;
             else
@@ -123,9 +122,7 @@ classdef EOGSaccades < handle
                 obj.degPerV = mean(data.offsetsDeg ./ endPointsV);
             end
             obj.degPerSPerV = obj.degPerV * data.sampleRateHz;
-
             % find the average saccade duration using the average speed trace
-
             [sAvgIndex, eAvgIndex] = obj.findSaccade(data, data.velAvg(:, data.offsetIndex), 1);
             if eAvgIndex > sAvgIndex 
                 data.saccadeDurS(data.offsetIndex) = eAvgIndex - sAvgIndex;

@@ -26,7 +26,6 @@ function varargout = EOG(varargin)
     end
 end
 
-
 %% clearButton_Callback
 function clearButton_Callback(hObject, eventdata, handles)                  %#ok<DEFNU>
 
@@ -46,7 +45,6 @@ function clearButton_Callback(hObject, eventdata, handles)                  %#ok
         guidata(hObject, handles);
     end
 end
-    
 
 %% closeEOG: clean up
 function closeEOG(hObject, eventdata, handles)
@@ -103,6 +101,7 @@ end
 
 % --- Executes on button press in loadDataButton.
 function loadDataButton_Callback(hObject, ~, handles)
+    EOGControlState(handles, 'off', {})
     [fileName, filePath] = uigetfile('*.mat', 'Load Matlab Data Workspace', '~/Desktop');
     if fileName ~= 0
         load([filePath fileName]);
@@ -113,7 +112,16 @@ function loadDataButton_Callback(hObject, ~, handles)
         handles.rtDists{2} = r2;
         handles.rtDists{3} = r3;
         handles.rtDists{4} = r4;
-        guidata(hObject, handles);                                                   % save the selection
+        % saved axes handles generally aren't valid if we are in a new run.
+        % Load the handles with the current axes handles.
+        
+        handles.ampDur.fHandle = handles.axes5;                         % loaded axes handle might be invalid
+        handles.rtDists{1}.fHandle = handles.axes6;
+        handles.rtDists{2}.fHandle = handles.axes7;
+        handles.rtDists{3}.fHandle = handles.axes8;
+        handles.rtDists{4}.fHandle = handles.axes9;
+        guidata(hObject, handles);                                      % save the selections
+        
         [startIndex, endIndex] = processSignals(handles.saccades, d);
         plot(handles.posVelPlots, handles, startIndex, endIndex);
         plotAmpDur(handles.ampDur);
@@ -122,6 +130,7 @@ function loadDataButton_Callback(hObject, ~, handles)
         end
 
     end
+    EOGControlState(handles, 'on', {})
 end
 
 % openEOG: just before gui is made visible.
@@ -173,6 +182,7 @@ function saveDataButton_Callback(hObject, eventdata, handles)
 % handles, which doesn't work.  Instead, we get a list of all the properties
 % from the EOGTaskData class, and then use eval statement to assign those to
 % local variable and save them (one by one).
+    EOGControlState(handles, 'off', {})
     [fileName, filePath] = uiputfile('*.mat', 'Save Matlab Data Workspace', '~/Desktop/EOGData.mat');
     if fileName ~= 0
         d = handles.data;
@@ -184,6 +194,7 @@ function saveDataButton_Callback(hObject, eventdata, handles)
         r4 = handles.rtDists{4};
        save([filePath fileName], 'd', 'a', 's', 'r1', 'r2', 'r3', 'r4');
     end
+    EOGControlState(handles, 'on', {})
 end
 
 % --- Respond to button press in savePlotsButton.
@@ -191,6 +202,7 @@ function savePlotsButton_Callback(hObject, eventdata, handles)
 % hObject    handle to savePlotsButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+    EOGControlState(handles, 'off', {})
     [fileName, filePath] = uiputfile('*.pdf', 'Save Window Plots as PDF', '~/Desktop/EOGData.pdf');
     if fileName ~= 0
         set(handles.figure1, 'PaperUnits', 'inches');
@@ -202,6 +214,7 @@ function savePlotsButton_Callback(hObject, eventdata, handles)
         set(handles.figure1, 'PaperPosition', [0.5, 0.5, widthInch, heightInch]);
         print(handles.figure1, '-dpdf', '-r600', '-noui', [filePath fileName]);
     end
+    EOGControlState(handles, 'on', {})
 end
 
 %% Set up the LabJack
@@ -258,12 +271,7 @@ function startButton_Callback(hObject, eventdata, handles)                  %#ok
 
         % set the gui button to "running" state
         set(handles.startButton, 'String', 'Stop', 'BackgroundColor', 'red');
-        set(handles.clearButton,'enable','off');
-        set(handles.savePlotsButton,'enable','off');
-        set(handles.saveDataButton,'enable','off');
-        set(handles.filterWidthText,'enable','off');
-        set(handles.viewDistanceText,'enable','off');
-        set(handles.thresholdDPSText,'enable','off');
+        EOGControlState(handles, 'off', {handles.startButton})
         % save timers to handles and update the GUI display
         handles.taskTimer = taskTimer;
         handles.dataTimer = dataTimer;
@@ -280,14 +288,9 @@ function startButton_Callback(hObject, eventdata, handles)                  %#ok
         delete(timerfind);        
         stopStream(handles.lbj);
         set(handles.startButton, 'string', 'Start','backgroundColor', 'green');
-        set(handles.clearButton,'enable','on');
-        set(handles.savePlotsButton,'enable','on');
-        set(handles.saveDataButton,'enable','on');
-        set(handles.filterWidthText,'enable','on');
-        set(handles.viewDistanceText,'enable','on');
-        set(handles.thresholdDPSText,'enable','on');
-        centerStimulus(handles.visStim);                                        % recenter fixspot
+        EOGControlState(handles, 'on', {handles.startButton})
         drawnow;
+        centerStimulus(handles.visStim);                                        % recenter fixspot
     end
 end
 
@@ -320,15 +323,15 @@ function taskController(obj, events, daqaxes)
                 end
             elseif etime(clock, data.trialStartTimeS) > 0.050               % data settled for one taskTimer cycle
                data.trialStartTimeS = clock;                                % reset the trial clock
-                data.stimTimeS = data.prestimDurS + rand() * 0.1250;
-                data.dataState = DataState.dataStart;
-                data.taskState = TaskState.taskPrestim;
+                data.stimTimeS = data.prestimDurS + rand() * 0.250;         % jitter the stimon time a bit
+                data.dataState = DataState.dataStart;                       % start data collection
+                data.taskState = TaskState.taskPrestim;                     % go to prestim state
             end
         case TaskState.taskPrestim
            if etime(clock, data.trialStartTimeS) > data.stimTimeS
                 data.stepSign = stepStimulus(visStim, data.offsetsDeg(data.offsetIndex));
                 if data.testMode
-                    data.voltage = visStim.currentOffsetPix / 1000.0;           % debugging- connect DOC0 to AIN Ch0
+                    data.voltage = visStim.currentOffsetPix / 1000.0;       % debugging- connect DOC0 to AIN Ch0
                     analogOut(lbj, 0, 2.5 + data.voltage);
                     analogOut(lbj, 1, 2.5 - data.voltage);
                 end
@@ -342,11 +345,17 @@ function taskController(obj, events, daqaxes)
             addAmpDur(ampDur, data.offsetIndex, startIndex, endIndex);
             plotAmpDur(ampDur);
             if startIndex > 0
-                if data.testMode
-                    addRT(rtDists{data.offsetIndex}, rand() * 100 * data.offsetIndex);
-                else
-                    addRT(rtDists{data.offsetIndex}, startIndex / data.sampleRateHz * 1000.0);
-                end
+                
+                data.stimTimeS * 1000.0
+                disp(startIndex / data.sampleRateHz * 1000.0 - data.stimTimeS);
+                
+                
+                addRT(rtDists{data.offsetIndex}, startIndex / data.sampleRateHz * 1000.0 - data.stimTimeS);
+%                 if data.testMode
+%                     addRT(rtDists{data.offsetIndex}, rand() * 100 * data.offsetIndex);
+%                 else
+%                     addRT(rtDists{data.offsetIndex}, startIndex / data.sampleRateHz * 1000.0);
+%                 end
             end
             needsRescale = plot(rtDists{data.offsetIndex});
             if needsRescale > 0
