@@ -34,8 +34,8 @@ classdef EOGPosVelPlots < handle
             data = handles.data;
             saccades = handles.saccades;
 
-            timestepS = 1 / data.sampleRateHz;                                       % time interval of samples
-            trialTimes = (0:1:size(data.posTrace, 1) - 1) * timestepS;          % make array of trial time points
+            timestepS = 1 / data.sampleRateHz;                            % time interval of samples
+            trialTimes = (0:1:size(data.posTrace, 1) - 1) * timestepS;    % make array of trial time points
             saccadeTimes = (-(size(data.posAvg, 1) / 2):1:(size(data.posAvg,1) / 2) - 1) * timestepS;             
             colors = get(obj.posAxes, 'ColorOrder');
 

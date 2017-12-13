@@ -323,16 +323,13 @@ function taskController(obj, events, daqaxes)
                 end
             elseif etime(clock, data.trialStartTimeS) > 0.050               % data settled for one taskTimer cycle
                 data.trialStartTimeS = clock;                               % reset the trial clock
-                data.stimTimeS = data.prestimDurS + rand() * 0.0;           % jitter the stimon time a bit
+                data.stimTimeS = data.prestimDurS + rand() * 0.125;           % jitter the stimon time a bit
                 data.dataState = DataState.dataStart;                       % start data collection
                 data.taskState = TaskState.taskPrestim;                     % go to prestim state
             end
         case TaskState.taskPrestim
            if etime(clock, data.trialStartTimeS) > data.stimTimeS
                 data.stepSign = stepStimulus(visStim, data.offsetsDeg(data.offsetIndex));
-               
-                disp(' ');
-                disp(sprintf('prestim (125 ms) elapse %f', etime(clock, data.trialStartTimeS)));
                 if data.testMode
                     data.voltage = visStim.currentOffsetPix / 1000.0;       % debugging- connect DOC0 to AIN Ch0
                     analogOut(lbj, 0, 2.5 + data.voltage);
@@ -343,22 +340,12 @@ function taskController(obj, events, daqaxes)
         case TaskState.taskPoststim
            % just wait for end of trial
         case TaskState.taskEndtrial
-            disp('endTrial');
             [startIndex, endIndex] = processSignals(saccades, data);
             plot(handles.posVelPlots, handles, startIndex, endIndex);
             addAmpDur(ampDur, data.offsetIndex, startIndex, endIndex);
             plotAmpDur(ampDur);
             if startIndex > 0
-                disp(sprintf('stimTimeMS %f', data.stimTimeS * 1000.0));
-                disp(sprintf('saccadeStart %f', startIndex / data.sampleRateHz * 1000.0 - data.stimTimeS));
-
-                
-                addRT(rtDists{data.offsetIndex}, startIndex / data.sampleRateHz * 1000.0 - data.stimTimeS);
-%                 if data.testMode
-%                     addRT(rtDists{data.offsetIndex}, rand() * 100 * data.offsetIndex);
-%                 else
-%                     addRT(rtDists{data.offsetIndex}, startIndex / data.sampleRateHz * 1000.0);
-%                 end
+                addRT(rtDists{data.offsetIndex}, (startIndex / data.sampleRateHz  - data.stimTimeS) * 1000.0);
             end
             needsRescale = plot(rtDists{data.offsetIndex});
             if needsRescale > 0
