@@ -64,22 +64,22 @@ end
 %% collectData: function to collect data from LabJack
 function collectData(obj, event)                                            %#ok<*INUSD>
 % reads stream data from the LabJack
-
     handles = obj.UserData;
     data = handles.data;
     lbj = handles.lbj;                                                     % obj.UserData is pointer to handles
-    [dRaw, errorCode] = getStreamData(lbj);                                     %#ok<*NASGU> % get stream data
     switch data.dataState
         case DataState.dataIdle
             return;
-        case DataState.dataStart
-           data.samplesRead = 0;
-            data.dataState = DataState.dataCollect;
         case DataState.dataCollect
+            [dRaw, errorCode] = getStreamData(lbj);                                     %#ok<*NASGU> % get stream data
             numNew = min(length(dRaw), data.trialSamples - data.samplesRead);
             data.rawData(data.samplesRead + 1:data.samplesRead + numNew, :) = dRaw(1:numNew, :);
             data.samplesRead = data.samplesRead + numNew;
             if (data.samplesRead == data.trialSamples)
+                tStart = tic;
+                handles.lbj.verbose = 0;
+                stopStream(handles.lbj);
+                handles.lbj.verbose = 1;
                 data.dataState = DataState.dataIdle;
                 data.taskState = TaskState.taskEndtrial;
             end        
@@ -235,7 +235,7 @@ function lbj = setupLabJack()
     % create input channel list
     removeChannel(lbj, -1);                     % remove all input channels
     addChannel(lbj, [0 1], [10 10], ['s' 's']); % add channels 0,1 as inputs
-    lbj.SampleRateHz = 1000;                    % sample rate (Hz)
+    lbj.SampleRateHz = 1000;                     % sample rate (Hz)
     lbj.ResolutionADC = 1;                      % ADC resolution (AD bit depth)
 
     % configure LabJack for analog input streaming
@@ -259,44 +259,46 @@ function startButton_Callback(hObject, eventdata, handles)                  %#ok
         handles.saccades.thresholdDPS = str2double(get(handles.thresholdDPSText, 'string'));
         handles.saccades.filterWidthMS = str2double(get(handles.filterWidthText, 'string'));
         % create timer to control the task
-        taskTimer = timer('Name', 'TaskTimer', 'ExecutionMode', 'fixedRate',...
-            'Period', 0.02, 'UserData', handles, 'ErrorFcn', {@timerErrorFcnStop, handles}, 'TimerFcn',...
+        taskRateHz = 25;
+        handles.taskTimer = timer('Name', 'TaskTimer', 'ExecutionMode', 'fixedRate',...
+            'Period', 1.0/taskRateHz, 'UserData', handles, 'ErrorFcn', {@timerErrorFcnStop, handles}, 'TimerFcn',...
             {@taskController, [handles.axes1 handles.axes2 handles.axes3 handles.axes4]});
 
         % create timer to get data from LabJack
-        dataCollectRateHz = 50;                       % Fast enough to prevent overflow w/o blocking other activity
-        dataTimer = timer('Name', 'LabJackData', 'ExecutionMode', 'fixedRate',...
-            'Period', 1/dataCollectRateHz, 'UserData', handles, 'ErrorFcn', {@timerErrorFcnStop, handles},...
-            'TimerFcn', {@collectData}, 'StartDelay', 0.1); % StartDelay allows other parts of the gui to execute
+        handles.data.taskState = TaskState.taskStarttrial;
+        handles.data.trialStartTimeS = 0;
+        handles.data.dataState = DataState.dataIdle;
+        dataCollectRateHz = 25;                       % Fast enough to prevent overflow w/o blocking other activity
+        handles.dataTimer = timer('Name', 'LabJackData', 'ExecutionMode', 'fixedRate',...
+            'Period', 1.0 / dataCollectRateHz, 'UserData', handles, 'ErrorFcn', {@timerErrorFcnStop, handles},...
+            'TimerFcn', {@collectData}, 'StartDelay', 0.050); % StartDelay allows other parts of the gui to execute
 
         % set the gui button to "running" state
         set(handles.startButton, 'String', 'Stop', 'BackgroundColor', 'red');
         EOGControlState(handles, 'off', {handles.startButton})
         % save timers to handles and update the GUI display
-        handles.taskTimer = taskTimer;
-        handles.dataTimer = dataTimer;
-        guidata(hObject, handles);    
 
         %% Start plots, data pickup, and data acquisition 
-        startStream(handles.lbj);
-        start(dataTimer);    
-        start(taskTimer);
+        start(handles.dataTimer);    
+        start(handles.taskTimer);
 
     %% Stop -- we're already running, so it's a the stop button    
     else % stop
         stop(timerfind);                                                        % stop/delete timers; pause data stream
-        delete(timerfind);        
+        delete(timerfind);      
+        handles.dataTimer = 0;
+        handles.taskTimer = 0;
         stopStream(handles.lbj);
         set(handles.startButton, 'string', 'Start','backgroundColor', 'green');
         EOGControlState(handles, 'on', {handles.startButton})
         drawnow;
         centerStimulus(handles.visStim);                                        % recenter fixspot
     end
+    guidata(hObject, handles);    
 end
 
 %% taskController: function to collect data from LabJack
 function taskController(obj, events, daqaxes)
-
     handles = obj.UserData;
     data = handles.data;
     lbj = handles.lbj;                                                      % get handle to LabJack
@@ -305,30 +307,35 @@ function taskController(obj, events, daqaxes)
     ampDur = handles.ampDur;
     rtDists = handles.rtDists;
     switch data.taskState
-        case TaskState.taskIdle
-            if data.trialStartTimeS == 0                                    % initialize a new trial
-               if sum(data.offsetsDone) >= data.numOffsets                  % finished another block
-                    data.offsetsDone = zeros(1, data.numOffsets);           % clear counters
-                    data.blocksDone = data.blocksDone + 1;                  % increment block counter
-                end
-                data.offsetIndex = ceil(rand() * data.numOffsets);
-                while data.offsetsDone(data.offsetIndex) > 0
-                    data.offsetIndex = mod(data.offsetIndex, data.numOffsets) + 1;
-                end
-                data.trialStartTimeS = clock;
-                if data.testMode
-                    data.voltage = visStim.currentOffsetPix / 1000.0;       % debugging- connect DOC0 to AIN Ch0
-                    analogOut(lbj, 0, 2.5 + data.voltage);
-                    analogOut(lbj, 1, 2.5 - data.voltage);
-                end
-            elseif etime(clock, data.trialStartTimeS) > 0.050               % data settled for one taskTimer cycle
+        case TaskState.taskStarttrial
+           if sum(data.offsetsDone) >= data.numOffsets                  % finished another block
+                data.offsetsDone = zeros(1, data.numOffsets);           % clear counters
+                data.blocksDone = data.blocksDone + 1;                  % increment block counter
+            end
+            data.offsetIndex = ceil(rand() * data.numOffsets);
+            while data.offsetsDone(data.offsetIndex) > 0
+                data.offsetIndex = mod(data.offsetIndex, data.numOffsets) + 1;
+            end
+            if data.testMode
+                data.voltage = visStim.currentOffsetPix / 1000.0;       % debugging- connect DOC0 to AIN Ch0
+                analogOut(lbj, 0, 2.5 + data.voltage);
+                analogOut(lbj, 1, 2.5 - data.voltage);
+            end
+            data.trialStartTimeS = clock;
+            data.taskState = TaskState.taskSettle;                      % go to settle state
+        case TaskState.taskSettle
+            if etime(clock, data.trialStartTimeS) > 0.015               % data settled for one taskTimer cycle
                 data.trialStartTimeS = clock;                               % reset the trial clock
-                data.stimTimeS = data.prestimDurS + rand() * 0.125;           % jitter the stimon time a bit
-                data.dataState = DataState.dataStart;                       % start data collection
+                data.stimTimeS = data.prestimDurS + rand() * 0.125;         % jitter the stimon time a bit
+                data.samplesRead = 0;
+                handles.lbj.verbose = 0;
+                startStream(handles.lbj);
+                handles.lbj.verbose = 1;
+                data.dataState = DataState.dataCollect;
                 data.taskState = TaskState.taskPrestim;                     % go to prestim state
             end
         case TaskState.taskPrestim
-           if etime(clock, data.trialStartTimeS) > data.stimTimeS
+            if etime(clock, data.trialStartTimeS) > data.stimTimeS
                 data.stepSign = stepStimulus(visStim, data.offsetsDeg(data.offsetIndex));
                 if data.testMode
                     data.voltage = visStim.currentOffsetPix / 1000.0;       % debugging- connect DOC0 to AIN Ch0
@@ -338,23 +345,25 @@ function taskController(obj, events, daqaxes)
                 data.taskState = TaskState.taskPoststim;
             end
         case TaskState.taskPoststim
-           % just wait for end of trial
+        % just wait for end of trial
         case TaskState.taskEndtrial
-            [startIndex, endIndex] = processSignals(saccades, data);
-            plot(handles.posVelPlots, handles, startIndex, endIndex);
+           [startIndex, endIndex] = processSignals(saccades, data);
+           plot(handles.posVelPlots, handles, startIndex, endIndex);
             addAmpDur(ampDur, data.offsetIndex, startIndex, endIndex);
             plotAmpDur(ampDur);
             if startIndex > 0
                 addRT(rtDists{data.offsetIndex}, (startIndex / data.sampleRateHz  - data.stimTimeS) * 1000.0);
             end
-            needsRescale = plot(rtDists{data.offsetIndex});
-            if needsRescale > 0
-                 for i = 1:data.numOffsets
-                     rescale(rtDists{i}, needsRescale);
-                     plot(rtDists{i});
+            if (mod(sum(data.numSummed), data.numOffsets) == 0)
+                needsRescale = plot(rtDists{data.offsetIndex});
+                if needsRescale > 0
+                     for i = 1:data.numOffsets
+                         rescale(rtDists{i}, needsRescale);
+                         plot(rtDists{i});
+                    end
                 end
-            end
+            end   
             data.trialStartTimeS = 0;
-            data.taskState = TaskState.taskIdle;
+            data.taskState = TaskState.taskStarttrial;
     end
 end

@@ -714,11 +714,9 @@ classdef labJackU6 < handle
                         fprintf(1,'  (m %d) backlog: %.1f%% (%d) (error %d)\n',m,double(backlog)/255*100,backlog,errorCode);
                     end                    
                     dataBytes((m-1)*obj.samplesPerPacket*2+1:m*obj.samplesPerPacket*2)=double(obj.bytesIn(13:end-2));
-                    
                     if all(errorCode~=[0 59]) && obj.verbose >= 1
-                        fprintf(1,'LJU6/getStreamData: device returns error %d on stream read\n',errorCode);
+                        fprintf(1,'LJU6/getStreamData: device returns error %d on stream read (backlog)\n',errorCode);
                     end
-                    
                     if m>=255
                         fprintf(1,'LJU6: WARNING: unable to keep up with data stream rate!\n');
                         break

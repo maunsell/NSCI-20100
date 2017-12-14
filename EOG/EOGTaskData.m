@@ -55,7 +55,7 @@ classdef EOGTaskData < handle
             obj.trialDurS = max(0.50, 2 * obj.saccadeTraceS);
             obj.trialSamples = floor(obj.trialDurS * obj.sampleRateHz);
             obj.prestimDurS = min(obj.trialDurS / 4, 0.250);
-            obj.taskState = TaskState.taskIdle;
+            obj.taskState = TaskState.taskStarttrial;
             obj.dataState = DataState.dataIdle;
             obj.trialStartTimeS = 0;
             obj.samplesRead = 0;

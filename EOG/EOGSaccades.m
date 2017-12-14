@@ -88,23 +88,26 @@ classdef EOGSaccades < handle
             % after its start
             [startIndex, endIndex] = obj.findSaccade(data, data.velTrace, data.stepSign);
             saccadeOffset = floor(data.saccadeSamples / 2);
-            if (startIndex - saccadeOffset < 1 || startIndex + saccadeOffset > data.trialSamples)
-                startIndex = 0;
+            firstIndex = startIndex - saccadeOffset;
+            lastIndex = startIndex + saccadeOffset;
+            if mod(data.saccadeSamples, 2) == 0
+                lastIndex = lastIndex - 1;
             end
-            if startIndex == 0
+            if (firstIndex < 1 || lastIndex > data.trialSamples)
+                startIndex = 0;
                 return;
             end
             % sum into the average pos and vel plot, inverting for negative steps
             if (data.stepSign == 1)
                 data.posSummed(:, data.offsetIndex) = data.posSummed(:, data.offsetIndex)... 
-                            + data.posTrace(startIndex - saccadeOffset:startIndex + saccadeOffset - 1);  
+                            + data.posTrace(firstIndex:lastIndex);  
                 data.velSummed(:, data.offsetIndex) = data.velSummed(:, data.offsetIndex)... 
-                            + data.velTrace(startIndex - saccadeOffset:startIndex + saccadeOffset - 1);  
+                            + data.velTrace(firstIndex:lastIndex);  
             else
                 data.posSummed(:, data.offsetIndex) = data.posSummed(:, data.offsetIndex)...
-                            - data.posTrace(startIndex - saccadeOffset:startIndex + saccadeOffset - 1);  
+                            - data.posTrace(firstIndex:lastIndex);  
                 data.velSummed(:, data.offsetIndex) = data.velSummed(:, data.offsetIndex)... 
-                            - data.velTrace(startIndex - saccadeOffset:startIndex + saccadeOffset - 1);  
+                            - data.velTrace(firstIndex:lastIndex);  
             end
             % tally the sums and compute the averages
             data.numSummed(data.offsetIndex) = data.numSummed(data.offsetIndex) + 1;

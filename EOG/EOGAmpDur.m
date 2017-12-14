@@ -95,6 +95,8 @@ classdef EOGAmpDur < handle
             xlabel(obj.fHandle, 'Saccade Amplitude (deg)','FontSize',14);
             ylabel(obj.fHandle, 'Saccade Duration (ms)','FontSize',14);
             yLim = ylim(obj.fHandle);
+%             disp('EOGAMPDur');
+%             [0 obj.offsetsDeg(end) + obj.offsetsDeg(1) 0 1.15 * yLim(2)]
             axis(obj.fHandle, [0 obj.offsetsDeg(end) + obj.offsetsDeg(1) 0 1.15 * yLim(2)]);
             a = axis(obj.fHandle);
             text(0.05 * a(2), 0.9 * a(4), '5', 'parent', obj.fHandle, 'FontSize', 24, 'FontWeight', 'Bold');

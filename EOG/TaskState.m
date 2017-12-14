@@ -1,6 +1,7 @@
 classdef TaskState
     enumeration
-        taskIdle
+        taskStarttrial
+        taskSettle
         taskPrestim
         taskPoststim
         taskEndtrial
