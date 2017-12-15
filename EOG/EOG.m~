@@ -277,7 +277,7 @@ function startButton_Callback(hObject, eventdata, handles)                  %#ok
         % create timer to control the task
         taskRateHz = 25;
         handles.taskTimer = timer('Name', 'TaskTimer', 'ExecutionMode', 'fixedRate',...
-            'Period', 1.0/taskRateHz, 'UserData', handles, 'ErrorFcn', {@taskError, handles}, 'TimerFcn',...
+            'Period', 1.0/taskRateHz, 'UserData', handles, 'ErrorFcn', {@timerErrorFcnStop, handles}, 'TimerFcn',...
             {@taskController, [handles.axes1 handles.axes2 handles.axes3 handles.axes4]});
 
         % create timer to get data from LabJack
@@ -313,6 +313,7 @@ function startButton_Callback(hObject, eventdata, handles)                  %#ok
     guidata(hObject, handles);    
 end
 
+timerErrorFcnStop
 %% taskController: function to collect data from LabJack
 function taskController(obj, events, daqaxes)
     handles = obj.UserData;
@@ -363,8 +364,8 @@ function taskController(obj, events, daqaxes)
         case TaskState.taskPoststim
         % just wait for end of trial
         case TaskState.taskEndtrial
-            [startIndex, endIndex] = processSignals(saccades, data);
-            plot(handles.posVelPlots, handles, startIndex, endIndex);
+           [startIndex, endIndex] = processSignals(saccades, data);
+           plot(handles.posVelPlots, handles, startIndex, endIndex);
             addAmpDur(ampDur, data.offsetIndex, startIndex, endIndex);
             plotAmpDur(ampDur);
             if startIndex > 0
@@ -386,6 +387,6 @@ end
 
 %% taskController: function to collect data from LabJack
 function taskError(obj, events, handles)
-    fprintf('timer error');
+    fprintf('task
 end
 

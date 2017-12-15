@@ -43,17 +43,13 @@ classdef EOGTaskData < handle
 
              %% Post Initialization %%
             obj.offsetsDeg = [4 8 12 16];
+            obj.numChannels = numChannels;
             obj.numOffsets = length(obj.offsetsDeg);
-            obj.stepSign = 1;
             obj.offsetIndex = 1;
-            obj.offsetsDone = zeros(1, obj.numOffsets);
-            obj.blocksDone = 0;
-            obj.sampleRateHz = sampleRateHz;
+            obj.stepSign = 1;
             obj.saccadeDurS = zeros(1, obj.numOffsets);                     % average saccade durations
             obj.saccadeTraceS = 0.250;                                      % duratoin of saccade trace
-            obj.saccadeSamples = floor(obj.saccadeTraceS * obj.sampleRateHz);
             obj.trialDurS = max(0.50, 2 * obj.saccadeTraceS);
-            obj.trialSamples = floor(obj.trialDurS * obj.sampleRateHz);
             obj.prestimDurS = min(obj.trialDurS / 4, 0.250);
             obj.taskState = TaskState.taskStarttrial;
             obj.dataState = DataState.dataIdle;
@@ -61,32 +57,44 @@ classdef EOGTaskData < handle
             obj.samplesRead = 0;
             obj.startStimS = 0;
             obj.stimTimeS = 0;
-            obj.numSummed = zeros(1, obj.numOffsets);
-            obj.numChannels = numChannels;
-            obj.rawData = zeros(obj.trialSamples, numChannels);             % raw data
-            obj.posTrace = zeros(obj.trialSamples, 1);                     	% trial EOG position trace
-            obj.posSummed = zeros(obj.saccadeSamples, obj.numOffsets);      % summed position traces
-            obj.posAvg = zeros(obj.saccadeSamples, obj.numOffsets);         % averaged position traces
             obj.testMode = false;
-            obj.velTrace = zeros(obj.trialSamples, 1);                      % trial EOG velocity trace
-            obj.velSummed = zeros(obj.saccadeSamples, obj.numOffsets);      % summed position traces
-            obj.velAvg = zeros(obj.saccadeSamples, obj.numOffsets);         % averaged position traces
             obj.voltage = 0;
+
+            setSampleRateHz(obj, sampleRateHz);
+             
+%             obj.blocksDone = 0;
+%             obj.numSummed = zeros(1, obj.numOffsets);
+%             obj.offsetsDone = zeros(1, obj.numOffsets);
+%             obj.posAvg = zeros(obj.saccadeSamples, obj.numOffsets);         % averaged position traces
+%             obj.posTrace = zeros(obj.trialSamples, 1);                     	% trial EOG position trace
+%             obj.posSummed = zeros(obj.saccadeSamples, obj.numOffsets);      % summed position traces
+%             obj.rawData = zeros(obj.trialSamples, numChannels);             % raw data
+%             obj.velAvg = zeros(obj.saccadeSamples, obj.numOffsets);         % averaged position traces
+%             obj.velTrace = zeros(obj.trialSamples, 1);                      % trial EOG velocity trace
+%             obj.velSummed = zeros(obj.saccadeSamples, obj.numOffsets);      % summed position traces
+
         end
 
         %% clearAll
         function clearAll(obj)
-            obj.offsetsDone = zeros(1, obj.numOffsets);
             obj.blocksDone = 0;
             obj.numSummed = zeros(1, obj.numOffsets);
-            obj.rawData = zeros(obj.trialSamples, obj.numChannels);       % raw data
+            obj.offsetsDone = zeros(1, obj.numOffsets);
             obj.posTrace = zeros(obj.trialSamples, 1);                    % trial EOG position trace
             obj.posSummed = zeros(obj.saccadeSamples, obj.numOffsets);    % summed position traces
             obj.posAvg = zeros(obj.saccadeSamples, obj.numOffsets);       % averaged position traces
+            obj.rawData = zeros(obj.trialSamples, obj.numChannels);       % raw data
             obj.velTrace = zeros(obj.trialSamples, 1);                    % trial EOG velocity trace
             obj.velSummed = zeros(obj.saccadeSamples, obj.numOffsets);    % summed position traces
             obj.velAvg = zeros(obj.saccadeSamples, obj.numOffsets);       % averaged position traces
         end
+        
+        function setSampleRateHz(obj, rateHz)
+            obj.sampleRateHz = rateHz;
+            obj.saccadeSamples = floor(obj.saccadeTraceS * obj.sampleRateHz);
+            obj.trialSamples = floor(obj.trialDurS * obj.sampleRateHz);
+            clearAll(obj);                                                % clear -- and also re-size buffers
+       end
     end
     
 end

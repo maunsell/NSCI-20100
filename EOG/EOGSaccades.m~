@@ -82,18 +82,22 @@ classdef EOGSaccades < handle
             % boxcar filter of the raw signal and make the velocity trace
             filterSamples = floor(data.sampleRateHz * obj.filterWidthMS / 1000.0);     
             b = (1 / filterSamples) * ones(1, filterSamples);
-            data.posTrace = filter(b, 1, data.posTrace);
+          data.posTrace = filter(b, 1, data.posTrace);
             data.velTrace(1:end - 1) = diff(data.posTrace);
             data.velTrace(end) = data.velTrace(end - 1);
+              disp('processSignals 2b');
           % find a saccade and make sure we have enough samples before and
             % after its start
             [startIndex, endIndex] = obj.findSaccade(data, data.velTrace, data.stepSign);
             saccadeOffset = floor(data.saccadeSamples / 2);
-            firstIndex = startIndex - saccadeOffset;
+             disp('processSignals 2c');
+           firstIndex = startIndex - saccadeOffset;
             lastIndex = startIndex + saccadeOffset;
-            if mod(data.saccadeSamples, 2) == 0
+             disp('processSignals 2d');
+           if mod(data.saccadeSamples, 2) == 0
                 lastIndex = lastIndex - 1;
             end
+            disp('processSignals 3');
             if (firstIndex < 1 || lastIndex > data.trialSamples)
                 startIndex = 0;
                 return;
@@ -111,6 +115,7 @@ classdef EOGSaccades < handle
                             - data.velTrace(firstIndex:lastIndex);  
             end
             % tally the sums and compute the averages
+            disp('processSignals 4');
             data.numSummed(data.offsetIndex) = data.numSummed(data.offsetIndex) + 1;
             data.posAvg(:, data.offsetIndex) = data.posSummed(:, data.offsetIndex) ...
                 / data.numSummed(data.offsetIndex);

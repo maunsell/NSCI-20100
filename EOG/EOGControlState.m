@@ -2,7 +2,7 @@ function EOGControlState(handles, state, except)
       
     controls = {handles.startButton,handles.clearButton, handles.savePlotsButton, ...
             handles.saveDataButton, handles.loadDataButton, handles.filterWidthText, ...
-            handles.viewDistanceText, handles.thresholdDPSText};
+            handles.sampleRateText, handles.viewDistanceText, handles.thresholdDPSText};
         
     for c = 1:length(controls)
         skip = false;
