@@ -20,19 +20,37 @@ classdef EOGSaccades < handle
         %% findSaccade: extract the saccade timing using speed threshold
 
         function [sIndex, eIndex] = findSaccade(obj, data, theTrace, stepSign)
-            if sum(data.numSummed) < length(data.numSummed)
-                calSamples = floor(0.050 * data.sampleRateHz);       % 50 ms of position trace
+            if data.calTrialsDone < 4                               % still getting a calibration
+                calSamples = floor(0.050 * data.sampleRateHz);      % compare 50 ms at start and end
                 DPV = abs(data.offsetsDeg(data.offsetIndex) /...
                              (mean(data.posTrace(end - calSamples:end)) - mean(data.posTrace(1:calSamples))));
-            else
-                DPV = obj.degPerV;
+                obj.degPerV = (obj.degPerV * data.calTrialsDone + DPV) / (data.calTrialsDone + 1);
+                obj.degPerSPerV = obj.degPerV * data.sampleRateHz;
+               data.calTrialsDone = data.calTrialsDone + 1;
+                sIndex = 0; eIndex = 0;
+                return;
+%             if sum(data.numSummed) < length(data.numSummed)         % are we calibrated?
+%                 calSamples = floor(0.050 * data.sampleRateHz);      % no, compare 50 ms at start and end;
+%                 DPV = abs(data.offsetsDeg(data.offsetIndex) /...
+%                              (mean(data.posTrace(end - calSamples:end)) - mean(data.posTrace(1:calSamples))));
+% %                 DPV = abs(data.offsetsDeg(data.offsetIndex) /...
+% %                              (max(data.posTrace(:)) / 2 - mean(data.posTrace(1:calSamples))));
+%             else
+%                 DPV = obj.degPerV;
             end
-            DPSPV = DPV * data.sampleRateHz;                        % degrees per second per volt unit
+%             DPSPV = obj.degPerV * data.sampleRateHz;                        % degrees per s per sample
             if (stepSign == 1)
-                fast = theTrace >= obj.thresholdDPS / DPSPV;
+                fast = theTrace >= obj.thresholdDPS / obj.degPerSPerV;
+%                 fast = theTrace >= 0.0150;
+                
+                
                 [~, maxIndex] = max(theTrace);
             else
-                fast = theTrace <= -obj.thresholdDPS / DPSPV;
+                fast = theTrace <= -obj.thresholdDPS / obj.degPerSPerV;
+%                 fast = theTrace <= -0.0150;
+                
+                
+                
                 [~, maxIndex] = min(theTrace);
             end
             sIndex = 1;
@@ -72,7 +90,8 @@ classdef EOGSaccades < handle
         function [startIndex, endIndex] = processSignals(obj, data)
             % take the difference between the electrodes, and then normalize to
             % prestim voltage
-            data.posTrace = data.rawData(:, 1) - data.rawData(:, 2);
+%             data.posTrace = data.rawData(:, 1) - data.rawData(:, 2);    % take differences between electrodes
+            data.posTrace = data.rawData;
             data.posTrace = data.posTrace - ...
                                         mean(data.posTrace(1:floor(data.sampleRateHz * data.prestimDurS)));
             % debug: add some noise to make things realistic
@@ -119,14 +138,11 @@ classdef EOGSaccades < handle
             data.offsetsDone(data.offsetIndex) = data.offsetsDone(data.offsetIndex) + 1;
             % now that we've updated all the traces, compute the degrees per volt if
             % we have enough trials
-            if sum(data.numSummed) < length(data.numSummed)
-                obj.degPerV = 0.0;
-            else
+            if sum(data.numSummed) > length(data.numSummed)
                 calSamples = floor(0.050 * data.sampleRateHz);                         % use last 50 ms of position trace
                 endPointsV = mean(data.posAvg(end - calSamples:end, :));        % average trace ends to get each endpoint
                 obj.degPerV = mean(data.offsetsDeg ./ endPointsV);
             end
-            obj.degPerSPerV = obj.degPerV * data.sampleRateHz;
             % find the average saccade duration using the average speed trace
             [sAvgIndex, eAvgIndex] = obj.findSaccade(data, data.velAvg(:, data.offsetIndex), 1);
             if eAvgIndex > sAvgIndex 

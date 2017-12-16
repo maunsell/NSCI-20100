@@ -169,7 +169,7 @@ function openEOG(hObject, eventdata, handles, varargin)
     handles.data.testMode = testMode;
     if (handles.data.testMode)
         analogOut(handles.lbj, 0, 2.5);                 % For debugging (AOuts to AIns)
-        analogOut(handles.lbj, 1, 2.5);
+%         analogOut(handles.lbj, 1, 2.5);
     end
     movegui(hObject, 'northeast');
     guidata(hObject, handles);                                                   % save the selection
@@ -250,8 +250,8 @@ function lbj = setupLabJack()
     end
     % create input channel list
     removeChannel(lbj, -1);                     % remove all input channels
-    addChannel(lbj, [0 1], [10 10], ['s' 's']); % add channels 0,1 as inputs
-    lbj.SampleRateHz = 1000;                     % sample rate (Hz)
+    addChannel(lbj, 0, 10, ['s' 's']);          % add channel 0 as input
+    lbj.SampleRateHz = 1000;                    % sample rate (Hz)
     lbj.ResolutionADC = 1;                      % ADC resolution (AD bit depth)
 
     % configure LabJack for analog input streaming
@@ -333,9 +333,9 @@ function taskController(obj, events, daqaxes)
                 data.offsetIndex = mod(data.offsetIndex, data.numOffsets) + 1;
             end
             if data.testMode
-                data.voltage = visStim.currentOffsetPix / 1000.0;       % debugging- connect DOC0 to AIN Ch0
+                data.voltage = min(5.0, visStim.currentOffsetPix / 500.0);  % debugging- connect DACO0 to AIN0
                 analogOut(lbj, 0, 2.5 + data.voltage);
-                analogOut(lbj, 1, 2.5 - data.voltage);
+%                 analogOut(lbj, 1, 2.5 - data.voltage);
             end
             data.trialStartTimeS = clock;
             data.taskState = TaskState.taskSettle;                      % go to settle state
@@ -354,9 +354,9 @@ function taskController(obj, events, daqaxes)
             if etime(clock, data.trialStartTimeS) > data.stimTimeS
                 data.stepSign = stepStimulus(visStim, data.offsetsDeg(data.offsetIndex));
                 if data.testMode
-                    data.voltage = visStim.currentOffsetPix / 1000.0;       % debugging- connect DOC0 to AIN Ch0
+                    data.voltage = min(5.0, visStim.currentOffsetPix / 500.0);	% debugging- connect DOC0 to AIN Ch0
                     analogOut(lbj, 0, 2.5 + data.voltage);
-                    analogOut(lbj, 1, 2.5 - data.voltage);
+%                     analogOut(lbj, 1, 2.5 - data.voltage);
                 end
                 data.taskState = TaskState.taskPoststim;
             end

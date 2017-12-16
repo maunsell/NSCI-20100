@@ -25,7 +25,7 @@ classdef EOGPosVelPlots < handle
         %EOGPlots Updata all plots for EOG
             posPlots(obj, handles, startIndex, endIndex);
             velPlots(obj, handles, startIndex, endIndex);
-            drawnow;
+%             drawnow;
         end
 
         %% posPlots: do the trial and average position plots

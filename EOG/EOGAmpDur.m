@@ -7,6 +7,7 @@ classdef EOGAmpDur < handle
         offsetsDeg
         numOffsets
         fHandle
+        lastN
         n
         reactTimesMS
         sampleRateHz
@@ -35,7 +36,7 @@ classdef EOGAmpDur < handle
              obj.numOffsets = length(offsetList);
              obj.reactTimesMS = zeros(10000, obj.numOffsets);                  % preallocate a generous buffer
              obj.n = zeros(1, obj.numOffsets);
-
+             obj.lastN = 0;
              obj.ampLabels = cell(1, obj.numOffsets);
              for i = 1:obj.numOffsets
                  obj.ampLabels{i} = sprintf('%.0f', obj.offsetsDeg(i));
@@ -53,58 +54,42 @@ classdef EOGAmpDur < handle
         %% clearAll
         function clearAll(obj)
             obj.n = zeros(1, obj.numOffsets);
+            obj.lastN = 0;
             cla(obj.fHandle);
+            axis(obj.fHandle, [0 1 0 1]);
+            text(0.05, 0.9, '5', 'parent', obj.fHandle, 'FontSize', 24, 'FontWeight', 'Bold');
         end
-
-        %% saveData
-        % append all properties to a given file
-
-        function saveData(obj, filePath)
-            p = properties(obj);
-            for i = 1:length(p)
-                eval(['save ' filePath ' obj.' p{i} ' -append;']);
-            end
-        end
-
-        function [yMean, sem] = stats(~, y)
-
-            yMean = mean(y);
-            num = length(y);
-            if num > 5
-                sem = std(y) / sqrt(num);
-            else
-                sem = 0;
-            end
-        end
+        
+        %         function [yMean, sem] = stats(~, y)
+%             yMean = mean(y);
+%             num = length(y);
+%             if num > 5
+%                 sem = std(y) / sqrt(num);
+%             else
+%                 sem = 0;
+%             end
+%         end
 
         %% plotAmpDur
         function plotAmpDur(obj)
-            if sum(obj.n) < obj.numOffsets
-                cla(obj.fHandle);
-                axis(obj.fHandle, [0 1 0 1]);
-                text(0.05, 0.9, '5', 'parent', obj.fHandle, 'FontSize', 24, 'FontWeight', 'Bold');
+            minN = min(obj.n);
+            if minN < 2 || minN == obj.lastN
                 return;
             end
             cla(obj.fHandle);
-            for i = 1:obj.numOffsets
-                [yMean, sem] = stats(obj, obj.reactTimesMS(1:obj.n(i), i)');
-                errorbar(obj.fHandle, obj.offsetsDeg(i), yMean, sem, -sem, 'o');
-                hold(obj.fHandle, 'on');
-           end
+            boxplot(obj.fHandle, obj.reactTimesMS(1:minN, :), 'labels', num2str(obj.offsetsDeg(:)), ...
+                'notch', 'on', 'positions', obj.offsetsDeg, 'symbol', '');
             title(obj.fHandle, 'Duration v. Amplitude', 'FontSize',12,'FontWeight','Bold');
             xlabel(obj.fHandle, 'Saccade Amplitude (deg)','FontSize',14);
             ylabel(obj.fHandle, 'Saccade Duration (ms)','FontSize',14);
             yLim = ylim(obj.fHandle);
-%             disp('EOGAMPDur');
-%             [0 obj.offsetsDeg(end) + obj.offsetsDeg(1) 0 1.15 * yLim(2)]
-            axis(obj.fHandle, [0 obj.offsetsDeg(end) + obj.offsetsDeg(1) 0 1.15 * yLim(2)]);
+            axis(obj.fHandle, [-inf inf 25  75]);
             a = axis(obj.fHandle);
-            text(0.05 * a(2), 0.9 * a(4), '5', 'parent', obj.fHandle, 'FontSize', 24, 'FontWeight', 'Bold');
+            text(a(1) + 0.05 * (a(2) - a(1)), 0.9 * (a(4) - a(3)) + a(3), '5', 'parent', obj.fHandle, 'FontSize', 24,...
+                'FontWeight', 'Bold');
             hold(obj.fHandle, 'off');
+            obj.lastN = minN;
         end
-    
-
-    end
-    
+    end  
 end
 

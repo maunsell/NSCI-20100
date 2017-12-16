@@ -4,6 +4,7 @@ classdef EOGTaskData < handle
     
     properties
         blocksDone;
+        calTrialsDone;
         dataState;
         numChannels;
         numOffsets;
@@ -42,14 +43,14 @@ classdef EOGTaskData < handle
              obj = obj@handle();                                            % object initialization
 
              %% Post Initialization %%
-            obj.offsetsDeg = [4 8 12 16];
+            obj.offsetsDeg = [6 8 12 20];
             obj.numChannels = numChannels;
             obj.numOffsets = length(obj.offsetsDeg);
             obj.offsetIndex = 1;
             obj.stepSign = 1;
             obj.saccadeDurS = zeros(1, obj.numOffsets);                     % average saccade durations
             obj.saccadeTraceS = 0.250;                                      % duratoin of saccade trace
-            obj.trialDurS = max(0.50, 2 * obj.saccadeTraceS);
+            obj.trialDurS = max(1.0, 2 * obj.saccadeTraceS);
             obj.prestimDurS = min(obj.trialDurS / 4, 0.250);
             obj.taskState = TaskState.taskStarttrial;
             obj.dataState = DataState.dataIdle;
@@ -61,23 +62,12 @@ classdef EOGTaskData < handle
             obj.voltage = 0;
 
             setSampleRateHz(obj, sampleRateHz);
-             
-%             obj.blocksDone = 0;
-%             obj.numSummed = zeros(1, obj.numOffsets);
-%             obj.offsetsDone = zeros(1, obj.numOffsets);
-%             obj.posAvg = zeros(obj.saccadeSamples, obj.numOffsets);         % averaged position traces
-%             obj.posTrace = zeros(obj.trialSamples, 1);                     	% trial EOG position trace
-%             obj.posSummed = zeros(obj.saccadeSamples, obj.numOffsets);      % summed position traces
-%             obj.rawData = zeros(obj.trialSamples, numChannels);             % raw data
-%             obj.velAvg = zeros(obj.saccadeSamples, obj.numOffsets);         % averaged position traces
-%             obj.velTrace = zeros(obj.trialSamples, 1);                      % trial EOG velocity trace
-%             obj.velSummed = zeros(obj.saccadeSamples, obj.numOffsets);      % summed position traces
-
         end
 
         %% clearAll
         function clearAll(obj)
             obj.blocksDone = 0;
+            obj.calTrialsDone = 0;
             obj.numSummed = zeros(1, obj.numOffsets);
             obj.offsetsDone = zeros(1, obj.numOffsets);
             obj.posTrace = zeros(obj.trialSamples, 1);                    % trial EOG position trace
