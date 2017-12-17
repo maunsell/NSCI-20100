@@ -19,8 +19,6 @@ classdef ctStimuli
     properties (Constant)
         pixelDepth = 32;
         numGabors = 2;
-%         gaborDimPix = 150;
-%         gaborSigma = 150 / 7;
         gaborDimPix = 300;
         gaborSigma = 300 / 7;
         gaborOriDeg = 0;
@@ -28,7 +26,6 @@ classdef ctStimuli
         gaborPhaseDeg = 0;
         gaborCycles = 4;
         gaborFreqPix = 4 / 300;
-%         gaborShiftPix = 120;
         gaborShiftPix = 240;
     end
     methods

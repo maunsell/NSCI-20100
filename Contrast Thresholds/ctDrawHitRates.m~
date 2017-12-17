@@ -1,21 +1,21 @@
-function handles = ctDrawHitRates(handles, doAllBaseContrasts)
+function handles = ctDrawHitRates(handles)
+    baseIndex = get(handles.baseContrastMenu, 'value');         % current base
     x = handles.data.baseContrasts' * handles.data.multipliers; % all multipliers
     hitRate = zeros(size(handles.data.trialsDone));             % for all hitRates
     errNeg = zeros(size(handles.data.trialsDone));              % for all neg CIs
     errPos = zeros(size(handles.data.trialsDone));              % for all pos CIs
     pci = zeros(size(handles.data.trialsDone, 1), size(handles.data.trialsDone, 2), 2);
-    baseIndex = get(handles.baseContrastMenu, 'value');         % current base
     for i = 1:(size(handles.data.trialsDone, 1))                % for each base 
         [hitRate(i,:), pci(i,:,:)] = binofit(handles.data.hits(i, :), handles.data.trialsDone(i, :));
         errNeg(i, :) = hitRate(i, :) - pci(i, :, 1);
         errPos(i, :) = pci(i, :, 2) - hitRate(i, :);
-        if doAllBaseContrasts || i == baseIndex                 % for current block (or when all are requested
+        if i == baseIndex                                       % for current block
             blocksDone = floor(mean(handles.data.trialsDone(i, :)));
             tableData = get(handles.resultsTable, 'Data');      % update table, regardless
             tableData{1, i} = sprintf('%.0f', blocksDone);
 % If we've just finished a block, and we have enough blocks, fit a logistic function.
 % We force 0.5 performace at the base contrast.
-            if (doAllBaseContrasts || (blocksDone > handles.data.blocksFit(i))) && blocksDone > 3 
+            if blocksDone > handles.data.blocksFit(i) && blocksDone > 3 
                 fun = @(params, xData) 0.5 + 0.5 ./ (1.0 + exp(-params(2) * (xData - params(1))));
                 xData = [handles.data.baseContrasts(i) (handles.data.baseContrasts(i) * handles.data.multipliers)];
                 yData = [0.5 hitRate(i,:)];

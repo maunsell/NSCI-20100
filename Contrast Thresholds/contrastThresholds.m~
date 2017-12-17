@@ -78,6 +78,7 @@ end
 
 %% stopCheck monitor and record the most recent keystroke
 function keyboardCheck(obj, event)                                              %#ok<*INUSD>
+
     handles = get(obj, 'UserData');
     data = handles.data;
     [~, ~, keyCode] = KbCheck(-1);
@@ -108,22 +109,42 @@ function loadDataButton_Callback(hObject, ~, handles)
     ctControlState(handles, 'off', {handles.loadDataButton});
     [fileName, filePath] = uigetfile('*.mat', 'Load Matlab Data Workspace', '~/Desktop/');
     if fileName ~= 0
-        stop(timerfind);                                            % stop/delete timers; pause data stream
-        delete(timerfind);      
         load([filePath fileName]);
         handles.data = d;
-        handles = ctDrawHitRates(handles, true);
-        taskTimer = timer('name', 'TaskTimer', 'executionMode', 'fixedRate', 'period', 0.1,... 
-            'UserData', handles, 'errorFcn', {@timerErrorFcnStop, handles}, 'timerFcn', {@ctTaskController});
-        keyTimer = timer('name', 'KeyTimer', 'executionMode', 'fixedRate', 'period', 0.1,... 
-            'UserData', handles, 'errorFcn', {@timerErrorFcnStop, handles}, 'timerFcn', {@keyboardCheck});
-        start(taskTimer);
-        start(keyTimer);
+%        d = handles.data;
+%         p = properties(d);
+%         for i = 1:length(p)
+%             eval(['clear d.' p{i} ';']);
+%             eval(['load ' filePath fileName ' ' p{i} ';'])
+%             eval(['d.' p{i} ' = ' p{i} ';'])
+%             eval(['clear ' p{i} ';']);
+%         end
     end
+    handles = ctDrawHitRates(handles, true);
     handles.stimuli = ctStimuli();                  % restore stimulus display
     set(handles.runButton, 'backgroundColor', 'green');
     ctControlState(handles, 'on', {handles.loadDataButton});
     guidata(hObject, handles);                                      % save the selections
+    
+%         % saved axes handles generally aren't valid if we are in a new run.
+%         % Load the handles with the current axes handles.
+%         
+%         handles.ampDur.fHandle = handles.axes5;                         % loaded axes handle might be invalid
+%         handles.rtDists{1}.fHandle = handles.axes6;
+%         handles.rtDists{2}.fHandle = handles.axes7;
+%         handles.rtDists{3}.fHandle = handles.axes8;
+%         handles.rtDists{4}.fHandle = handles.axes9;
+%         guidata(hObject, handles);                                      % save the selections
+%         
+%         [startIndex, endIndex] = processSignals(handles.saccades, d);
+%         plot(handles.posVelPlots, handles, startIndex, endIndex);
+%         plotAmpDur(handles.ampDur);
+%         for i = 1:4
+%             plot(handles.rtDists{i});
+%         end
+% 
+%     end
+
 end
 
 %% --- Executes just before contrastThresholds is made visible.
@@ -137,13 +158,13 @@ function openContrastThresholds(hObject, ~, handles, varargin)
     set(handles.figure1, 'visible', 'on');
     guidata(hObject, handles);                                                   % save the selection
     
-    KbName('UnifyKeyNames');
     taskTimer = timer('name', 'TaskTimer', 'executionMode', 'fixedRate', 'period', 0.1,... 
         'UserData', handles, 'errorFcn', {@timerErrorFcnStop, handles}, 'timerFcn', {@ctTaskController});
+    KbName('UnifyKeyNames');
     keyTimer = timer('name', 'KeyTimer', 'executionMode', 'fixedRate', 'period', 0.1,... 
         'UserData', handles, 'errorFcn', {@timerErrorFcnStop, handles}, 'timerFcn', {@keyboardCheck});
-    start(taskTimer);
     start(keyTimer);
+    start(taskTimer);
 end
 
 %% runButton_Callback responds to stop/start button
@@ -154,6 +175,7 @@ function runButton_Callback(hObject, ~, handles)
         handles.data.taskState = ctTaskState.taskStartRunning;
     end
     guidata(hObject, handles);                          % save the changes
+    disp(handles.data.taskState)
 end
 
 % --- Executes on button press in saveDataButton.
