@@ -30,7 +30,7 @@ classdef ctTaskData < handle
             obj = obj@handle();                                            % object initialization
             %% Post Initialization %%
             
-            obj.testMode = true;
+            obj.testMode = false;
             obj.doStim = true;
            
             tones = [];

@@ -39,9 +39,17 @@ classdef EOGPosVelPlots < handle
             % trial position trace
             cla(obj.posAxes);
             plot(obj.posAxes, trialTimes, data.posTrace, 'color', colors(data.offsetIndex,:));
+            if saccades.degPerV > 0
+                hold(obj.posAxes, 'on');
+                thresholdV = saccades.thresholdDeg / saccades.degPerV * data.stepSign;
+                plot(obj.posAxes, [trialTimes(1) trialTimes(end)], [thresholdV, thresholdV], ...
+                    ':', 'color', colors(data.offsetIndex,:));
+                hold(obj.posAxes, 'off');
+            end
             title(obj.posAxes, 'Most recent position trace', 'FontSize',12,'FontWeight','Bold')
             ylabel(obj.posAxes,'Analog Input (V)','FontSize',14);
-            % average position traces
+%             hold(obj.posAxes, 'off');
+            % average position traces every complete block
             if (mod(sum(data.numSummed), data.numOffsets) == 0)
                 cla(obj.posAvgAxes);
                 plot(obj.posAvgAxes, saccadeTimes, data.posAvg, '-');
@@ -55,19 +63,24 @@ classdef EOGPosVelPlots < handle
                 text(-0.112, 0.8 * yLim, '2', 'parent', obj.posAvgAxes, 'FontSize', 24, 'FontWeight', 'Bold');
                 axis(obj.posAxes, [-inf inf -yLim yLim]);
                 axis(obj.posAvgAxes, [-inf inf -yLim yLim]);
-            else
+                hold(obj.posAvgAxes, 'on');
+                for i = 1:length(data.saccadeDurS)
+                    saccadeDurS = data.saccadeDurS(i) / 1000.0
+                    plot(obj.posAvgAxes, [saccadeDurS, saccadeDurS], [-yLim, yLim], ':', 'color', colors(i,:));
+                end
+                hold(obj.posAvgAxes, 'off');
+            else            % not a complete block, just set the y axis for the position trace plot
                a1 = axis(obj.posAxes);
                yLim = max([abs(a1(3)), abs(a1(4))]);
             end
-
-            % if a saccade was detected, mark its start (and end, if end was detected
+            % if a saccade was detected, mark its start (and end, if end was detected)
             if (startIndex > 0)
                 hold(obj.posAxes, 'on');
-                plot(obj.posAxes, [startIndex, startIndex] * timestepS, [-yLim yLim], 'color', colors(data.offsetIndex,:),...
-                    'linestyle', ':');
+                plot(obj.posAxes, [startIndex, startIndex] * timestepS, [-yLim yLim], 'color', ...
+                    colors(data.offsetIndex,:), 'linestyle', ':');
                 if (endIndex > 0)
-                    plot(obj.posAxes, [endIndex, endIndex] * timestepS, [-yLim yLim], 'color', colors(data.offsetIndex,:),...
-                    'linestyle', ':');
+                    plot(obj.posAxes, [endIndex, endIndex] * timestepS, [-yLim yLim], 'color', ...
+                    colors(data.offsetIndex,:), 'linestyle', ':');
                 end
                 hold(obj.posAxes, 'off');
             end
@@ -94,12 +107,10 @@ classdef EOGPosVelPlots < handle
         function velPlots(obj, handles, startIndex, endIndex)
             data = handles.data;
             saccades = handles.saccades;
-
             timestepS = 1 / data.sampleRateHz;                                       % time interval of samples
             trialTimes = (0:1:size(data.posTrace, 1) - 1) * timestepS;          % make array of trial time points
             saccadeTimes = (-(size(data.posAvg, 1) / 2):1:(size(data.posAvg,1) / 2) - 1) * timestepS;              
             colors = get(obj.velAxes, 'ColorOrder');
-
             % plot the trial velocity trace
             cla(obj.velAxes);
             plot(obj.velAxes, trialTimes, data.velTrace, 'color', colors(data.offsetIndex,:));
@@ -113,19 +124,21 @@ classdef EOGPosVelPlots < handle
             % plot the average velocity traces
             if (mod(sum(data.numSummed), data.numOffsets) == 0)
                 cla(obj.velAvgAxes);
-                plot(obj.velAvgAxes, saccadeTimes, data.velAvg, '-');
-                title(obj.velAvgAxes, 'Average velocity traces (left/right combined)', 'FontSize',12,'FontWeight','Bold')
-                ylabel(obj.velAvgAxes,'Analog Input (V)','FontSize',14);
-                xlabel(obj.velAvgAxes,'Time (s)','FontSize',14);
+                if sum(data.numSummed) > 0
+                    plot(obj.velAvgAxes, saccadeTimes, data.velAvg, '-');
+                    title(obj.velAvgAxes, 'Average velocity traces (left/right combined)', 'FontSize',12,'FontWeight','Bold')
+                    ylabel(obj.velAvgAxes,'Analog Input (V)','FontSize',14);
+                    xlabel(obj.velAvgAxes,'Time (s)','FontSize',14);
 
-                % put both plots on the same y scale
-                a1 = axis(obj.velAxes);
-                a2 = axis(obj.velAvgAxes);
-                yLim = max([abs(a1(3)), abs(a1(4)), abs(a2(3)), abs(a2(4))]);
-                text(0.025, 0.8 * yLim, '3', 'parent', obj.velAxes, 'FontSize', 24, 'FontWeight', 'Bold');
-                text(-0.112, 0.8 * yLim, '4', 'parent', obj.velAvgAxes, 'FontSize', 24, 'FontWeight', 'Bold');
-                axis(obj.velAxes, [-inf inf -yLim yLim]);
-                axis(obj.velAvgAxes, [-inf inf -yLim yLim]);
+                    % put both plots on the same y scale
+                    a1 = axis(obj.velAxes);
+                    a2 = axis(obj.velAvgAxes);
+                    yLim = max([abs(a1(3)), abs(a1(4)), abs(a2(3)), abs(a2(4))]);
+                    text(0.025, 0.8 * yLim, '3', 'parent', obj.velAxes, 'FontSize', 24, 'FontWeight', 'Bold');
+                    text(-0.112, 0.8 * yLim, '4', 'parent', obj.velAvgAxes, 'FontSize', 24, 'FontWeight', 'Bold');
+                    axis(obj.velAxes, [-inf inf -yLim yLim]);
+                    axis(obj.velAvgAxes, [-inf inf -yLim yLim]);
+                end
             else
                 a1 = axis(obj.velAxes);
                 yLim = max([abs(a1(3)), abs(a1(4))]);
@@ -133,15 +146,14 @@ classdef EOGPosVelPlots < handle
             % if a saccade was detected, mark its start (and end, if end was detected
             if (startIndex > 0)
                 hold(obj.velAxes, 'on');
-                plot(obj.velAxes, [startIndex, startIndex] * timestepS, [-yLim yLim], 'color', colors(data.offsetIndex,:),...
-                                                                                                     'linestyle', ':');
+                plot(obj.velAxes, [startIndex, startIndex] * timestepS, [-yLim yLim], ...
+                    'color', colors(data.offsetIndex,:), 'linestyle', ':');
                 if (endIndex > 0)
-                    plot(obj.velAxes, [endIndex, endIndex] * timestepS, [-yLim yLim], 'color', colors(data.offsetIndex,:),...
-                    'linestyle', ':');
+                    plot(obj.velAxes, [endIndex, endIndex] * timestepS, [-yLim yLim], ...
+                    'color', colors(data.offsetIndex,:), 'linestyle', ':');
                 end
                 hold(obj.velAxes, 'off');
             end
-
             % averages are always aligned on onset, so draw a vertical line at that point
             if (mod(sum(data.numSummed), data.numOffsets) == 0)
                 hold(obj.velAvgAxes, 'on');
@@ -149,20 +161,12 @@ classdef EOGPosVelPlots < handle
                 hold(obj.velAvgAxes, 'off');
             end
             % if eye position has been calibrated, change the y scaling on the average to degrees rather than volts
-            if saccades.degPerSPerV > 0
+            if saccades.degPerV > 0
                 maxSpeedDPS = ceil((yLim * saccades.degPerSPerV) / 100.0) * 100;
                 yTicks = (-maxSpeedDPS:100:maxSpeedDPS) / saccades.degPerSPerV;
                 for i = 1:length(yTicks)
                     yLabels{i} = num2str(yTicks(i) * saccades.degPerSPerV, '%.0f');
                 end
-                hold(obj.velAxes, 'on');
-
-                %draw horizontal lines at +/-threshold for the trial velocity
-                plot(obj.velAxes, [a(1) a(2)], [saccades.thresholdDPS saccades.thresholdDPS] ./ saccades.degPerSPerV,...
-                        'color', colors(data.offsetIndex,:),'linestyle', ':');
-                plot(obj.velAxes, [a(1) a(2)], -[saccades.thresholdDPS saccades.thresholdDPS] ./ saccades.degPerSPerV,...
-                        'color', colors(data.offsetIndex,:),'linestyle', ':');
-                hold(obj.velAxes, 'off');
                 set(obj.velAxes, 'YTick', yTicks);
                 set(obj.velAxes, 'YTickLabel', yLabels);
                 ylabel(obj.velAxes,'Average Eye Speed (degrees/s)','FontSize',14);
@@ -171,7 +175,7 @@ classdef EOGPosVelPlots < handle
                     set(obj.velAvgAxes, 'YTickLabel', yLabels);
                     ylabel(obj.velAvgAxes, 'Average Eye Speed (degrees/s)', 'FontSize', 14);
                     % draw lines showing the duration of the above-threshold part of the average traces.
-                    if (mod(sum(data.numSummed), data.numOffsets) == 0)
+                    if (sum(data.numSummed) > 0 && mod(sum(data.numSummed), data.numOffsets) == 0)
                         hold(obj.velAvgAxes, 'on');
                         for i = 1:data.numOffsets
                             limitIndex = min(length(saccadeTimes), ceil(length(saccadeTimes) / 2 + data.saccadeDurS(i)));

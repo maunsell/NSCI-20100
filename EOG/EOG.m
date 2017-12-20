@@ -272,7 +272,7 @@ function startButton_Callback(hObject, eventdata, handles)                  %#ok
     if strcmp(get(handles.startButton, 'String'), 'Start') % if start button, do the following
         fprintf(1,'\nEOG v1.0\n %s\n', datestr(clock));
         setViewDistanceCM(handles.visStim, str2double(get(handles.viewDistanceText, 'string')));
-        handles.saccades.thresholdDPS = str2double(get(handles.thresholdDPSText, 'string'));
+        handles.saccades.thresholdDeg = str2double(get(handles.thresholdDegText, 'string'));
         handles.saccades.filterWidthMS = str2double(get(handles.filterWidthText, 'string'));
         % create timer to control the task
         taskRateHz = 25;
@@ -388,4 +388,3 @@ end
 function taskError(obj, events, handles)
     fprintf('timer error');
 end
-

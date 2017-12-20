@@ -48,7 +48,6 @@ classdef EOGTaskData < handle
             obj.numOffsets = length(obj.offsetsDeg);
             obj.offsetIndex = 1;
             obj.stepSign = 1;
-            obj.saccadeDurS = zeros(1, obj.numOffsets);                     % average saccade durations
             obj.saccadeTraceS = 0.250;                                      % duratoin of saccade trace
             obj.trialDurS = max(1.0, 2 * obj.saccadeTraceS);
             obj.prestimDurS = min(obj.trialDurS / 4, 0.250);
@@ -74,6 +73,7 @@ classdef EOGTaskData < handle
             obj.posSummed = zeros(obj.saccadeSamples, obj.numOffsets);    % summed position traces
             obj.posAvg = zeros(obj.saccadeSamples, obj.numOffsets);       % averaged position traces
             obj.rawData = zeros(obj.trialSamples, obj.numChannels);       % raw data
+            obj.saccadeDurS = zeros(1, obj.numOffsets);                   % average saccade durations
             obj.velTrace = zeros(obj.trialSamples, 1);                    % trial EOG velocity trace
             obj.velSummed = zeros(obj.saccadeSamples, obj.numOffsets);    % summed position traces
             obj.velAvg = zeros(obj.saccadeSamples, obj.numOffsets);       % averaged position traces
