@@ -151,7 +151,18 @@ function runButton_Callback(hObject, ~, handles)
     if strcmp(get(hObject, 'String'), 'Stop')           % if we are running, just set the abort flag
         handles.data.taskState = ctTaskState.taskStopRunning;
     else
-        handles.data.taskState = ctTaskState.taskStartRunning;
+        baseIndex = get(handles.baseContrastMenu, 'value');
+        stimReps = str2num(get(handles.stimRepsText, 'string'));
+        data = handles.data;
+        if sum(data.trialsDone(baseIndex, :)) < stimReps * data.numMultipliers
+            data.taskState = ctTaskState.taskStartRunning;
+        else
+            contrastStrings = get(handles.baseContrastMenu, 'string');
+            originalSize = get(0, 'DefaultUIControlFontSize');
+            set(0, 'DefaultUIControlFontSize', 14);
+            helpdlg(sprintf('%d reps of %s%% contrast have already been done', stimReps, contrastStrings{baseIndex}));
+            set(0, 'DefaultUIControlFontSize', originalSize);
+        end
     end
     guidata(hObject, handles);                          % save the changes
 end
@@ -164,16 +175,6 @@ function saveDataButton_Callback(hObject, ~, handles)
     if fileName ~= 0
         d = handles.data;
         save([filePath fileName], 'd');
-%         p = properties(d);
-%         for i = 1:length(p)
-%             eval([p{i} '= d.' p{i} ';']);
-%             if i == 1
-%                 eval(['save ' filePath fileName ' ' p{i} ';']);
-%             else
-%              	eval(['save ' filePath fileName ' ' p{i} ' -append ;']);
-%             end
-%             eval(['clear ' p{i} ';']);
-%         end
     end
     handles.stimuli = ctStimuli();    
     set(handles.runButton, 'backgroundColor', 'green');
