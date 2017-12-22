@@ -18,7 +18,6 @@ classdef EOGSaccades < handle
         end
 
         %% findSaccade: extract the saccade timing using speed threshold
-
         function [sIndex, eIndex] = findSaccade(obj, data, posTrace, velTrace, stepSign)
            calSamples = floor(0.050 * data.sampleRateHz);               % compare 50 ms at start and end
            if data.calTrialsDone < 4                                    % still getting a calibration
@@ -39,9 +38,9 @@ classdef EOGSaccades < handle
                 sIndex = 0; eIndex = 0;
                 return;
             end
-            sIndex = calSamples;
+            sIndex = floor(0.100 * data.sampleRateHz);                  % no saccades < 100 ms
             seq = 0;
-            thresholdV = mean(posTrace(1:calSamples)) + obj.thresholdDeg / obj.degPerV;     % ???? NEEDS TO BE POS THRESHOLD
+            thresholdV = mean(posTrace(1:calSamples)) + obj.thresholdDeg / obj.degPerV;
             while (seq < 5 && sIndex < length(posTrace))	% find the first sequence of 5 > than threshold
                 if posTrace(sIndex) * stepSign < thresholdV
                     seq = 0;
@@ -78,6 +77,10 @@ classdef EOGSaccades < handle
                         sIndex = sIndex - 1;
                     end
                 end
+                if eIndex - sIndex < 0.005 * data.sampleRateHz;      % no saccades less than 5 ms
+                    sIndex = 0;
+                    eIndex = 0;
+                end
             else
                 sIndex = 0;
                 eIndex = 0;
@@ -96,13 +99,17 @@ classdef EOGSaccades < handle
                     decayValue = decayValue * (1.0 - multiplier) + data.posTrace(i) * multiplier;
                 end
                 data.posTrace = data.posTrace - decayTrace + 0.3 * rand(size(data.posTrace)) - 0.15;
-            end
-            % boxcar filter of the raw signal and make the velocity trace
-            filterSamples = floor(data.sampleRateHz * obj.filterWidthMS / 1000.0);     
-            b = (1 / filterSamples) * ones(1, filterSamples);
-            data.posTrace = filter(b, 1, data.posTrace);
+                filterSamples = floor(data.sampleRateHz * 50.0 / 1000.0);      % smooth with 50 ms boxcar   
+                b = (1 / filterSamples) * ones(1, filterSamples);
+                data.posTrace = filter(b, 1, data.posTrace);
+           end
+            % make the velocity trace and then apply boxcar filter
+%             data.posTrace = filter(b, 1, data.posTrace);
             data.velTrace(1:end - 1) = diff(data.posTrace);
             data.velTrace(end) = data.velTrace(end - 1);
+            filterSamples = floor(data.sampleRateHz * obj.filterWidthMS / 1000.0);     
+            b = (1 / filterSamples) * ones(1, filterSamples);
+            data.velTrace = filter(b, 1, data.velTrace);
             % find a saccade and make sure we have enough samples before and after its start
             [startIndex, endIndex] = obj.findSaccade(data, data.posTrace, data.velTrace, data.stepSign);
             saccadeOffset = floor(data.saccadeSamples / 2);

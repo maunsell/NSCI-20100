@@ -4,7 +4,11 @@ function varargout = EOG(varargin)
 % EOG signals come through analog input channels 0 and 1 (AIN0 AIN1) on the LabJack. Connect LabJack DAC0/1 to AIN0/1
 % for debugging with synthetic eye movements.
 %
-% Initialization code
+% Derived from LJSteam.m by 
+% M.A. Hopcroft
+%
+
+    % Initialization code
     gui_Singleton = 1;
     gui_State = struct('gui_Name',       mfilename, ...
                        'gui_Singleton',  gui_Singleton, ...
@@ -143,10 +147,10 @@ function openEOG(hObject, eventdata, handles, varargin)
     else
         testMode = false;
     end
+    
     testMode = true;
-    if testMode
-        set(handles.warnText, 'string', 'Warning -- Test Mode');
-    end   
+    
+    
     handles.output = hObject;                                               % select default command line output
     handles.visStim = EOGStimulus;
     handles.saccades = EOGSaccades;
@@ -267,15 +271,13 @@ function startButton_Callback(hObject, eventdata, handles)                  %#ok
 
     if strcmp(get(handles.startButton, 'String'), 'Start') % if start button, do the following
         fprintf(1,'\nEOG v1.0\n %s\n', datestr(clock));
-        viewDistanceCM = str2double(get(handles.viewDistanceText, 'string'));
-        limitDistanceCM = maxViewDistanceCM(handles.visStim, max(handles.data.offsetsDeg));
-        if viewDistanceCM > limitDistanceCM
-            errordlg(sprintf('Viewing distance must be <= %d cm', floor(limitDistanceCM)));
-            return;
-        end
+        viewDistanceCM = str2double(get(handles.viewDistanceText, 'string')));
         setViewDistanceCM(handles.visStim, str2double(get(handles.viewDistanceText, 'string')));
+        limitDistanceCM = maxViewDistanceCM(handles.stimulus, max(handles.data.offsetsDeg))
+        if viewDistanceCM > limitDistanceCM
+            errordlg(sprintf(''))'
         handles.saccades.thresholdDeg = str2double(get(handles.thresholdDegText, 'string'));
-        handles.saccades.filterWidthMS = max(1, str2double(get(handles.filterWidthText, 'string')));
+        handles.saccades.filterWidthMS = str2double(get(handles.filterWidthText, 'string'));
         % create timer to control the task
         taskRateHz = 25;
         handles.taskTimer = timer('Name', 'TaskTimer', 'ExecutionMode', 'fixedRate',...

@@ -43,7 +43,7 @@ classdef EOGTaskData < handle
              obj = obj@handle();                                            % object initialization
 
              %% Post Initialization %%
-            obj.offsetsDeg = [6 8 12 20];
+            obj.offsetsDeg = [5 10 15 20];
             obj.numChannels = numChannels;
             obj.numOffsets = length(obj.offsetsDeg);
             obj.offsetIndex = 1;

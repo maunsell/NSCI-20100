@@ -69,6 +69,10 @@ classdef EOGStimulus < handle
             limitDeg = atan2(obj.windowRectPix(3) / 2.0 - obj.marginPix, obj.viewDistanceMM) * 57.2958;
         end
         
+        function limitDistCM = maxViewDistanceCM(obj, maxDeg)
+            limitDistCM = (obj.windowRectPix(3) / 2.0 - obj.marginPix) / obj.pixPerMM / tan(maxDeg / 57.2958) / 10.0;
+        end
+        
         function setViewDistanceCM(obj, newValueCM)
             obj.viewDistanceMM = newValueCM * 10.0;
         end

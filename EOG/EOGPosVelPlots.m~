@@ -119,6 +119,7 @@ classdef EOGPosVelPlots < handle
             title(obj.velAxes, 'Most recent velocity trace', 'FontSize',12,'FontWeight','Bold');
             ylabel(obj.velAxes,'Analog Input (dV/dt)','FontSize',14);
             xlabel(obj.velAxes,'Time (s)','FontSize',14);
+
             % plot the average velocity traces
             if (mod(sum(data.numSummed), data.numOffsets) == 0)
                 cla(obj.velAvgAxes);
@@ -135,7 +136,7 @@ classdef EOGPosVelPlots < handle
                     axis(obj.velAxes, [-inf inf -yLim yLim]);
                     axis(obj.velAvgAxes, [-inf inf -yLim yLim]);
                     % averages are always aligned on onset, so draw a vertical line at that point
-                    hold(obj.velAvgAxes, 'on');
+                   hold(obj.velAvgAxes, 'on');
                     plot(obj.velAvgAxes, [0 0], [-yLim yLim], 'color', 'k', 'linestyle', ':');
                     hold(obj.velAvgAxes, 'off');
                end
@@ -146,12 +147,7 @@ classdef EOGPosVelPlots < handle
             % if eye position has been calibrated, change the y scaling on the average to degrees rather than volts
             if saccades.degPerV > 0
                 maxSpeedDPS = ceil((yLim * saccades.degPerSPerV) / 100.0) * 100;
-                increment = 100;
-                while maxSpeedDPS / increment > 5
-                    increment = increment * 2;
-                end
-                yTicks = (-maxSpeedDPS:increment:maxSpeedDPS) / saccades.degPerSPerV;
-                yLabels = cell(length(yTicks), 1);
+                yTicks = (-maxSpeedDPS:100:maxSpeedDPS) / saccades.degPerSPerV;
                 for i = 1:length(yTicks)
                     yLabels{i} = num2str(yTicks(i) * saccades.degPerSPerV, '%.0f');
                 end
@@ -162,6 +158,15 @@ classdef EOGPosVelPlots < handle
                     set(obj.velAvgAxes, 'YTick', yTicks);
                     set(obj.velAvgAxes, 'YTickLabel', yLabels);
                     ylabel(obj.velAvgAxes, 'Average Eye Speed (degrees/s)', 'FontSize', 14);
+                    % draw lines showing the duration of the above-threshold part of the average traces.
+%                     if (sum(data.numSummed) > 0 && mod(sum(data.numSummed), data.numOffsets) == 0)
+%                         hold(obj.velAvgAxes, 'on');
+%                         for i = 1:data.numOffsets
+%                             limitIndex = min(length(saccadeTimes), ceil(length(saccadeTimes) / 2 + data.saccadeDurS(i)));
+%                             plot(obj.velAvgAxes, [0, saccadeTimes(limitIndex)], -[yLim, yLim] / 5 * i, 'color', colors(i,:));
+%                         end
+%                         hold(obj.velAvgAxes, 'off');
+%                     end
                 end
             end
             a1 = axis(obj.velAxes);
