@@ -1,0 +1,101 @@
+    pthread_mutex_lock (&craw->mutex);
+    craw->frames_ready++;
+    pthread_mutex_unlock (&craw->mutex);
+    if (write (craw->notify_pipe[1], "+", 1)!=1) {
+    dc1394capture_t * capture = &(craw->capture);
+        capture->callback (craw->camera, capture->callback_user_data);
+        libusb_handle_events_timeout(craw->thread_context, &tv);
+        pthread_mutex_lock (&craw->mutex);
+        if (craw->kill_thread)
+        pthread_mutex_unlock (&craw->mutex);
+    pthread_mutex_unlock (&craw->mutex);
+    struct usb_frame *f = craw->frames + index;
+    f->frame.image = craw->buffer + index * proto->total_bytes;
+    dc1394camera_t * camera = craw->camera;
+    dc1394capture_t * capture = &(craw->capture);
+    if (craw->capture_is_set > 0)
+    craw->flags = flags;
+    if (pipe (craw->notify_pipe) < 0) {
+    capture->socket = CFSocketCreateWithNative (NULL, craw->notify_pipe[0],
+    craw->capture_is_set = 1;
+    craw->num_frames = num_dma_buffers;
+    craw->current = -1;
+    craw->frames_ready = 0;
+    craw->queue_broken = 0;
+    craw->buffer_size = proto.total_bytes * num_dma_buffers;
+    craw->buffer = malloc (craw->buffer_size);
+    if (craw->buffer == NULL) {
+    craw->frames = calloc (num_dma_buffers, sizeof *craw->frames);
+    if (craw->frames == NULL) {
+    if (libusb_init(&craw->thread_context) != 0) {
+    uint8_t bus = libusb_get_bus_number (libusb_get_device (craw->handle));
+    uint8_t addr = libusb_get_device_address (libusb_get_device (craw->handle));
+    libusb_get_device_list (craw->thread_context, &list);
+    if (libusb_open (dev, &craw->thread_handle) < 0) {
+    if (libusb_claim_interface (craw->thread_handle, 0) < 0) {
+    for (i = 0; i < craw->num_frames; i++) {
+        struct usb_frame *f = craw->frames + i;
+        libusb_fill_bulk_transfer (f->transfer, craw->thread_handle,
+    for (i = 0; i < craw->num_frames; i++) {
+        if (libusb_submit_transfer (craw->frames[i].transfer) < 0) {
+    if (pthread_mutex_init (&craw->mutex, NULL) < 0) {
+    craw->mutex_created = 1;
+    if (pthread_create (&craw->thread, NULL, capture_thread, craw) < 0) {
+    craw->thread_created = 1;
+        craw->iso_auto_started = 1;
+    dc1394camera_t * camera = craw->camera;
+    dc1394capture_t * capture = &(craw->capture);
+    if (craw->capture_is_set == 0)
+    if (craw->iso_auto_started > 0) {
+        craw->iso_auto_started = 0;
+    if (craw->thread_created) {
+        for (i = 0; i < craw->num_frames; i++) {
+            libusb_cancel_transfer (craw->frames[i].transfer);
+        pthread_mutex_lock (&craw->mutex);
+        craw->kill_thread = 1;
+        pthread_mutex_unlock (&craw->mutex);
+        pthread_join (craw->thread, NULL);
+        craw->kill_thread = 0;
+        craw->thread_created = 0;
+    if (craw->mutex_created) {
+        pthread_mutex_destroy (&craw->mutex);
+        craw->mutex_created = 0;
+    if (craw->thread_handle) {
+        libusb_release_interface (craw->thread_handle, 0);
+        libusb_close (craw->thread_handle);
+        craw->thread_handle = NULL;
+    if (craw->thread_context) {
+        libusb_exit (craw->thread_context);
+        craw->thread_context = NULL;
+    if (craw->frames) {
+        for (i = 0; i < craw->num_frames; i++) {
+            libusb_free_transfer (craw->frames[i].transfer);
+        free (craw->frames);
+        craw->frames = NULL;
+    free (craw->buffer);
+    craw->buffer = NULL;
+    if (craw->notify_pipe[0] != 0 || craw->notify_pipe[1] != 0) {
+        close (craw->notify_pipe[0]);
+        close (craw->notify_pipe[1]);
+    craw->notify_pipe[0] = 0;
+    craw->notify_pipe[1] = 0;
+    craw->capture_is_set = 0;
+    int next = NEXT_BUFFER (craw, craw->current);
+    struct usb_frame * f = craw->frames + next;
+        pthread_mutex_lock (&craw->mutex);
+        pthread_mutex_unlock (&craw->mutex);
+    if (craw->queue_broken)
+    if (read (craw->notify_pipe[0], &ch, 1)!=1) {
+    pthread_mutex_lock (&craw->mutex);
+        pthread_mutex_unlock (&craw->mutex);
+    craw->frames_ready--;
+    f->frame.frames_behind = craw->frames_ready;
+    pthread_mutex_unlock (&craw->mutex);
+    craw->current = next;
+    dc1394camera_t * camera = craw->camera;
+        craw->queue_broken = 1;
+    if (craw->notify_pipe[0] == 0 && craw->notify_pipe[1] == 0)
+    return craw->notify_pipe[0];
+    dc1394capture_t * capture = &(craw->capture);
+    if (craw->capture_is_set) {
+    dc1394capture_t * capture = &(craw->capture);

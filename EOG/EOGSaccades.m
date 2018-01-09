@@ -19,7 +19,7 @@ classdef EOGSaccades < handle
 
         %% findSaccade: extract the saccade timing using speed threshold
         function [sIndex, eIndex] = findSaccade(obj, data, posTrace, velTrace, stepSign)
-           calSamples = floor(0.050 * data.sampleRateHz);               % compare 50 ms at start and end
+           calSamples = floor(data.prestimDurS * data.sampleRateHz);    % use preStim for calibration
            if data.calTrialsDone < 4                                    % still getting a calibration
                 mean(posTrace(1:calSamples));
                 min(posTrace(:));
@@ -38,7 +38,7 @@ classdef EOGSaccades < handle
                 sIndex = 0; eIndex = 0;
                 return;
             end
-            sIndex = floor(0.100 * data.sampleRateHz);                  % no saccades < 100 ms
+            sIndex = floor(data.stimTimeS * data.sampleRateHz);         % no saccades before stimon
             seq = 0;
             thresholdV = mean(posTrace(1:calSamples)) + obj.thresholdDeg / obj.degPerV;
             while (seq < 5 && sIndex < length(posTrace))	% find the first sequence of 5 > than threshold

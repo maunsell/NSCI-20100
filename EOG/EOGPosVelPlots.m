@@ -89,18 +89,19 @@ classdef EOGPosVelPlots < handle
             a1 = axis(obj.posAxes);
             text(trialTimes(1) + 0.05 * (trialTimes(end) - trialTimes(1)), ...
                 a1(3) + 0.9 * (a1(4) - a1(3)), '1', 'parent', obj.posAxes, 'FontSize', 24, 'FontWeight', 'Bold');
-          % Once the y-axis scaling is set, we can draw lines to mark any saccade that was detected.
+            % Once the y-axis scaling is set, we can draw vertical marks for stimOn and saccades
+            hold(obj.posAxes, 'on');
+            plot(obj.posAxes, [data.stimTimeS, data.stimTimeS], [a1(3), a1(4)], 'k-.');
             if (startIndex > 0)
-                hold(obj.posAxes, 'on');
                 plot(obj.posAxes, [startIndex, startIndex] * timestepS, [a1(3), a1(4)], 'color', ...
                     colors(data.offsetIndex,:), 'linestyle', ':');
                 if (endIndex > 0)
                     plot(obj.posAxes, [endIndex, endIndex] * timestepS, [a1(3), a1(4)], 'color', ...
                     colors(data.offsetIndex,:), 'linestyle', ':');
                 end
-                hold(obj.posAxes, 'off');
             end
-        end
+            hold(obj.posAxes, 'off');
+       end
 
         %% velPlots: do the trial and average velocity plots
         function velPlots(obj, handles, startIndex, endIndex)
@@ -167,17 +168,18 @@ classdef EOGPosVelPlots < handle
             a1 = axis(obj.velAxes);
             text(trialTimes(1) + 0.05 * (trialTimes(end) - trialTimes(1)), ...
                 a1(3) + 0.9 * (a1(4) - a1(3)), '3', 'parent', obj.velAxes, 'FontSize', 24, 'FontWeight', 'Bold');
-            % Once the y-axis scaling is set, we can draw lines to mark any saccade that was detected.
+            % Once the y-axis scaling is set, we can draw vertical marks for stimOn and saccades
+            hold(obj.velAxes, 'on');
+            plot(obj.velAxes, [data.stimTimeS, data.stimTimeS], [a1(3), a1(4)], 'k-.');
             if (startIndex > 0)
-                hold(obj.velAxes, 'on');
                 plot(obj.velAxes, [startIndex, startIndex] * timestepS, [a1(3), a1(4)], 'color', ...
                     colors(data.offsetIndex,:), 'linestyle', ':');
                 if (endIndex > 0)
                     plot(obj.velAxes, [endIndex, endIndex] * timestepS, [a1(3), a1(4)], 'color', ...
                     colors(data.offsetIndex,:), 'linestyle', ':');
                 end
-                hold(obj.posAxes, 'off');
             end
+            hold(obj.posAxes, 'off');
         end
     end
 end

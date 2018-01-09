@@ -143,7 +143,7 @@ function openEOG(hObject, eventdata, handles, varargin)
     else
         testMode = false;
     end
-    testMode = true;
+%     testMode = true;
     if testMode
         set(handles.warnText, 'string', 'Warning -- Test Mode');
     end   
@@ -337,7 +337,6 @@ function taskController(obj, events, daqaxes)
             if data.testMode
                 data.voltage = min(5.0, visStim.currentOffsetPix / 500.0);  % debugging- connect DACO0 to AIN0
                 analogOut(lbj, 0, 2.5 + data.voltage);
-%                 analogOut(lbj, 1, 2.5 - data.voltage);
             end
             data.trialStartTimeS = clock;
             data.taskState = TaskState.taskSettle;                      % go to settle state

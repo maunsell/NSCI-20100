@@ -160,7 +160,7 @@ function runButton_Callback(hObject, ~, handles)
             contrastStrings = get(handles.baseContrastMenu, 'string');
             originalSize = get(0, 'DefaultUIControlFontSize');
             set(0, 'DefaultUIControlFontSize', 14);
-            helpdlg(sprintf('%d reps of %s%% contrast have already been done', stimReps, contrastStrings{baseIndex}));
+            helpdlg(sprintf('%d reps of %s contrast have already been done', stimReps, contrastStrings{baseIndex}));
             set(0, 'DefaultUIControlFontSize', originalSize);
         end
     end
@@ -217,27 +217,7 @@ function showHideButton_Callback(hObject, ~, handles)
     guidata(hObject, handles);                          % save the changes
 end
 
-%% stopCheck monitor and record the most recent keystroke
-function stopCheck(obj, event)                                              %#ok<*INUSD>
-    runButton = get(obj, 'UserData');
-    buttonStruct = get(runButton, 'UserData');                                    % abort commands are latched
-    if strcmp(buttonStruct.keyDown, 'abort')
-        return;
-    end
-    [~, ~, keyCode] = KbCheck(-1);
-    if keyCode(KbName('Escape'))
-        buttonStruct.keyDown = 'abort';
-    elseif keyCode(KbName('LeftArrow'))
-        buttonStruct.keyDown = 'left';
-    elseif keyCode(KbName('RightArrow'))
-        buttonStruct.keyDown = 'right';
-    else
-        buttonStruct.keyDown = '';
-    end
-    set(runButton, 'UserData', buttonStruct);
-end
-
-function timerErrorFcnStop(obj, event, handles)
+function timerErrorFcn(obj, event, handles)
     disp('timer error');
 end
 
