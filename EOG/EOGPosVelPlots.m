@@ -114,7 +114,7 @@ classdef EOGPosVelPlots < handle
             % plot the trial velocity trace
             cla(obj.velAxes);
             plot(obj.velAxes, trialTimes, data.velTrace, 'color', colors(data.offsetIndex,:));
-            a = axis(obj.velAxes);
+            a = axis(obj.velAxes);                                              % center vel plot vertically
             yLim = max(abs(a(3)), abs(a(4)));
             axis(obj.velAxes, [-inf inf -yLim yLim]);
             title(obj.velAxes, 'Most recent velocity trace', 'FontSize',12,'FontWeight','Bold');
@@ -127,7 +127,7 @@ classdef EOGPosVelPlots < handle
                     plot(obj.velAvgAxes, saccadeTimes, data.velAvg, '-');
                     title(obj.velAvgAxes, 'Average velocity traces (left/right combined)', 'FontSize',12,...
                         'FontWeight','Bold')
-                    ylabel(obj.velAvgAxes,'Analog Input (V)','FontSize',14);
+                    ylabel(obj.velAvgAxes,'Analog Input (dV/dt)','FontSize',14);
                     xlabel(obj.velAvgAxes,'Time (s)','FontSize',14);
                     % put both plots on the same y scale
                     a1 = axis(obj.velAxes);
@@ -141,9 +141,9 @@ classdef EOGPosVelPlots < handle
                     plot(obj.velAvgAxes, [0 0], [-yLim yLim], 'color', 'k', 'linestyle', ':');
                     hold(obj.velAvgAxes, 'off');
                end
-            else
-                a1 = axis(obj.velAxes);
-                yLim = max([abs(a1(3)), abs(a1(4))]);
+%             else  % shouldn't need this, we've set yLim to this up above
+%                 a1 = axis(obj.velAxes);
+%                 yLim = max([abs(a1(3)), abs(a1(4))]);
             end
             % if eye position has been calibrated, change the y scaling on the average to degrees rather than volts
             if saccades.degPerV > 0
@@ -180,7 +180,7 @@ classdef EOGPosVelPlots < handle
                     colors(data.offsetIndex,:), 'linestyle', ':');
                 end
             end
-            hold(obj.posAxes, 'off');
+            hold(obj.velAxes, 'off');
         end
     end
 end
