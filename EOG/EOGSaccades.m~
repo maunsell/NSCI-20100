@@ -15,7 +15,6 @@ classdef EOGSaccades < handle
         function clearAll(obj)
             obj.degPerV = 0;
             obj.degPerSPerV = 0;
-            set(handles.calibrationText, 'string', '');
         end
 
         %% findSaccade: extract the saccade timing using speed threshold

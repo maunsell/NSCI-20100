@@ -38,6 +38,7 @@ function clearButton_Callback(hObject, eventdata, handles)                  %#ok
         end
         clearAll(handles.data);
         plot(handles.posVelPlots, handles, 0, 0);
+        set(handles.calibrationText, 'string', '');
         guidata(hObject, handles);
     end
 end
@@ -106,6 +107,7 @@ function loadDataButton_Callback(hObject, ~, handles)
         handles.data.testMode = testMode;                               % keep testMode across data loads
         handles.ampDur = a;
         handles.saccades = s;
+        set(handles.calibrationText, 'string', sprintf('Calibration %.1f deg/V', handles.saccades.degPerV));
         handles.rtDists{1} = r1;
         handles.rtDists{2} = r2;
         handles.rtDists{3} = r3;
@@ -151,7 +153,7 @@ function openEOG(hObject, eventdata, handles, varargin)
     testMode = true;
     
     if testMode
-        set(handles.warnText, 'string', 'Warning -- Test Mode');
+        set(handles.warnText, 'string', 'Test Mode');
     end   
     handles.output = hObject;                                               % select default command line output
     handles.visStim = EOGStimulus;
@@ -370,6 +372,7 @@ function taskController(obj, events, daqaxes)
         case TaskState.taskEndtrial
             [startIndex, endIndex] = processSignals(saccades, data);
             plot(handles.posVelPlots, handles, startIndex, endIndex);
+            set(handles.calibrationText, 'string', sprintf('Calibration %.1f deg/V', saccades.degPerV));
             addAmpDur(ampDur, data.offsetIndex, startIndex, endIndex);
             plotAmpDur(ampDur);
             if startIndex > 0
