@@ -100,10 +100,9 @@ function loadDataButton_Callback(hObject, ~, handles)
     EOGControlState(handles, 'off', {})
     [fileName, filePath] = uigetfile('*.mat', 'Load Matlab Data Workspace', '~/Desktop');
     if fileName ~= 0
-        testMode = handles.data.testMode;                               % keep testMode across data loads
+        testMode = handles.data.
         load([filePath fileName]);
         handles.data = d;
-        handles.data.testMode = testMode;                               % keep testMode across data loads
         handles.ampDur = a;
         handles.saccades = s;
         handles.rtDists{1} = r1;
@@ -123,7 +122,6 @@ function loadDataButton_Callback(hObject, ~, handles)
         
         [startIndex, endIndex] = processSignals(handles.saccades, d);
         plot(handles.posVelPlots, handles, startIndex, endIndex);
-        handles.ampDur.lastN = 0;                                       % tell ampDur it needs to plot
         plotAmpDur(handles.ampDur);
         for i = 1:4
             plot(handles.rtDists{i});
