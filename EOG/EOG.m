@@ -143,7 +143,9 @@ function openEOG(hObject, eventdata, handles, varargin)
     else
         testMode = false;
     end
-%     testMode = true;
+    
+    testMode = true;
+    
     if testMode
         set(handles.warnText, 'string', 'Warning -- Test Mode');
     end   
@@ -165,7 +167,6 @@ function openEOG(hObject, eventdata, handles, varargin)
     handles.data.testMode = testMode;
     if (handles.data.testMode)
         analogOut(handles.lbj, 0, 2.5);                 % For debugging (AOuts to AIns)
-%         analogOut(handles.lbj, 1, 2.5);
     end
     movegui(hObject, 'northeast');
     guidata(hObject, handles);                                                   % save the selection

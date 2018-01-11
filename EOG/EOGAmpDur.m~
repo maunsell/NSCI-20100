@@ -78,17 +78,18 @@ classdef EOGAmpDur < handle
             end
             cla(obj.fHandle);
             boxplot(obj.fHandle, obj.reactTimesMS(1:minN, :), 'labels', num2str(obj.offsetsDeg(:)), ...
-                'notch', 'on', 'whisker', 0, 'positions', obj.offsetsDeg, 'symbol', '');
+                'notch', 'on', 'positions', obj.offsetsDeg, 'symbol', '');
             title(obj.fHandle, 'Duration v. Amplitude', 'FontSize', 12, 'FontWeight', 'Bold');
             xlabel(obj.fHandle, 'Saccade Amplitude (deg)','FontSize',14);
             ylabel(obj.fHandle, 'Saccade Duration (ms)','FontSize',14);
-            a = axis(obj.fHandle);
-            medians = median(obj.reactTimesMS(1:minN, :));
-            quartiles = prctile(obj.reactTimesMS(1:minN, :), [25 75]);
-            [maxQ, indexMax] = max(max(quartiles));
-            [minQ, indexMin] = min(min(quartiles));
-            axis(obj.fHandle, [a(1), a(2), (medians(indexMin) - 2.0 * (medians(indexMin) - minQ))...
-                (medians(indexMax) + 2.0 * (maxQ - medians(indexMax)))]);
+            if minN > 2
+                medians = median(obj.reactTimesMS(1:minN, :));
+                quartiles = prctile(obj.reactTimesMS(1:minN, :), [25 75]);
+                [maxQ, indexMax] = max(max(quartiles));
+            end
+            
+%             yLim = ylim(obj.fHandle);
+%             axis(obj.fHandle, [-inf inf 0 75]);
             a = axis(obj.fHandle);
             text(a(1) + 0.05 * (a(2) - a(1)), 0.9 * (a(4) - a(3)) + a(3), '5', 'parent', obj.fHandle, 'FontSize', 24,...
                 'FontWeight', 'Bold');

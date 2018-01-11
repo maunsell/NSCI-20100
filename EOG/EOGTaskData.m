@@ -40,7 +40,7 @@ classdef EOGTaskData < handle
         function obj = EOGTaskData(numChannels, sampleRateHz)
 
              %% Object Initialization %%
-             obj = obj@handle();                                            % object initialization
+             obj = obj@handle();                                    % object initialization
 
              %% Post Initialization %%
             obj.offsetsDeg = [5 10 15 20];
@@ -48,7 +48,7 @@ classdef EOGTaskData < handle
             obj.numOffsets = length(obj.offsetsDeg);
             obj.offsetIndex = 1;
             obj.stepSign = 1;
-            obj.saccadeTraceS = 0.250;                                      % duratoin of saccade trace
+            obj.saccadeTraceS = 0.250;                              % duratoin of saccade trace
             obj.trialDurS = max(1.0, 2 * obj.saccadeTraceS);
             obj.prestimDurS = min(obj.trialDurS / 4, 0.250);
             obj.taskState = TaskState.taskStarttrial;
@@ -57,7 +57,7 @@ classdef EOGTaskData < handle
             obj.samplesRead = 0;
             obj.startStimS = 0;
             obj.stimTimeS = 0;
-            obj.testMode = false;
+            obj.testMode = false;                                  % testMode is set in EOG, not here
             obj.voltage = 0;
 
             setSampleRateHz(obj, sampleRateHz);
