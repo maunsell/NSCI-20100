@@ -38,7 +38,7 @@ classdef EOGRTDist < handle
         %% addRT
         function addRT(obj, rtMS)
             obj.n = obj.n + 1;
-            obj.reactTimesMS(obj.n) = rtMS;
+            obj.reactTimesMS(obj.n) = max(rtMS, 0);
         end
 
         %% clearAll

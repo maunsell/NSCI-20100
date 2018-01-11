@@ -37,7 +37,7 @@ function clearButton_Callback(hObject, eventdata, handles)                  %#ok
             clearAll(handles.rtDists{i});
         end
         clearAll(handles.data);
-        plot(handles.posVelPlots, handles, 0, 0);
+        plot(handles.posVelPlots, handles, 0, 0, true);
         set(handles.calibrationText, 'string', '');
         guidata(hObject, handles);
     end
@@ -48,14 +48,27 @@ function closeEOG(hObject, eventdata, handles)
     % this function is called  when the user closes the main window
     % close the timer and clear the LabJack handle
     %
-    fprintf(1,'EOG: close window\n');
-    cleanup(handles.visStim);
-    delete(handles.visStim);
-    try delete(handles.ampDur); catch, end;
-    try stop(timerfind); catch, end
-    try delete(timerfind); catch, end
-    try clear('handles.lbj'); catch, end
-    delete(hObject);                                                            % close the program window
+    % fist check whether the task is running
+    if strcmp(get(handles.startButton, 'String'), 'Stop')
+        return;
+    end
+    originalSize = get(0, 'DefaultUIControlFontSize');
+    set(0, 'DefaultUIControlFontSize', 14);
+    selection = questdlg('Really exit EOG? Unsaved data will be lost.',...
+        'Exit Request', 'Yes', 'No', 'Yes');      
+    set(0, 'DefaultUIControlFontSize', originalSize);
+    switch selection
+    case 'Yes'
+        cleanup(handles.visStim);
+        delete(handles.visStim);
+        try delete(handles.ampDur); catch, end;
+        try stop(timerfind); catch, end
+        try delete(timerfind); catch, end
+        try clear('handles.lbj'); catch, end
+        delete(hObject);                                                            % close the program window
+    case 'No'
+        return
+    end
 end
 
 %% collectData: function to collect data from LabJack
@@ -124,8 +137,8 @@ function loadDataButton_Callback(hObject, ~, handles)
         guidata(hObject, handles);                                      % save the selections
         
         [startIndex, endIndex] = processSignals(handles.saccades, d);
-        plot(handles.posVelPlots, handles, startIndex, endIndex);
-        handles.ampDur.lastN = 0;                                       % tell ampDur it needs to plot
+        plot(handles.posVelPlots, handles, startIndex, endIndex, true);
+        handles.ampDur.lastN = 0;                                       % force ampDur to plot
         plotAmpDur(handles.ampDur);
         for i = 1:4
             plot(handles.rtDists{i});
@@ -150,7 +163,7 @@ function openEOG(hObject, eventdata, handles, varargin)
         testMode = false;
     end
     
-    testMode = true;
+%     testMode = true;
     
     if testMode
         set(handles.warnText, 'string', 'Test Mode');
@@ -371,7 +384,7 @@ function taskController(obj, events, daqaxes)
         % just wait for end of trial
         case TaskState.taskEndtrial
             [startIndex, endIndex] = processSignals(saccades, data);
-            plot(handles.posVelPlots, handles, startIndex, endIndex);
+            plot(handles.posVelPlots, handles, startIndex, endIndex, false);
             set(handles.calibrationText, 'string', sprintf('Calibration %.1f deg/V', saccades.degPerV));
             addAmpDur(ampDur, data.offsetIndex, startIndex, endIndex);
             plotAmpDur(ampDur);

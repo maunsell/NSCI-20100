@@ -18,19 +18,16 @@ classdef EOGSaccades < handle
         end
 
         %% findSaccade: extract the saccade timing using speed threshold
-        function [sIndex, eIndex] = findSaccade(obj, data, posTrace, velTrace, stepSign)
-           calSamples = floor(data.prestimDurS * data.sampleRateHz);    % use preStim for calibration
-           if data.calTrialsDone < 4                                    % still getting a calibration
-                mean(posTrace(1:calSamples));
-                min(posTrace(:));
-                max(posTrace(:))    ;            
+        function [sIndex, eIndex] = findSaccade(obj, data, posTrace, velTrace, stepSign, startIndex)
+%            calSamples = floor(data.prestimDurS * data.sampleRateHz);    % use preStim for calibration
+            seqLength = 5;
+            if data.calTrialsDone < 4                                    % still getting a calibration
                 if (stepSign == 1)
                     DPV = abs(data.offsetsDeg(data.offsetIndex) /...
-                             (max(posTrace(:)) - mean(posTrace(1:calSamples)))); 
-
+                             (max(posTrace(:)) - mean(posTrace(1:startIndex)))); 
                 else
                     DPV = abs(data.offsetsDeg(data.offsetIndex) /...
-                             (mean(posTrace(1:calSamples) - min(posTrace(:)))));
+                             (mean(posTrace(1:startIndex) - min(posTrace(:)))));
                 end
                 obj.degPerV = (obj.degPerV * data.calTrialsDone + DPV) / (data.calTrialsDone + 1);
                 obj.degPerSPerV = obj.degPerV * data.sampleRateHz;      % needed for velocity plots
@@ -38,24 +35,24 @@ classdef EOGSaccades < handle
                 sIndex = 0; eIndex = 0;
                 return;
             end
-            sIndex = floor(data.stimTimeS * data.sampleRateHz);         % no saccades before stimon
+            sIndex = startIndex;
             seq = 0;
-            thresholdV = mean(posTrace(1:calSamples)) + obj.thresholdDeg / obj.degPerV;
-            while (seq < 5 && sIndex < length(posTrace))	% find the first sequence of 5 > than threshold
-                if posTrace(sIndex) * stepSign < thresholdV
+            thresholdV = mean(posTrace(1:startIndex)) + obj.thresholdDeg / obj.degPerV;
+            while (seq < seqLength && sIndex < length(posTrace))	% find the first sequence of seqLength > than threshold
+               if posTrace(sIndex) * stepSign < thresholdV
                     seq = 0;
                 else
                     seq = seq + 1;
                 end
                 sIndex = sIndex + 1;
             end
-            % if we found a saccade start, look for the saccade end, consisting of 5 samples below the peak
+            % if we found a saccade start, look for the saccade end, consisting of seqLength samples below the peak
             if sIndex < length(posTrace)
                 seq = 0;
                 maxPos = posTrace(sIndex);
                 maxIndex = sIndex;
                 eIndex = sIndex;
-                while seq < 5 && eIndex < (length(posTrace) - 1)
+                while seq < seqLength && eIndex < (length(posTrace) - 1)
                    if posTrace(eIndex + 1) * stepSign < maxPos * stepSign
                         seq = seq + 1;
                     else
@@ -73,11 +70,11 @@ classdef EOGSaccades < handle
                 % if we have found the start and end of a saccade, walk the start from the position threshold to the 
                 % point where velocity turned positive at the start of the saccade
                 if eIndex > sIndex
-                    while sIndex > calSamples && velTrace(sIndex - 1) * stepSign > 0
+                    while sIndex > startIndex && velTrace(sIndex - 1) * stepSign > 0
                         sIndex = sIndex - 1;
                     end
                 end
-                if eIndex - sIndex < 0.005 * data.sampleRateHz;      % no saccades less than 5 ms
+                if eIndex - sIndex < 0.005 * data.sampleRateHz      % no saccades less than 5 ms
                     sIndex = 0;
                     eIndex = 0;
                 end
@@ -104,14 +101,15 @@ classdef EOGSaccades < handle
                 data.posTrace = filter(b, 1, data.posTrace);
            end
             % make the velocity trace and then apply boxcar filter
-%             data.posTrace = filter(b, 1, data.posTrace);
             data.velTrace(1:end - 1) = diff(data.posTrace);
             data.velTrace(end) = data.velTrace(end - 1);
             filterSamples = floor(data.sampleRateHz * obj.filterWidthMS / 1000.0);     
             b = (1 / filterSamples) * ones(1, filterSamples);
             data.velTrace = filter(b, 1, data.velTrace);
             % find a saccade and make sure we have enough samples before and after its start
-            [startIndex, endIndex] = obj.findSaccade(data, data.posTrace, data.velTrace, data.stepSign);
+%             sIndex = floor(data.stimTimeS * data.sampleRateHz);         % no saccades before stimon
+            sIndex = floor(data.prestimDurS * data.sampleRateHz);
+            [startIndex, endIndex] = obj.findSaccade(data, data.posTrace, data.velTrace, data.stepSign, sIndex);
             saccadeOffset = floor(data.saccadeSamples / 2);
             firstIndex = startIndex - saccadeOffset;
             lastIndex = startIndex + saccadeOffset;
@@ -136,24 +134,20 @@ classdef EOGSaccades < handle
             end
             % tally the sums and compute the averages
             data.numSummed(data.offsetIndex) = data.numSummed(data.offsetIndex) + 1;
-            data.posAvg(:, data.offsetIndex) = data.posSummed(:, data.offsetIndex) ...
-                / data.numSummed(data.offsetIndex);
-            data.velAvg(:, data.offsetIndex) = data.velSummed(:, data.offsetIndex) ...
-                / data.numSummed(data.offsetIndex);
+            data.posAvg(:, data.offsetIndex) = data.posSummed(:, data.offsetIndex) / data.numSummed(data.offsetIndex);
+            data.velAvg(:, data.offsetIndex) = data.velSummed(:, data.offsetIndex) / data.numSummed(data.offsetIndex);
             data.offsetsDone(data.offsetIndex) = data.offsetsDone(data.offsetIndex) + 1;
-            % now that we've updated all the traces, compute the degrees per volt if
-            % we have enough trials
+            % now that we've updated all the traces, compute the degrees per volt if we have enough trials
             if sum(data.numSummed) > length(data.numSummed)
-%                 calSamples = floor(0.050 * data.sampleRateHz);            % use last 50 ms of position trace
                 endPointsV = max(data.posAvg(:, :));                        % take average peaks to get each point
                 obj.degPerV = mean(data.offsetsDeg ./ endPointsV);
                 obj.degPerSPerV = obj.degPerV * data.sampleRateHz;          % needed for velocity plots
             end
             % find the average saccade duration using the average speed trace
             [sAvgIndex, eAvgIndex] = obj.findSaccade(data, data.posAvg(:, data.offsetIndex), ...
-                            data.velAvg(:, data.offsetIndex), 1);
+                            data.velAvg(:, data.offsetIndex), 1, length(data.posAvg(:, data.offsetIndex)) / 2);
             if eAvgIndex > sAvgIndex 
-                data.saccadeDurS(data.offsetIndex) = eAvgIndex - sAvgIndex;
+                data.saccadeDurS(data.offsetIndex) = (eAvgIndex - sAvgIndex) / data.sampleRateHz;
             else
                 data.saccadeDurS(data.offsetIndex) = 0;
             end

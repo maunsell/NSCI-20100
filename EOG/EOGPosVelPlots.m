@@ -21,15 +21,16 @@ classdef EOGPosVelPlots < handle
             obj.velAxes = handles.axes3;            
         end
             
-        function plot(obj, handles, startIndex, endIndex)
+        function plot(obj, handles, startIndex, endIndex, mustPlot)
         %EOGPlots Updata all plots for EOG
-            posPlots(obj, handles, startIndex, endIndex);
-            velPlots(obj, handles, startIndex, endIndex);
+            mustPlot = mustPlot || (mod(sum(handles.data.numSummed), handles.data.numOffsets) == 0);
+            posPlots(obj, handles, startIndex, endIndex, mustPlot);
+            velPlots(obj, handles, startIndex, endIndex, mustPlot);
 %             drawnow;
         end
 
         %% posPlots: do the trial and average position plots
-        function posPlots(obj, handles, startIndex, endIndex)
+        function posPlots(obj, handles, startIndex, endIndex, mustPlot)
             data = handles.data;
             saccades = handles.saccades;
             timestepS = 1 / data.sampleRateHz;                            % time interval of samples
@@ -49,7 +50,7 @@ classdef EOGPosVelPlots < handle
             title(obj.posAxes, 'Most recent position trace', 'FontSize',12,'FontWeight','Bold')
             ylabel(obj.posAxes,'Analog Input (V)','FontSize',14);
             % average position traces every complete block
-            if (mod(sum(data.numSummed), data.numOffsets) == 0)
+            if mustPlot
                 cla(obj.posAvgAxes);
                 if sum(data.numSummed) > 0
                     plot(obj.posAvgAxes, saccadeTimes, data.posAvg, '-');
@@ -61,12 +62,12 @@ classdef EOGPosVelPlots < handle
                     text(-0.112, 0.8 * yLim, '2', 'parent', obj.posAvgAxes, 'FontSize', 24, 'FontWeight', 'Bold');
                     axis(obj.posAvgAxes, [-inf inf -yLim yLim]);
                     hold(obj.posAvgAxes, 'on');
-                    for i = 1:length(data.saccadeDurS)
-                        saccadeDurS = data.saccadeDurS(i) / 1000.0;
-                        plot(obj.posAvgAxes, [saccadeDurS, saccadeDurS], [-yLim, yLim], ':', 'color', colors(i,:));
-                    end
                     % averages are always aligned on onset, so draw a vertical line at that point
                     plot(obj.posAvgAxes, [0 0], [-yLim yLim], 'color', 'k', 'linestyle', ':');
+                    for i = 1:length(data.saccadeDurS)          % draw saccade durations for average traces
+                        plot(obj.posAvgAxes, [data.saccadeDurS(i), data.saccadeDurS(i)], [-yLim, yLim], ':', ...
+                                            'color', colors(i,:));
+                    end
                     hold(obj.posAvgAxes, 'off');
                     % if eye position has been calibrated, change the y scaling on the average to degrees 
                     % rather than volts
@@ -104,7 +105,7 @@ classdef EOGPosVelPlots < handle
        end
 
         %% velPlots: do the trial and average velocity plots
-        function velPlots(obj, handles, startIndex, endIndex)
+        function velPlots(obj, handles, startIndex, endIndex, mustPlot)
             data = handles.data;
             saccades = handles.saccades;
             timestepS = 1 / data.sampleRateHz;                                  % time interval of samples
@@ -121,7 +122,7 @@ classdef EOGPosVelPlots < handle
             ylabel(obj.velAxes,'Analog Input (dV/dt)','FontSize',14);
             xlabel(obj.velAxes,'Time (s)','FontSize',14);
             % plot the average velocity traces every time a set of step sizes is completed
-            if (mod(sum(data.numSummed), data.numOffsets) == 0)
+            if mustPlot
                 cla(obj.velAvgAxes);
                 if sum(data.numSummed) > 0                  % make sure there is at least one set of steps
                     plot(obj.velAvgAxes, saccadeTimes, data.velAvg, '-');
@@ -141,9 +142,6 @@ classdef EOGPosVelPlots < handle
                     plot(obj.velAvgAxes, [0 0], [-yLim yLim], 'color', 'k', 'linestyle', ':');
                     hold(obj.velAvgAxes, 'off');
                end
-%             else  % shouldn't need this, we've set yLim to this up above
-%                 a1 = axis(obj.velAxes);
-%                 yLim = max([abs(a1(3)), abs(a1(4))]);
             end
             % if eye position has been calibrated, change the y scaling on the average to degrees rather than volts
             if saccades.degPerV > 0
@@ -160,7 +158,7 @@ classdef EOGPosVelPlots < handle
                 set(obj.velAxes, 'YTick', yTicks);
                 set(obj.velAxes, 'YTickLabel', yLabels);
                 ylabel(obj.velAxes,'Average Eye Speed (degrees/s)','FontSize',14);
-                if (mod(sum(data.numSummed), data.numOffsets) == 0)
+                if mustPlot
                     set(obj.velAvgAxes, 'YTick', yTicks);
                     set(obj.velAvgAxes, 'YTickLabel', yLabels);
                     ylabel(obj.velAvgAxes, 'Average Eye Speed (degrees/s)', 'FontSize', 14);
