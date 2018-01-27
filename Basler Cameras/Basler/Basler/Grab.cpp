@@ -33,7 +33,7 @@ using namespace std;
 // Number of images to be grabbed.
 static const uint32_t c_countOfImagesToGrab = 100;
 
-int main(int argc, char* argv[])
+int grab(int argc, char* argv[])
 {
     // The exit code of the sample application.
     int exitCode = 0;

@@ -15,6 +15,8 @@
 		698DAD67201D094900528A4A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 698DAD66201D094900528A4A /* main.m */; };
 		698DAD72201D094900528A4A /* BaslerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 698DAD71201D094900528A4A /* BaslerTests.m */; };
 		698DAD7D201D094900528A4A /* BaslerUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 698DAD7C201D094900528A4A /* BaslerUITests.m */; };
+		698DAD9E201D16D400528A4A /* Grab.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 698DAD9D201D16D400528A4A /* Grab.cpp */; };
+		698DADA0201D172100528A4A /* pylon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 698DAD9F201D172100528A4A /* pylon.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -52,6 +54,8 @@
 		698DAD78201D094900528A4A /* BaslerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BaslerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		698DAD7C201D094900528A4A /* BaslerUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BaslerUITests.m; sourceTree = "<group>"; };
 		698DAD7E201D094900528A4A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		698DAD9D201D16D400528A4A /* Grab.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Grab.cpp; sourceTree = "<group>"; };
+		698DAD9F201D172100528A4A /* pylon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = pylon.framework; path = ../../../../../../../Library/Frameworks/pylon.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -59,6 +63,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				698DADA0201D172100528A4A /* pylon.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -83,6 +88,7 @@
 			isa = PBXGroup;
 			children = (
 				698DAD56201D094900528A4A /* Basler */,
+				698DAD8A201D0BFF00528A4A /* Frameworks */,
 				698DAD70201D094900528A4A /* BaslerTests */,
 				698DAD7B201D094900528A4A /* BaslerUITests */,
 				698DAD55201D094900528A4A /* Products */,
@@ -107,10 +113,11 @@
 				698DAD5A201D094900528A4A /* Document.h */,
 				698DAD5B201D094900528A4A /* Document.m */,
 				698DAD5D201D094900528A4A /* Document.xib */,
-				698DAD60201D094900528A4A /* Assets.xcassets */,
+				698DAD9D201D16D400528A4A /* Grab.cpp */,
 				698DAD62201D094900528A4A /* MainMenu.xib */,
 				698DAD65201D094900528A4A /* Info.plist */,
 				698DAD66201D094900528A4A /* main.m */,
+				698DAD60201D094900528A4A /* Assets.xcassets */,
 				698DAD68201D094900528A4A /* Basler.entitlements */,
 			);
 			path = Basler;
@@ -132,6 +139,14 @@
 				698DAD7E201D094900528A4A /* Info.plist */,
 			);
 			path = BaslerUITests;
+			sourceTree = "<group>";
+		};
+		698DAD8A201D0BFF00528A4A /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				698DAD9F201D172100528A4A /* pylon.framework */,
+			);
+			path = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -268,6 +283,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				698DAD5C201D094900528A4A /* Document.m in Sources */,
+				698DAD9E201D16D400528A4A /* Grab.cpp in Sources */,
 				698DAD67201D094900528A4A /* main.m in Sources */,
 				698DAD59201D094900528A4A /* AppDelegate.m in Sources */,
 			);
@@ -372,7 +388,8 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				HEADER_SEARCH_PATHS = "$(SYSTEM_LIBRARY_DIR)/Frameworks/pylon.framework/Headers/**";
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
@@ -421,7 +438,8 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				HEADER_SEARCH_PATHS = "$(SYSTEM_LIBRARY_DIR)/Frameworks/pylon.framework/Headers/**";
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
 			};
@@ -434,10 +452,16 @@
 				CODE_SIGN_ENTITLEMENTS = Basler/Basler.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LOCAL_LIBRARY_DIR)/Frameworks",
+				);
+				HEADER_SEARCH_PATHS = "$(PYLON_LIBRARY_DIR)/Frameworks/pylon.framework/Headers/GenICam";
 				INFOPLIST_FILE = Basler/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks $(PYLON_LIBRARY_DIR)/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "University-of-Chicago.Basler";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PYLON_LIBRARY_DIR = "$(LOCAL_LIBRARY_DIR)";
 			};
 			name = Debug;
 		};
@@ -448,10 +472,16 @@
 				CODE_SIGN_ENTITLEMENTS = Basler/Basler.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LOCAL_LIBRARY_DIR)/Frameworks",
+				);
+				HEADER_SEARCH_PATHS = "$(PYLON_LIBRARY_DIR)/Frameworks/pylon.framework/Headers/GenICam";
 				INFOPLIST_FILE = Basler/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks $(PYLON_LIBRARY_DIR)/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "University-of-Chicago.Basler";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PYLON_LIBRARY_DIR = "$(LOCAL_LIBRARY_DIR)";
 			};
 			name = Release;
 		};
