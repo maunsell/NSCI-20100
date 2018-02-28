@@ -1,0 +1,9 @@
+JHRM 180204
+
+The Basler camera is handled by a C++ client application.  You might be tempted to put that C++ code
+in this project (and use Objective-C++ (.mm files)) to communicate with it.  But I've never gotten
+that to work.
+
+This project uses sandboxing, so the outgoing network connection must be enabled in the entitlements.
+
+

@@ -1,0 +1,749 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 48;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		698DAD59201D094900528A4A /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 698DAD58201D094900528A4A /* AppDelegate.m */; };
+		698DAD5C201D094900528A4A /* Document.mm in Sources */ = {isa = PBXBuildFile; fileRef = 698DAD5B201D094900528A4A /* Document.mm */; };
+		698DAD5F201D094900528A4A /* Document.xib in Resources */ = {isa = PBXBuildFile; fileRef = 698DAD5D201D094900528A4A /* Document.xib */; };
+		698DAD61201D094900528A4A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 698DAD60201D094900528A4A /* Assets.xcassets */; };
+		698DAD64201D094900528A4A /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 698DAD62201D094900528A4A /* MainMenu.xib */; };
+		698DADE8201D53E500528A4A /* pylon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 698DAD9F201D172100528A4A /* pylon.framework */; };
+		698DADE9201D555500528A4A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 698DAD66201D094900528A4A /* main.m */; };
+		698DADF5201D5A8B00528A4A /* pylon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 698DAD9F201D172100528A4A /* pylon.framework */; };
+		698DADF6201D5BDF00528A4A /* liblibBasler.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 698DADEE201D582100528A4A /* liblibBasler.dylib */; };
+		698DADFB201D663100528A4A /* CameraClass.h in Headers */ = {isa = PBXBuildFile; fileRef = 698DADF9201D624F00528A4A /* CameraClass.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		698DADFC201D663700528A4A /* CameraClass.cp in Sources */ = {isa = PBXBuildFile; fileRef = 698DADF7201D623E00528A4A /* CameraClass.cp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		698DAD6E201D094900528A4A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 698DAD4C201D094900528A4A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 698DAD53201D094900528A4A;
+			remoteInfo = Basler;
+		};
+		698DAD79201D094900528A4A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 698DAD4C201D094900528A4A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 698DAD53201D094900528A4A;
+			remoteInfo = Basler;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		698DAD54201D094900528A4A /* Basler.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Basler.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		698DAD57201D094900528A4A /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		698DAD58201D094900528A4A /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		698DAD5A201D094900528A4A /* Document.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Document.h; sourceTree = "<group>"; };
+		698DAD5B201D094900528A4A /* Document.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = Document.mm; sourceTree = "<group>"; };
+		698DAD5E201D094900528A4A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/Document.xib; sourceTree = "<group>"; };
+		698DAD60201D094900528A4A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		698DAD63201D094900528A4A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		698DAD65201D094900528A4A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		698DAD66201D094900528A4A /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		698DAD68201D094900528A4A /* Basler.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Basler.entitlements; sourceTree = "<group>"; };
+		698DAD6D201D094900528A4A /* BaslerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BaslerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		698DAD78201D094900528A4A /* BaslerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BaslerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		698DAD9D201D16D400528A4A /* BaslerCamera.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BaslerCamera.cpp; sourceTree = "<group>"; };
+		698DAD9F201D172100528A4A /* pylon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = pylon.framework; path = ../../../../../../../Library/Frameworks/pylon.framework; sourceTree = "<group>"; };
+		698DADA1201D1C3900528A4A /* BaslerCamera.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BaslerCamera.h; sourceTree = "<group>"; };
+		698DADE1201D532500528A4A /* libBaslerLib.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libBaslerLib.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		698DADEE201D582100528A4A /* liblibBasler.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = liblibBasler.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		698DADF7201D623E00528A4A /* CameraClass.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CameraClass.cp; sourceTree = "<group>"; };
+		698DADF9201D624F00528A4A /* CameraClass.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CameraClass.h; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		698DAD51201D094900528A4A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				698DADF6201D5BDF00528A4A /* liblibBasler.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		698DAD6A201D094900528A4A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		698DAD75201D094900528A4A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		698DADDE201D532500528A4A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				698DADE8201D53E500528A4A /* pylon.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		698DADEB201D582100528A4A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				698DADF5201D5A8B00528A4A /* pylon.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		698DAD4B201D094900528A4A = {
+			isa = PBXGroup;
+			children = (
+				698DADE7201D53CD00528A4A /* BaslerLib */,
+				698DAD56201D094900528A4A /* Basler */,
+				698DAD8A201D0BFF00528A4A /* Frameworks */,
+				698DAD55201D094900528A4A /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		698DAD55201D094900528A4A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				698DAD54201D094900528A4A /* Basler.app */,
+				698DAD6D201D094900528A4A /* BaslerTests.xctest */,
+				698DAD78201D094900528A4A /* BaslerUITests.xctest */,
+				698DADE1201D532500528A4A /* libBaslerLib.a */,
+				698DADEE201D582100528A4A /* liblibBasler.dylib */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		698DAD56201D094900528A4A /* Basler */ = {
+			isa = PBXGroup;
+			children = (
+				698DAD57201D094900528A4A /* AppDelegate.h */,
+				698DAD58201D094900528A4A /* AppDelegate.m */,
+				698DAD5A201D094900528A4A /* Document.h */,
+				698DAD5B201D094900528A4A /* Document.mm */,
+				698DAD5D201D094900528A4A /* Document.xib */,
+				698DAD62201D094900528A4A /* MainMenu.xib */,
+				698DAD65201D094900528A4A /* Info.plist */,
+				698DAD66201D094900528A4A /* main.m */,
+				698DAD60201D094900528A4A /* Assets.xcassets */,
+				698DAD68201D094900528A4A /* Basler.entitlements */,
+			);
+			path = Basler;
+			sourceTree = "<group>";
+		};
+		698DAD8A201D0BFF00528A4A /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				698DAD9F201D172100528A4A /* pylon.framework */,
+			);
+			path = Frameworks;
+			sourceTree = "<group>";
+		};
+		698DADE7201D53CD00528A4A /* BaslerLib */ = {
+			isa = PBXGroup;
+			children = (
+				698DADA1201D1C3900528A4A /* BaslerCamera.h */,
+				698DAD9D201D16D400528A4A /* BaslerCamera.cpp */,
+				698DADF9201D624F00528A4A /* CameraClass.h */,
+				698DADF7201D623E00528A4A /* CameraClass.cp */,
+			);
+			path = BaslerLib;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		698DADDF201D532500528A4A /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		698DADEC201D582100528A4A /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				698DADFB201D663100528A4A /* CameraClass.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		698DAD53201D094900528A4A /* Basler */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 698DAD81201D094900528A4A /* Build configuration list for PBXNativeTarget "Basler" */;
+			buildPhases = (
+				698DAD50201D094900528A4A /* Sources */,
+				698DAD51201D094900528A4A /* Frameworks */,
+				698DAD52201D094900528A4A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Basler;
+			productName = Basler;
+			productReference = 698DAD54201D094900528A4A /* Basler.app */;
+			productType = "com.apple.product-type.application";
+		};
+		698DAD6C201D094900528A4A /* BaslerTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 698DAD84201D094900528A4A /* Build configuration list for PBXNativeTarget "BaslerTests" */;
+			buildPhases = (
+				698DAD69201D094900528A4A /* Sources */,
+				698DAD6A201D094900528A4A /* Frameworks */,
+				698DAD6B201D094900528A4A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				698DAD6F201D094900528A4A /* PBXTargetDependency */,
+			);
+			name = BaslerTests;
+			productName = BaslerTests;
+			productReference = 698DAD6D201D094900528A4A /* BaslerTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		698DAD77201D094900528A4A /* BaslerUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 698DAD87201D094900528A4A /* Build configuration list for PBXNativeTarget "BaslerUITests" */;
+			buildPhases = (
+				698DAD74201D094900528A4A /* Sources */,
+				698DAD75201D094900528A4A /* Frameworks */,
+				698DAD76201D094900528A4A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				698DAD7A201D094900528A4A /* PBXTargetDependency */,
+			);
+			name = BaslerUITests;
+			productName = BaslerUITests;
+			productReference = 698DAD78201D094900528A4A /* BaslerUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		698DADE0201D532500528A4A /* BaslerLib */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 698DADE2201D532500528A4A /* Build configuration list for PBXNativeTarget "BaslerLib" */;
+			buildPhases = (
+				698DADDD201D532500528A4A /* Sources */,
+				698DADDE201D532500528A4A /* Frameworks */,
+				698DADDF201D532500528A4A /* Headers */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = BaslerLib;
+			productName = BaslerLib;
+			productReference = 698DADE1201D532500528A4A /* libBaslerLib.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		698DADED201D582100528A4A /* libBasler */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 698DADEF201D582100528A4A /* Build configuration list for PBXNativeTarget "libBasler" */;
+			buildPhases = (
+				698DADEA201D582100528A4A /* Sources */,
+				698DADEB201D582100528A4A /* Frameworks */,
+				698DADEC201D582100528A4A /* Headers */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = libBasler;
+			productName = libBasler;
+			productReference = 698DADEE201D582100528A4A /* liblibBasler.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		698DAD4C201D094900528A4A /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0920;
+				ORGANIZATIONNAME = "John Maunsell";
+				TargetAttributes = {
+					698DAD53201D094900528A4A = {
+						CreatedOnToolsVersion = 9.2;
+						ProvisioningStyle = Automatic;
+					};
+					698DAD6C201D094900528A4A = {
+						CreatedOnToolsVersion = 9.2;
+						ProvisioningStyle = Automatic;
+						TestTargetID = 698DAD53201D094900528A4A;
+					};
+					698DAD77201D094900528A4A = {
+						CreatedOnToolsVersion = 9.2;
+						ProvisioningStyle = Automatic;
+						TestTargetID = 698DAD53201D094900528A4A;
+					};
+					698DADE0201D532500528A4A = {
+						CreatedOnToolsVersion = 9.2;
+						ProvisioningStyle = Automatic;
+					};
+					698DADED201D582100528A4A = {
+						CreatedOnToolsVersion = 9.2;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 698DAD4F201D094900528A4A /* Build configuration list for PBXProject "Basler" */;
+			compatibilityVersion = "Xcode 8.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 698DAD4B201D094900528A4A;
+			productRefGroup = 698DAD55201D094900528A4A /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				698DAD53201D094900528A4A /* Basler */,
+				698DAD6C201D094900528A4A /* BaslerTests */,
+				698DAD77201D094900528A4A /* BaslerUITests */,
+				698DADE0201D532500528A4A /* BaslerLib */,
+				698DADED201D582100528A4A /* libBasler */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		698DAD52201D094900528A4A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				698DAD61201D094900528A4A /* Assets.xcassets in Resources */,
+				698DAD5F201D094900528A4A /* Document.xib in Resources */,
+				698DAD64201D094900528A4A /* MainMenu.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		698DAD6B201D094900528A4A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		698DAD76201D094900528A4A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		698DAD50201D094900528A4A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				698DAD5C201D094900528A4A /* Document.mm in Sources */,
+				698DADE9201D555500528A4A /* main.m in Sources */,
+				698DAD59201D094900528A4A /* AppDelegate.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		698DAD69201D094900528A4A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		698DAD74201D094900528A4A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		698DADDD201D532500528A4A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		698DADEA201D582100528A4A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				698DADFC201D663700528A4A /* CameraClass.cp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		698DAD6F201D094900528A4A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 698DAD53201D094900528A4A /* Basler */;
+			targetProxy = 698DAD6E201D094900528A4A /* PBXContainerItemProxy */;
+		};
+		698DAD7A201D094900528A4A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 698DAD53201D094900528A4A /* Basler */;
+			targetProxy = 698DAD79201D094900528A4A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		698DAD5D201D094900528A4A /* Document.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				698DAD5E201D094900528A4A /* Base */,
+			);
+			name = Document.xib;
+			sourceTree = "<group>";
+		};
+		698DAD62201D094900528A4A /* MainMenu.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				698DAD63201D094900528A4A /* Base */,
+			);
+			name = MainMenu.xib;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		698DAD7F201D094900528A4A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "$(SYSTEM_LIBRARY_DIR)/Frameworks/pylon.framework/Headers/**";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		698DAD80201D094900528A4A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "$(SYSTEM_LIBRARY_DIR)/Frameworks/pylon.framework/Headers/**";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		698DAD82201D094900528A4A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Basler/Basler.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LOCAL_LIBRARY_DIR)/Frameworks",
+				);
+				HEADER_SEARCH_PATHS = "$(PYLON_LIBRARY_DIR)/Frameworks/pylon.framework/Headers/GenICam";
+				INFOPLIST_FILE = Basler/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(PYLON_LIBRARY_DIR)/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "University-of-Chicago.Basler";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PYLON_LIBRARY_DIR = "$(LOCAL_LIBRARY_DIR)";
+			};
+			name = Debug;
+		};
+		698DAD83201D094900528A4A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Basler/Basler.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LOCAL_LIBRARY_DIR)/Frameworks",
+				);
+				HEADER_SEARCH_PATHS = "$(PYLON_LIBRARY_DIR)/Frameworks/pylon.framework/Headers/GenICam";
+				INFOPLIST_FILE = Basler/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(PYLON_LIBRARY_DIR)/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "University-of-Chicago.Basler";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PYLON_LIBRARY_DIR = "$(LOCAL_LIBRARY_DIR)";
+			};
+			name = Release;
+		};
+		698DAD85201D094900528A4A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = BaslerTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "University-of-Chicago.BaslerTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Basler.app/Contents/MacOS/Basler";
+			};
+			name = Debug;
+		};
+		698DAD86201D094900528A4A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = BaslerTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "University-of-Chicago.BaslerTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Basler.app/Contents/MacOS/Basler";
+			};
+			name = Release;
+		};
+		698DAD88201D094900528A4A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = BaslerUITests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "University-of-Chicago.BaslerUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_TARGET_NAME = Basler;
+			};
+			name = Debug;
+		};
+		698DAD89201D094900528A4A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = BaslerUITests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "University-of-Chicago.BaslerUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_TARGET_NAME = Basler;
+			};
+			name = Release;
+		};
+		698DADE3201D532500528A4A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				EXECUTABLE_PREFIX = lib;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LOCAL_LIBRARY_DIR)/Frameworks",
+				);
+				HEADER_SEARCH_PATHS = "$(PYLON_LIBRARY_DIR)/Frameworks/pylon.framework/Headers/GenICam";
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PYLON_LIBRARY_DIR = "$(LOCAL_LIBRARY_DIR)";
+			};
+			name = Debug;
+		};
+		698DADE4201D532500528A4A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				EXECUTABLE_PREFIX = lib;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LOCAL_LIBRARY_DIR)/Frameworks",
+				);
+				HEADER_SEARCH_PATHS = "$(PYLON_LIBRARY_DIR)/Frameworks/pylon.framework/Headers/GenICam";
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PYLON_LIBRARY_DIR = "$(LOCAL_LIBRARY_DIR)";
+			};
+			name = Release;
+		};
+		698DADF0201D582100528A4A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				EXECUTABLE_PREFIX = lib;
+				FRAMEWORK_SEARCH_PATHS = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				HEADER_SEARCH_PATHS = "$(PYLON_LIBRARY_DIR)/Frameworks/pylon.framework/Headers/GenICam";
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PYLON_LIBRARY_DIR = "$(LOCAL_LIBRARY_DIR)";
+			};
+			name = Debug;
+		};
+		698DADF1201D582100528A4A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				EXECUTABLE_PREFIX = lib;
+				FRAMEWORK_SEARCH_PATHS = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				HEADER_SEARCH_PATHS = "$(PYLON_LIBRARY_DIR)/Frameworks/pylon.framework/Headers/GenICam";
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PYLON_LIBRARY_DIR = "$(LOCAL_LIBRARY_DIR)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		698DAD4F201D094900528A4A /* Build configuration list for PBXProject "Basler" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				698DAD7F201D094900528A4A /* Debug */,
+				698DAD80201D094900528A4A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		698DAD81201D094900528A4A /* Build configuration list for PBXNativeTarget "Basler" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				698DAD82201D094900528A4A /* Debug */,
+				698DAD83201D094900528A4A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		698DAD84201D094900528A4A /* Build configuration list for PBXNativeTarget "BaslerTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				698DAD85201D094900528A4A /* Debug */,
+				698DAD86201D094900528A4A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		698DAD87201D094900528A4A /* Build configuration list for PBXNativeTarget "BaslerUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				698DAD88201D094900528A4A /* Debug */,
+				698DAD89201D094900528A4A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		698DADE2201D532500528A4A /* Build configuration list for PBXNativeTarget "BaslerLib" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				698DADE3201D532500528A4A /* Debug */,
+				698DADE4201D532500528A4A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		698DADEF201D582100528A4A /* Build configuration list for PBXNativeTarget "libBasler" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				698DADF0201D582100528A4A /* Debug */,
+				698DADF1201D582100528A4A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 698DAD4C201D094900528A4A /* Project object */;
+}
