@@ -429,7 +429,7 @@ classdef labJackU6 < handle
             if nargin < 3, gains=zeros(1,length(channels)); end
             gains=gains(:)'; % make sure channels is a row vector
             
-            if obj.verbose >= 1, fprintf(1,'LJU6:/addChannel: add channels: %s\n',num2str(channels)); end
+            if obj.verbose >= 2, fprintf(1,'LJU6:/addChannel: add channels: %s\n',num2str(channels)); end
             
             % does this channel already exist?
             rv=[];
@@ -660,9 +660,9 @@ classdef labJackU6 < handle
 
                 %bytesIn=zeros(14 + obj.samplesPerPacket*2,1);
                 count=length(obj.bytesIn);
-                if obj.verbose>=3, fprintf('LJU6/getStreamData: Preparing to read %d bytes from stream\n',count); end
-                
-
+                if obj.verbose>=3
+                    fprintf('LJU6/getStreamData: Preparing to read %d bytes from stream\n',count);
+                end
                 
                 [in3 in2 obj.bytesIn] =  calllib('liblabjackusb', 'LJUSB_Stream', obj.handle, obj.bytesIn, count);
                 
@@ -691,7 +691,9 @@ classdef labJackU6 < handle
                 end
                 
                 if errorCode==59
-                    if obj.verbose>=1, fprintf(1,'LJU6/getStreamData: WARNING: In auto-recovery mode. Data has been lost.\n'); end
+                    if obj.verbose >= 1
+                        fprintf(1, 'LJU6/getStreamData: WARNING: In auto-recovery mode. Data has been lost.\n'); 
+                    end
                 end                
 
                 % read additional packets if there is data remaining in buffer
@@ -777,7 +779,10 @@ classdef labJackU6 < handle
                 fprintf(1,'labJackU6: Error: device not configured. Use streamConfig.\n');
                 data=[];
             end
-            if obj.verbose>=3, fprintf(1,'getStreamData: '); disp(toc); end
+            if obj.verbose>=3
+                fprintf(1,'getStreamData: ');
+                disp(toc);
+            end
         end
 
 

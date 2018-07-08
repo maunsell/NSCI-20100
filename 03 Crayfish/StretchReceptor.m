@@ -31,6 +31,7 @@ function clearButton_Callback(hObject, eventdata, handles)
     set(0, 'DefaultUIControlFontSize', originalSize);
     switch selection
         case 'Yes'
+        clearAll(handles.data);
         clearAll(handles.plots, handles);
         clearAll(handles.isiPlot);
         guidata(hObject, handles);
@@ -72,7 +73,7 @@ function collectData(obj, event)                                            %#ok
     if data.contPlotRescale
         setLimits(data,handles);
         clearContPlot(handles.plots, handles)
-        clearSpikePlot(handles.plots, handles)
+        clearTriggerPlot(handles.plots, handles)
         data.contPlotRescale = false;
     end
     % We need a new trace if we hit or exceeded the sample buffer limit on the previous call
@@ -80,11 +81,11 @@ function collectData(obj, event)                                            %#ok
         data.samplesRead = 0;
         data.lastSpikeIndex = data.lastSpikeIndex - data.contSamples;
         if data.singleTrace                                         % if singleTrace, stop data collection
-            data.samplesPlotted = 0;
+            handles.plots.samplesPlotted = 0;
             startButton_Callback(handles.startButton, event, handles);
         end
     end
-    if (data.samplesPlotted > data.samplesRead)
+    if (handles.plots.samplesPlotted > data.samplesRead)
         if data.singleSpike
             clearContPlot(handles.plots, handles);
         else
@@ -118,7 +119,7 @@ function collectData(obj, event)                                            %#ok
         plot(handles.plots, handles);
         if numNew < length(dRaw)                                    % more data read from LabJack?
             if data.singleTrace                                     % if singleTrace, stop data collection
-                data.samplesPlotted = 0;
+                handles.plots.samplesPlotted = 0;
                 data.samplesRead = 0;
                 startButton_Callback(handles.startButton, event, handles);
             else
@@ -159,26 +160,25 @@ end
 
 %% fakeSpike: make a fake spike on LabJack
 function fakeSpike(obj, event)                                              %#ok<*INUSD>
-% reads stream data from the LabJack
     persistent count;
     
     if isempty(count)
-        count = 0;
-%         tic;
+        count = 1;
     else
         count = count + 1;
     end
+    numSpikes = 1 + (mod(count, 5) == 0);
+    
     handles = obj.UserData;                                             % obj.UserData is pointer to handles
     lbj = handles.lbj;                                                  % get lbj
- %   sampleRateHz = handles.lbj.SampleRateHz;  
-%     analogOut(lbj, 0, mod(count, 2) == 0);
-    analogOut(lbj, 0, 4.5);
-    java.lang.Thread.sleep(1.5);
-    analogOut(lbj, 0, 1.5);
-    java.lang.Thread.sleep(3.0);
-    analogOut(lbj, 0, 2.5);
-%     fprintf('interval %.3f \n', toc);
-%     tic;
+    for s = 1:numSpikes
+        analogOut(lbj, 0, 4.5);
+        java.lang.Thread.sleep(1.5);
+        analogOut(lbj, 0, 1.5);
+        java.lang.Thread.sleep(3.0);
+        analogOut(lbj, 0, 2.5);
+        java.lang.Thread.sleep(3.0);
+   end    
 end
 
 %% fakeSpikeError: function to collect data from LabJack
@@ -209,6 +209,35 @@ function maxISIMenu_Callback(hObject, eventdata, handles)
     setISIMaxS(handles.isiPlot);
 end
 
+%% Set up the LabJack
+function lbj = openLabJack()
+%  get hardware info and do not continue if daq device/drivers unavailable
+
+    lbj = labJackU6;                        % create the daq object
+    open(lbj);                              % open connection to the daq
+    if isempty(lbj.handle)
+        originalSize = get(0, 'DefaultUIControlFontSize');
+        set(0, 'DefaultUIControlFontSize', 14);
+        questdlg('Exit and check USB connections.', 'No LabJack Device Found', 'OK', 'OK');
+        set(0, 'DefaultUIControlFontSize', originalSize);
+    else
+        fprintf(1,'StretchReceptor: LabJack Ready\n\n');
+    end
+    % create input channel list
+    removeChannel(lbj, -1);                     % remove all input channels
+    addChannel(lbj, 0, 10, ['s' 's']);          % add channel 0 as input
+    lbj.SampleRateHz = 5000;                    % sample rate (Hz)
+    lbj.ResolutionADC = 1;                      % ADC resolution (AD bit depth)
+
+    % configure LabJack for analog input streaming
+
+    errorCode = streamConfigure(lbj);
+    if errorCode > 0
+        fprintf(1,'StretchReceptor: Unable to configure LabJack. Error %d.\n',errorCode);
+        return
+    end
+end
+
 %% openSR: just before gui is made visible.
 function openSR(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
@@ -218,22 +247,23 @@ function openSR(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to SR (see VARARGIN)
 
     % test mode requires connecting DAC0 to AIN0 and DAC1 to AIN1 on the LabJack
-%     if ~isempty(varargin)
-%         testMode = strcmp(varargin{1}, 'debug') || strcmp(varargin{1}, 'test');
-%     else
-%         testMode = false;
-%     end
-    testMode = true;
+    if ~isempty(varargin)
+        testMode = strcmp(varargin{1}, 'debug') || strcmp(varargin{1}, 'test');
+    else
+        testMode = true;
+    end
     if testMode
         set(handles.warnText, 'string', 'Test Mode');
     end   
     handles.output = hObject;                                      	% select default command line output
     set(hObject, 'CloseRequestFcn', {@closeSR, handles});          	% close function will close LabJack
-    handles.lbj = setupLabJack();                                   % LJ first, it has no contigencies
-    handles.data = SRTaskData(handles);                             % data next
+    handles.lbj = openLabJack();                                    % LJ first, it has no contigencies
+    handles.data = SRData(handles);                                 % data next
     handles.isiPlot = SRISIPlot(handles);                           % isi plot before signal processing
     handles.signals = SRSignalProcess(handles);                     % signal processing after data
     handles.plots = SRPlots(handles);                              	% plots after handles.data
+    
+    handles.signals.fH = handles;
        
     % set up test mode
     handles.data.testMode = testMode;
@@ -246,7 +276,7 @@ end
 
 %% button press in retriggerButton.
 function retriggerButton_Callback(hObject, eventdata, handles)
-    clearSpikePlot(handles.plots, handles);
+    clearTriggerPlot(handles.plots, handles);
     handles.data.singleSpikeDisplayed = false;
 end   % retriggerButton_Callback()
 
@@ -286,36 +316,6 @@ function savePlotsButton_Callback(hObject, eventdata, handles)
     SRControlState(handles, 'on', {})
 end
 
-%% Set up the LabJack
-function lbj = setupLabJack()
-%  get hardware info and do not continue if daq device/drivers unavailable
-
-    lbj = labJackU6;                        % create the daq object
-    open(lbj);                              % open connection to the daq
-    if isempty(lbj.handle)
-        originalSize = get(0, 'DefaultUIControlFontSize');
-        set(0, 'DefaultUIControlFontSize', 14);
-        questdlg('Exit and check USB connections.', ...
-            'No LabJack Device Found', 'OK', 'OK');
-        set(0, 'DefaultUIControlFontSize', originalSize);
-    else
-        fprintf(1,'StretchReceptor: LabJack Ready\n\n');
-    end
-    % create input channel list
-    removeChannel(lbj, -1);                     % remove all input channels
-    addChannel(lbj, 0, 10, ['s' 's']);          % add channel 0 as input
-    lbj.SampleRateHz = 5000;                    % sample rate (Hz)
-    lbj.ResolutionADC = 1;                      % ADC resolution (AD bit depth)
-
-    % configure LabJack for analog input streaming
-
-    errorCode = streamConfigure(lbj);
-    if errorCode > 0
-        fprintf(1,'StretchReceptor: Unable to configure LabJack. Error %d.\n',errorCode);
-        return
-    end
-end
-
 %% button press in singleSpikeCheckbox.
 function singleSpikeCheckbox_Callback(hObject, eventdata, handles)
     handles.data.singleSpike = get(hObject, 'value');
@@ -335,8 +335,7 @@ function singleTraceCheckbox_Callback(hObject, eventdata, handles)
 	guidata(hObject, handles);                                  % save change
 end
 
-%% respond to button presses
-
+%% respond to start/stop button presses
 
 function startButton_Callback(hObject, eventdata, handles)                  
 % hObject    handle to startButton (see GCBO)
@@ -352,10 +351,10 @@ function startButton_Callback(hObject, eventdata, handles)
             'TimerFcn', {@collectData}, 'StartDelay', 0.050);   % startDelay allows rest of the gui to execute
 
         % create timer to make fake spikes for LabJack
-        fakeSpikeRateHz = 10;
+        fakeSpikeRateHz = 4;
         handles.fakeSpikeTimer = timer('Name', 'FakeSpikes', 'ExecutionMode', 'fixedRate',...
             'Period', 1.0 / fakeSpikeRateHz, 'UserData', handles, 'ErrorFcn', {@fakeSpikeError, handles},...
-            'TimerFcn', {@fakeSpike}, 'StartDelay', 1.0 / fakeSpikeRateHz);
+            'TimerFcn', {@fakeSpike}, 'StartDelay', 0.050);
        
         % set the gui button to "running" state
         % clear the plots
@@ -370,19 +369,19 @@ function startButton_Callback(hObject, eventdata, handles)
         SRControlState(handles, 'off', {handles.startButton})
         startStream(handles.lbj);
 
-%% Start plots, data pickup, and data acquisition 
+        % Start plots, data pickup, and data acquisition 
         start(handles.dataTimer);    
         start(handles.fakeSpikeTimer);
 %         profile on;
 
-    %% Stop -- we're already running, so it's a the stop button    
+    % Stop -- we're already running, so it's a the stop button    
     else % stop
         stop(timerfind);                                        % stop/delete timers; pause data stream
         delete(timerfind);      
         handles.dataTimer = 0;
-        handles.taskTimer = 0;
         handles.fakeSpikeTimer = 0;
         stopStream(handles.lbj);
+        clearAll(handles.signals);                              % stop audio processing
         set(handles.startButton, 'string', 'Start','backgroundColor', 'green');
         SRControlState(handles, 'on', {handles.startButton})
         drawnow;
@@ -391,11 +390,10 @@ function startButton_Callback(hObject, eventdata, handles)
     guidata(hObject, handles);                                  % save variables
 end
 
-
-
-%% slider movement.
+%% threshold slider has a new value
 function thresholdSlider_Callback(hObject, eventdata, handles)
     handles.data.thresholdV = get(hObject, 'value');
+    clearTriggerPlot(handles.plots, handles);
 	guidata(hObject, handles);                                  % save change
 end
 
@@ -415,4 +413,9 @@ function vPerDivButton_Callback(hObject, eventdata, handles)
         end
     end
 	guidata(hObject, handles);                                  % save change
+end
+
+%% volume slider has new value
+function volumeSlider_Callback(hObject, eventdata, handles)
+    setVolume(handles.signals);
 end

@@ -31,6 +31,7 @@ classdef SRISIPlot < handle
             obj.isiAxes = fH.axes3;
             obj.isiStartMaxY = 10;
             obj.isiNum = 0;
+            obj.isiMS = zeros(1000, 1);
             obj.isiMaxMS = 0;                   % force rescaling
             obj.isiMeanRate = 0;
             obj.isiMedianIsiMS = 0;
@@ -42,25 +43,25 @@ classdef SRISIPlot < handle
 
         %% addISI -- add a new isi to the list of isi
         function addISI(obj, newIsiMS)
-            if obj.isiNum >= length(obj.isiMS)                 % need to lengthen isi buffer?
-                obj.isiMS = [obj.isiMS, zeros(10000, 1)];
+            if obj.isiNum >= length(obj.isiMS)                              % need to lengthen isi buffer?
+                obj.isiMS = [obj.isiMS; zeros(1000, 1)];
             end
             obj.isiNum = obj.isiNum + 1;
             obj.isiMS(obj.isiNum) = newIsiMS;
             if newIsiMS < obj.isiMaxMS
                 bin = ceil(obj.isiBins * newIsiMS / obj.isiMaxMS);
                 obj.isiHist(bin) = obj.isiHist(bin) + 1;
-                if mod(obj.isiNum, 5) == 0                                     % don't refresh plot every time
-                    obj.isiMedianIsiMS = median(obj.isiMS(1:obj.isiNum));
-                    obj.isiMeanRate = sum(obj.isiMS(1:obj.isiNum)) / obj.isiNum / 1000.0;
-                    if obj.isiHist(bin) > 0.95 * obj.isiMaxY                    % rescale y axis on overflow
-                        obj.isiMaxY = obj.isiMaxY * 1.5;                        % double the y axis maximum
-                        axis(obj.isiAxes, [0, obj.isiBins, 0, obj.isiMaxY]);    % set axis scale
-                        makeHistogram(obj);
-                    end
-                    cla(obj.isiAxes);
-                    plotISI(obj);
+                if obj.isiHist(bin) > 0.95 * obj.isiMaxY                    % rescale y axis on overflow
+                    obj.isiMaxY = obj.isiMaxY * 1.5;                        % double the y axis maximum
+                    axis(obj.isiAxes, [0, obj.isiBins, 0, obj.isiMaxY]);    % set axis scale
+                    makeHistogram(obj);
                 end
+            end
+            if mod(obj.isiNum, 10) == 0                                     % don't refresh plot every time
+                obj.isiMedianIsiMS = median(obj.isiMS(1:obj.isiNum));
+                obj.isiMeanRate = obj.isiNum / (sum(obj.isiMS(1:obj.isiNum)) / 1000.0);
+                cla(obj.isiAxes);
+                plotISI(obj);
             end
       end
 
@@ -69,15 +70,13 @@ classdef SRISIPlot < handle
             obj.isiNum = 0;
             obj.isiMedianIsiMS = 0;
             obj.isiMeanRate = 0;
-            if obj.isiMaxY ~= obj.isiStartMaxY
-                obj.isiMaxY = obj.isiStartMaxY;
-                hold(obj.isiAxes, 'off');
-                cla(obj.isiAxes);
-                a = axis(obj.isiAxes);
-                axis(obj.isiAxes, [a(1), a(2), 0, obj.isiMaxY]);
-                rescalePlot(obj);
-            end
+            obj.isiMaxY = obj.isiStartMaxY;
+            hold(obj.isiAxes, 'off');
+            cla(obj.isiAxes);
+            a = axis(obj.isiAxes);
+            axis(obj.isiAxes, [a(1), a(2), 0, obj.isiMaxY]);
             makeHistogram(obj);
+            rescalePlot(obj);
         end
         
         %% makeHistogram
@@ -93,6 +92,7 @@ classdef SRISIPlot < handle
             if maxBin > 0 && (maxBin > 0.95 * obj.isiMaxY || maxBin < obj.isiMaxY / 1.5)
                 obj.isiMaxY = 1.5 * maxBin;
                 rescalePlot(obj);
+                plotISI(obj);
             end
         end
 
@@ -100,10 +100,13 @@ classdef SRISIPlot < handle
         function plotISI(obj)
             histogram(obj.isiAxes, 'binedges', 0:obj.isiBins, 'bincounts', obj.isiHist, 'facecolor', 'blue');
             if obj.isiMedianIsiMS > 0 && obj.isiMeanRate > 0
-                rateText = sprintf('%d spikes\nMedian ISI %.0f ms\nMean %.2f (spikes/s)\n', ...
+                rateText = sprintf('%d spikes\nMedian ISI %.0f ms\nMean %.1f (spikes/s)\n', ...
                     obj.isiNum, obj.isiMedianIsiMS, obj.isiMeanRate);
+                if obj.isiNum > 0 && max(obj.isiMS(1:obj.isiNum)) > obj.isiMaxMS
+                    rateText = [rateText, '(some off x-axis scale)'];
+                end
                 a = axis(obj.isiAxes);
-                text(obj.isiAxes, a(2) * 0.60, a(4) * 0.95, rateText, 'fontsize', 12, 'verticalalignment', 'top');
+                text(obj.isiAxes, a(2) * 0.57, a(4) * 0.95, rateText, 'fontsize', 12, 'verticalalignment', 'top');
             end
             drawnow limitrate nocallbacks;             	% don't plot too often, or notify callbacks
         end
@@ -124,6 +127,7 @@ classdef SRISIPlot < handle
             xticklabels(obj.isiAxes, xTickLabels);
             xlabel(obj.isiAxes, 'Inter-spike Interval (ms)', 'fontsize', 14, 'fontWeight', 'bold');
             hold(obj.isiAxes, 'on');
+            plotISI(obj);
         end
         
         %% setMaxISI -- set the maximum isi in seconds
@@ -134,7 +138,6 @@ classdef SRISIPlot < handle
                 obj.isiMaxMS = str2double(valueStrings{get(obj.fHandles.maxISIMenu, 'Value')}) * 1000.0;
                 makeHistogram(obj);
                 rescalePlot(obj);
-                plotISI(obj);
             end
         end
     end  

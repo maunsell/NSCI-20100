@@ -1,8 +1,9 @@
-classdef SRTaskData < handle
+classdef SRData < handle
     % SRTaskData
     % Support for task data for StretchReceptor
     
     properties
+        audioOut;
         contMSPerDiv;
         contPlotRescale;
         contSamples;
@@ -16,17 +17,11 @@ classdef SRTaskData < handle
         rawTrace;
         sampleRateHz;
         samplesRead;
-        samplesPlotted;
         singleSpike;
         singleSpikeDisplayed;
         singleTrace;
-        spikeDivisions;
         spikeIndices;
-        spikeSamples;
         lastSpikeIndex;
-        isiNum;
-        ISIS;
-        spikeTraceDurS;
         thresholdV;
         testMode;
         vDivs;
@@ -34,18 +29,18 @@ classdef SRTaskData < handle
     end
     
     methods
-        function obj = SRTaskData(handles)
-
-             %% Object Initialization %%
+        %% SRTaskData -- instantiate and initialize
+       function obj = SRData(handles)
+             % Object Initialization %%
              obj = obj@handle();                                    % object initialization
 
-             %% Post Initialization %%
+             % Post Initialization %%
             obj.fH = handles;
             obj.sampleRateHz = handles.lbj.SampleRateHz;
+            obj.audioOut = audioDeviceWriter(obj.sampleRateHz, 'BitDepth','32-bit float');
             contents = get(handles.contMSPerDivButton, 'string');
             obj.contMSPerDiv = str2double(contents{get(handles.contMSPerDivButton, 'Value')});
             obj.contTimeDivs = 20;
-            obj.isiNum = 0;
             contents = cellstr(get(handles.contMSPerDivButton,'String'));
             maxMSPerDiv = str2double(contents{end});
             obj.maxContSamples = obj.contTimeDivs * maxMSPerDiv / 1000.0 * obj.sampleRateHz;
@@ -66,9 +61,6 @@ classdef SRTaskData < handle
             obj.singleSpike = false;
             obj.singleSpikeDisplayed = false;
             obj.singleTrace = false;
-            obj.spikeDivisions = 10;
-            obj.spikeTraceDurS = 0.020;
-            obj.spikeSamples = floor(obj.spikeTraceDurS * obj.sampleRateHz);
             obj.testMode = false;                                           % testMode is set in SR, not here
             obj.thresholdV = 1.0;
             obj.vPerDiv = 1.0;
@@ -82,12 +74,10 @@ classdef SRTaskData < handle
         function clearAll(obj)
             obj.spikeIndices = [];
             obj.samplesRead = 0;
-            obj.samplesPlotted = 0;
             obj.lastSpikeIndex = 2 * obj.maxContSamples;                    % flag start with invalid index
-            obj.isiNum = 0;
-            obj.ISIS = [];
         end
         
+        %% selectFilter -- used when filter selection changes
         function selectFilter(obj)
             obj.filter = obj.filters{get(obj.fH.filterMenu, 'value')};
         end
@@ -95,7 +85,6 @@ classdef SRTaskData < handle
         %% setLimits -- used when plot scaling changes
         function setLimits(obj, handles)
             obj.samplesRead = 0;
-            obj.samplesPlotted = 0;
             obj.spikeIndices = [];
             obj.contSamples = obj.contMSPerDiv / 1000.0 * obj.sampleRateHz * obj.contTimeDivs;
             vLimit = obj.vPerDiv * obj.vDivs / 2.0;
