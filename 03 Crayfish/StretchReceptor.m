@@ -86,7 +86,7 @@ function collectData(obj, event)                                            %#ok
         end
     end
     if (handles.plots.samplesPlotted > data.samplesRead)
-        if data.singleSpike
+        if handles.plots.singleSpike
             clearContPlot(handles.plots, handles);
         else
             clearAll(handles.plots, handles);
@@ -101,13 +101,20 @@ function collectData(obj, event)                                            %#ok
     % at the end of the trace (after the buffer has filled).  Oddly, there is generally one spurious large value
     % (+10.115) that appears exactly 8 samples before the first error values.  We clip that out as well.
     
-    firstErrorIndex = find(dRaw == -9999, 1, 'first');              % get the first error index
-    if ~isempty(firstErrorIndex)                                    % for one or more errors,
-        if (firstErrorIndex > 8)                                    % clip out the spurious erroneous value
-            dRaw(firstErrorIndex - 8) = [];
-        end
-        dRaw(dRaw == -9999) = [];                                   % and clip out all error values
-    end
+    dRaw(dRaw > 10.0) = [];                                         % and clip out all error values
+    dRaw(dRaw == -9999) = [];                                         % and clip out all error values
+%     firstErrorIndex = find(dRaw == -9999, 1, 'first');              % get the first error index
+%     if ~isempty(firstErrorIndex)                                    % for one or more errors,
+%         fprintf('found an error\n');
+%         for i = firstErrorIndex - 10:firstErrorIndex + 10
+%             fprintf('%.3f ', dRaw(i));
+%         end
+%         fprintf('\n');
+%         if (firstErrorIndex > 8)                                    % clip out the spurious erroneous value
+%             dRaw(firstErrorIndex - 8) = [];
+%         end
+%         dRaw(dRaw == -9999) = [];                                   % and clip out all error values
+%     end
     
     % now we can process any valid data
     
@@ -277,7 +284,6 @@ end
 %% button press in retriggerButton.
 function retriggerButton_Callback(hObject, eventdata, handles)
     clearTriggerPlot(handles.plots, handles);
-    handles.data.singleSpikeDisplayed = false;
 end   % retriggerButton_Callback()
 
 %% executes on button press in saveDataButton.
@@ -318,13 +324,12 @@ end
 
 %% button press in singleSpikeCheckbox.
 function singleSpikeCheckbox_Callback(hObject, eventdata, handles)
-    handles.data.singleSpike = get(hObject, 'value');
-    if handles.data.singleSpike
+    handles.plots.singleSpike = get(hObject, 'value');
+    if handles.plots.singleSpike
         set(handles.retriggerButton, 'Enable', 'on');
         retriggerButton_Callback(hObject, eventdata, handles);  % clear plot and enable for a single spike
     else
         set(handles.retriggerButton, 'Enable', 'off');
-%         clearSpikePlot(handles.plots, handles);                 % clear plot for multiple new spikes
     end
 	guidata(hObject, handles);                                  % save change
 end   % singleSpikeCheckbox_Callback()
@@ -358,7 +363,7 @@ function startButton_Callback(hObject, eventdata, handles)
        
         % set the gui button to "running" state
         % clear the plots
-        if handles.data.singleSpike
+        if handles.plots.singleSpike
             clearContPlot(handles.plots, handles);
         else
            	clearAll(handles.plots, handles);

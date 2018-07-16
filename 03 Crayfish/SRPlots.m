@@ -5,6 +5,8 @@ classdef SRPlots < handle
     properties
         lastThresholdXPlotted
         samplesPlotted
+        singleSpike
+        singleSpikeDisplayed
         triggerDivisions
         triggerFraction
         triggerSamples
@@ -28,6 +30,8 @@ classdef SRPlots < handle
             obj.vTrigAxes.XGrid = 'on';
             obj.vTrigAxes.YGrid = 'on';
             obj.lastThresholdXPlotted = 0;
+            obj.singleSpike = false;
+            obj.singleSpikeDisplayed = false;
             obj.triggerDivisions = 10;
             obj.triggerFraction = 0.20;
             obj.triggerTraceDurS = 0.020;
@@ -93,7 +97,7 @@ classdef SRPlots < handle
             triggerSampleOffset = mod(triggerSample - 1, samplesPerDiv);
             negTriggerDivisions = floor(obj.triggerDivisions * obj.triggerFraction) + 1;
             cla(theAxes);
-            xticks(theAxes, [1:samplesPerDiv:floor(obj.triggerSamples / 2) * 2 + 1] + triggerSampleOffset);
+            xticks(theAxes, 1:samplesPerDiv:floor(obj.triggerSamples / 2) * 2 + 1 + triggerSampleOffset);
             theAxes.XGrid = 'on';
             xTickLabels = cell(obj.triggerDivisions, 1);
             for t = 1:obj.triggerDivisions + 1
@@ -117,7 +121,7 @@ classdef SRPlots < handle
             hold(theAxes, 'on');
             axis(theAxes, [1, floor(obj.triggerSamples / 2) * 2 + 1, -maxV, maxV]);
             plot(theAxes, [triggerSample, triggerSample], [-maxV, maxV], 'k:');
-            handles.data.singleSpikeDisplayed = false;
+            obj.singleSpikeDisplayed = false;
         end
   
         %% plot the oscilloscope trace and individual spikes
@@ -137,7 +141,7 @@ classdef SRPlots < handle
                 dirty = true;
             end
             % triggered spikes
-            if data.singleSpike && data.singleSpikeDisplayed        % in single spike mode and already displayed?
+            if obj.singleSpike && obj.singleSpikeDisplayed        % in single spike mode and already displayed?
                 data.spikeIndices = [];                             %   then don't plot the spikes
                 return;
             end
@@ -152,14 +156,14 @@ classdef SRPlots < handle
                 if endIndex > data.samplesRead              % haven't read all the samples yet, wait for next pass
                     break;
                 end
-                if ~data.singleSpikeDisplayed
+                if ~obj.singleSpikeDisplayed
                     plot(obj.vTrigAxes, [1, obj.triggerSamples], [data.thresholdV, data.thresholdV], 'color', ...
                         [1.0, 0.25, 0.25]);
-                    data.singleSpikeDisplayed = true;
+                    obj.singleSpikeDisplayed = true;
                 end
                 plot(obj.vTrigAxes, 1:obj.triggerSamples, data.filteredTrace(startIndex:endIndex), 'b');
                 dirty = true;
-                if data.singleSpike
+                if obj.singleSpike
                     data.spikeIndices = [];                 % single spike, throw out any remaining
                 else
                     data.spikeIndices(1) = [];              % delete this spike time

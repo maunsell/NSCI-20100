@@ -3,7 +3,6 @@ classdef SRData < handle
     % Support for task data for StretchReceptor
     
     properties
-        audioOut;
         contMSPerDiv;
         contPlotRescale;
         contSamples;
@@ -12,24 +11,23 @@ classdef SRData < handle
         filter;                     % pointer to filter in use
         filters;                    % pointer to all the filters we have made
         filteredTrace;
+        inSpike;                    % flag showing that spike finding routine is in middle of a spike
+        lastSpikeIndex;
         maxContSamples;             % allocate large buffers to avoid auto-lengthening.
         rawData;
         rawTrace;
         sampleRateHz;
         samplesRead;
-        singleSpike;
-        singleSpikeDisplayed;
         singleTrace;
         spikeIndices;
-        lastSpikeIndex;
-        thresholdV;
+        thresholdV;                 % used by signals and plots
         testMode;
         vDivs;
         vPerDiv;
     end
     
     methods
-        %% SRTaskData -- instantiate and initialize
+        %% SRData -- instantiate and initialize
        function obj = SRData(handles)
              % Object Initialization %%
              obj = obj@handle();                                    % object initialization
@@ -37,7 +35,6 @@ classdef SRData < handle
              % Post Initialization %%
             obj.fH = handles;
             obj.sampleRateHz = handles.lbj.SampleRateHz;
-            obj.audioOut = audioDeviceWriter(obj.sampleRateHz, 'BitDepth','32-bit float');
             contents = get(handles.contMSPerDivButton, 'string');
             obj.contMSPerDiv = str2double(contents{get(handles.contMSPerDivButton, 'Value')});
             obj.contTimeDivs = 20;
@@ -51,16 +48,15 @@ classdef SRData < handle
             obj.filters = cell(length(filterStrings), 1);
             for f = 1:length(filterStrings)
                 cutOffHz = str2double(filterStrings{f});
-                filter = design(fdesign.highpass('Fst,Fp,Ast,Ap', 0.2 * cutOffHz / obj.sampleRateHz, ...
-                    2 * cutOffHz / obj.sampleRateHz, 18, 1), 'butter');
+                filter = design(fdesign.highpass('Fst,Fp,Ast,Ap', 0.5 * cutOffHz / obj.sampleRateHz, ...
+                    2 * cutOffHz / obj.sampleRateHz, 60, 1), 'butter');
                 filter.persistentmemory = true;         % piecemeal filtering of trace
                 filter.states = 1;                      % uses scalar expansion.
                 obj.filters{f} = filter;
             end
             selectFilter(obj);
-            obj.singleSpike = false;
-            obj.singleSpikeDisplayed = false;
             obj.singleTrace = false;
+            obj.inSpike = false;
             obj.testMode = false;                                           % testMode is set in SR, not here
             obj.thresholdV = 1.0;
             obj.vPerDiv = 1.0;
@@ -73,6 +69,7 @@ classdef SRData < handle
         %% clearAll
         function clearAll(obj)
             obj.spikeIndices = [];
+            obj.inSpike = false;
             obj.samplesRead = 0;
             obj.lastSpikeIndex = 2 * obj.maxContSamples;                    % flag start with invalid index
         end
