@@ -1,29 +1,29 @@
 classdef SRData < handle
     % SRTaskData
-    % Support for task data for StretchReceptor
+    % Support for global data for StretchReceptor
     
     properties
-        contMSPerDiv;
-        contPlotRescale;
-        contSamples;
-        contTimeDivs;
-        fH;
+        contMSPerDiv;               % ms/division in continuous plot
+        contPlotRescale;            % flag for rescale needed on continuous plot
+        contSamples;                % number of samples in the continuous plot
+        contTimeDivs;               % number of time divisions in continuous plot
+        fH;                         % pointer to GUI handles
         filter;                     % pointer to filter in use
         filters;                    % pointer to all the filters we have made
-        filteredTrace;
+        filteredTrace;              % filtered version of samples
         inSpike;                    % flag showing that spike finding routine is in middle of a spike
-        lastSpikeIndex;
+        lastSpikeIndex;             % index of last triggered spike
         maxContSamples;             % allocate large buffers to avoid auto-lengthening.
-        rawData;
-        rawTrace;
-        sampleRateHz;
-        samplesRead;
-        singleTrace;
-        spikeIndices;
+        rawData;                    % most recent raw snippet of sampled data
+        rawTrace;                   % raw version of samples
+        sampleRateHz;               % sampling rate
+        samplesRead;                % number of samples read in the continuous trace
+        singleTrace;                % flag for displaying a single continous trace
+        spikeIndices;               % indices for unplotted spikes in continuous trace
         thresholdV;                 % used by signals and plots
-        testMode;
-        vDivs;
-        vPerDiv;
+        testMode;                   % flag for testing mode
+        vDivs;                      % number of voltage (y) divisions
+        vPerDiv;                    % volts per division
     end
     
     methods

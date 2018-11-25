@@ -54,13 +54,13 @@ function ctTaskController(obj, ~)
                 baseContrast = data.baseContrasts(baseIndex);
                 blocksDone = min(data.trialsDone(baseIndex, :));
                 undone = find(data.trialsDone(baseIndex, :) == blocksDone);
-                data.multIndex = undone(ceil(length(undone) * (rand(1, 1))));
+                data.testIndex = undone(ceil(length(undone) * (rand(1, 1))));
                 if (data.stimParams.changeSide == 0)
-                    data.stimParams.leftContrast = baseContrast * data.multipliers(data.multIndex);
+                    data.stimParams.leftContrast = data.testContrasts(baseIndex, data.testIndex);
                     data.stimParams.rightContrast = baseContrast;
                 else
                     data.stimParams.leftContrast = baseContrast;
-                    data.stimParams.rightContrast = baseContrast * data.multipliers(data.multIndex);
+                    data.stimParams.rightContrast = data.testContrasts(baseIndex, data.testIndex);
                 end
                 if data.doStim
                     doStimulus(handles.stimuli, data.stimParams);           % display the increment stimulus
@@ -76,9 +76,11 @@ function ctTaskController(obj, ~)
         case ctTaskState.taskProcessResponse
             baseIndex = get(handles.baseContrastMenu, 'value');
             blocksDone = min(data.trialsDone(baseIndex, :));
-            undone = find(data.trialsDone(baseIndex, :) == blocksDone);
+%             undone = find(data.trialsDone(baseIndex, :) == blocksDone);
             if data.testMode
-                prob = 0.5 + 0.5 / (1.0 + exp(-10.0 * (data.multipliers(data.multIndex) - data.multipliers(3))));
+                prob = 0.5 + 0.5 / (1.0 + exp(-10.0 * (data.testContrasts(baseIndex, data.testIndex) - ...
+                    data.testContrasts(baseIndex, 3)) / data.baseContrasts(baseIndex)));
+%                 prob = 0.5 + 0.5 / (1.0 + exp(-10.0 * (data.multipliers(data.testIndex) - data.multipliers(3))));
                 hit = rand(1,1) < prob;
             else
                 if strcmp(data.theKey, 'left')
@@ -88,28 +90,28 @@ function ctTaskController(obj, ~)
                 end
             end
             if (hit == 1)
-                data.hits(baseIndex, data.multIndex) = data.hits(baseIndex, data.multIndex) + hit;
+                data.hits(baseIndex, data.testIndex) = data.hits(baseIndex, data.testIndex) + hit;
                 sound(data.tones(2, :), data.sampFreqHz);
             else
                 sound(data.tones(1, :), data.sampFreqHz);
             end
-            data.trialsDone(baseIndex, data.multIndex) = data.trialsDone(baseIndex, data.multIndex) + 1;
+            data.trialsDone(baseIndex, data.testIndex) = data.trialsDone(baseIndex, data.testIndex) + 1;
             data.trialStartTimeS = 0;
             data.stimStartTimeS = 0;
             data.taskState = ctTaskState.taskStartTrial;
             if data.doStim
                 clearScreen(handles.stimuli);
             end
-            handles = ctDrawHitRates(handles, false);
+            handles = ctDrawHitRates(handles, false);            
             % Check whether we are done with all the trials
-            if sum(data.trialsDone(baseIndex, :)) >= data.stimParams.stimReps * data.numMultipliers
+            if sum(data.trialsDone(baseIndex, :)) >= data.stimParams.stimReps * data.numIncrements
                 if (~data.testMode)                         % if we're not in test mode, we're done testing
                     data.taskState = ctTaskState.taskStopRunning;
                 else                                        % if we're testing, see if there are more to do
-                    if sum(sum(data.trialsDone)) >=  data.stimParams.stimReps * data.numMultipliers * data.numBases
+                    if sum(sum(data.trialsDone)) >=  data.stimParams.stimReps * data.numIncrements * data.numBases
                         data.taskState = ctTaskState.taskStopRunning;
                     else                                    % more to do, try the next multiplier
-                        while sum(data.trialsDone(baseIndex, :)) >= data.stimParams.stimReps * data.numMultipliers
+                        while sum(data.trialsDone(baseIndex, :)) >= data.stimParams.stimReps * data.numIncrements
                             baseIndex = mod(baseIndex, data.numBases) + 1;
                         end
                         set(handles.baseContrastMenu, 'value', baseIndex);

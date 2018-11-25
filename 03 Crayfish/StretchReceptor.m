@@ -24,18 +24,10 @@ end
 
 %% clearButton_Callback
 function clearButton_Callback(hObject, eventdata, handles)                  
-
-    originalSize = get(0, 'DefaultUIControlFontSize');
-    set(0, 'DefaultUIControlFontSize', 14);
-    selection = questdlg('Really clear all data? (This cannot be undone).', 'Clear Data', 'Yes', 'No', 'Yes');
-    set(0, 'DefaultUIControlFontSize', originalSize);
-    switch selection
-        case 'Yes'
-        clearAll(handles.data);
-        clearAll(handles.plots, handles);
-        clearAll(handles.isiPlot);
-        guidata(hObject, handles);
-    end
+    clearAll(handles.data);
+    clearAll(handles.plots, handles);
+    clearAll(handles.isiPlot);
+    guidata(hObject, handles);
 end
 
 %% closeSR: clean up

@@ -1,6 +1,5 @@
 classdef SRISIPlot < handle
     % SRISIPlot Handle isi data and plotting for StretchReceptor
-    
     % Maintain a histogram
         % change the number of bins as needed
         % plot as needed
@@ -12,6 +11,7 @@ classdef SRISIPlot < handle
         isiAxes;        % Matlab axes on which to plot
         isiBins;        % number of isi bins
         isiHist;        % the isi histogram we maintain
+        isiLastPlotTime;% time of the last ISI plot
         isiMaxMS;       % maximum ISI included in the plot
         isiMaxY;        % maximum of the count axis
         isiMeanRate     % mean rate in spikes/s from ISIs
@@ -26,10 +26,11 @@ classdef SRISIPlot < handle
        %% SRISIPlot Initialization %%
        function obj = SRISIPlot(fH)
             obj = obj@handle();
-            % Post instaniation
+            % Post instantiation
             obj.fHandles = fH;
             obj.isiAxes = fH.axes3;
             obj.isiStartMaxY = 10;
+            obj.isiLastPlotTime = clock;
             obj.isiNum = 0;
             obj.isiMS = zeros(1000, 1);
             obj.isiMaxMS = 0;                   % force rescaling
@@ -57,11 +58,12 @@ classdef SRISIPlot < handle
                     makeHistogram(obj);
                 end
             end
-            if mod(obj.isiNum, 10) == 0                                     % don't refresh plot every time
+            if etime(clock, obj.isiLastPlotTime) > 1.0                      % refresh once a second
                 obj.isiMedianIsiMS = median(obj.isiMS(1:obj.isiNum));
                 obj.isiMeanRate = obj.isiNum / (sum(obj.isiMS(1:obj.isiNum)) / 1000.0);
                 cla(obj.isiAxes);
                 plotISI(obj);
+                obj.isiLastPlotTime = clock;                                % time reference for next plot
             end
       end
 
@@ -80,6 +82,7 @@ classdef SRISIPlot < handle
         end
         
         %% makeHistogram
+        % recompile a histogram based on the current bin width
         function makeHistogram(obj)
             obj.isiHist = zeros(obj.isiBins, 1);
             for i = 1:obj.isiNum
@@ -97,6 +100,7 @@ classdef SRISIPlot < handle
         end
 
         %% plotISI
+        % plot the ISI histogram
         function plotISI(obj)
             histogram(obj.isiAxes, 'binedges', 0:obj.isiBins, 'bincounts', obj.isiHist, 'facecolor', 'blue');
             if obj.isiMedianIsiMS > 0 && obj.isiMeanRate > 0
@@ -131,6 +135,7 @@ classdef SRISIPlot < handle
         end
         
         %% setMaxISI -- set the maximum isi in seconds
+        % update based on the content of the GUI menu
         function setISIMaxS(obj)
             valueStrings = cellstr(get(obj.fHandles.maxISIMenu, 'String'));
             newIsiMaxMS = str2double(valueStrings{get(obj.fHandles.maxISIMenu, 'Value')}) * 1000.0;

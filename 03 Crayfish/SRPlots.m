@@ -1,6 +1,6 @@
 classdef SRPlots < handle
     % SRPlots
-    %   Support for plotting in StretchReceptor
+    % Support for plotting of spike waveforms in StretchReceptor
     
     properties
         lastThresholdXPlotted
@@ -124,7 +124,7 @@ classdef SRPlots < handle
             obj.singleSpikeDisplayed = false;
         end
   
-        %% plot the oscilloscope trace and individual spikes
+        %% plot the continuous and triggered spike waveforms
         function plot(obj, handles)
             dirty = false;
             data = handles.data;

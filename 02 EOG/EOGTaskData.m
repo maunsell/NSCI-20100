@@ -1,11 +1,13 @@
 classdef EOGTaskData < handle
-    % saccades
-    %   Support for processing eye traces and detecting saccades
+    % EOGTaskData
+    %   Support for processing eye traces and detecting saccades in EOG
     
     properties
         blocksDone;
         calTrialsDone;
         dataState;
+        doFilter;
+        filter;
         numChannels;
         numOffsets;
         numSummed;
@@ -59,7 +61,7 @@ classdef EOGTaskData < handle
             obj.stimTimeS = 0;
             obj.testMode = false;                                  % testMode is set in EOG, not here
             obj.voltage = 0;
-
+            obj.doFilter = false;
             setSampleRateHz(obj, sampleRateHz);
         end
 
@@ -79,13 +81,25 @@ classdef EOGTaskData < handle
             obj.velAvg = zeros(obj.saccadeSamples, obj.numOffsets);       % averaged position traces
         end
         
+        %% setSampleRate
         function setSampleRateHz(obj, rateHz)
             obj.sampleRateHz = rateHz;
             obj.saccadeSamples = floor(obj.saccadeTraceS * obj.sampleRateHz);
             obj.trialSamples = floor(obj.trialDurS * obj.sampleRateHz);
+            % create a 60 Hz bandstop filter  for the sample rate
+            obj.filter = design(fdesign.bandstop('Fp1,Fst1,Fst2,Fp2,Ap1,Ast,Ap2', ...
+                55 / obj.sampleRateHz, 59 / obj.sampleRateHz, ...
+                61 / obj.sampleRateHz, 65 / obj.sampleRateHz, ...
+                1, 60, 1), 'butter');
+            obj.filter.persistentmemory = false;      	% no piecemeal filtering of trace
+            obj.filter.states = 1;                      % uses scalar expansion.
             clearAll(obj);                                                % clear -- and also re-size buffers
-       end
-    end
-    
+        end
+       
+        %% set60HzFilter
+        function set60HzFilter(obj, state)
+            obj.doFilter = state;
+        end
+   end   
 end
 

@@ -96,6 +96,12 @@ function collectData(obj, event)                                            %#ok
     end
 end
 
+%% --- Executes on button press in Filter60.
+function filter60_Callback(hObject, eventdata, handles)
+ 
+set60HzFilter(handles.data, get(hObject,'Value'));
+end
+
 %% initEOG: initialization
 function varargout = initEOG(hObject, eventdata, handles)               %#ok<*INUSL>
 % initialize application.  We need to set up GUI items  after the GUI has been
@@ -163,7 +169,7 @@ function openEOG(hObject, eventdata, handles, varargin)
         testMode = false;
     end
     
-%     testMode = true;
+    testMode = true;
     
     if testMode
         set(handles.warnText, 'string', 'Test Mode');

@@ -1,13 +1,13 @@
 classdef SRSignalProcess < handle
     % SRSignalProcess
-    %   Support for filtering voltage traces and finding spikes
+    %   Support for filtering voltage traces, audio out and finding spikes
     properties
         audioBuffer
         audioBufferSize
         audioMultiplier
         audioOutDevice
-        fH
         audioOutIndex
+        fH
         outSampleRatio
     end
     

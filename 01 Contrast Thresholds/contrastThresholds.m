@@ -132,6 +132,10 @@ function openContrastThresholds(hObject, ~, handles, varargin)
     handles.data = ctTaskData(handles.baseContrastMenu);
     handles.output = hObject;                                                   % select default command line output
     handles.stimuli = ctStimuli;
+    
+    testStimuli(handles.stimuli, handles);
+    
+    
     ctDrawStatusText(handles, 'idle');
     movegui(handles.figure1, 'northwest');
     set(handles.figure1, 'visible', 'on');
@@ -154,7 +158,7 @@ function runButton_Callback(hObject, ~, handles)
         baseIndex = get(handles.baseContrastMenu, 'value');
         stimReps = str2num(get(handles.stimRepsText, 'string'));
         data = handles.data;
-        if sum(data.trialsDone(baseIndex, :)) < stimReps * data.numMultipliers
+        if sum(data.trialsDone(baseIndex, :)) < stimReps * data.numIncrements
             data.taskState = ctTaskState.taskStartRunning;
         else
             contrastStrings = get(handles.baseContrastMenu, 'string');
@@ -166,7 +170,7 @@ function runButton_Callback(hObject, ~, handles)
     end
     guidata(hObject, handles);                          % save the changes
 end
-
+%% saveDataButton_Callback responds to save button
 % --- Executes on button press in saveDataButton.
 function saveDataButton_Callback(hObject, ~, handles)
     cleanup(handles.stimuli);
@@ -193,7 +197,7 @@ function savePlotsButton_Callback(hObject, ~, handles)
         heightInch = figurePos(4) / 72;
         set(handles.figure1, 'PaperSize', [widthInch + 1.0, heightInch + 1.0]);
         set(handles.figure1, 'PaperPosition', [0.5, 0.5, widthInch, heightInch]);
-        print(handles.figure1, '-dpdf', '-r600', [filePath fileName]);
+        sprintf(handles.figure1, '-dpdf', '-r600', [filePath fileName]);
     end
     handles.stimuli = ctStimuli();
     set(handles.runButton, 'backgroundColor', 'green');
@@ -217,6 +221,7 @@ function showHideButton_Callback(hObject, ~, handles)
     guidata(hObject, handles);                          % save the changes
 end
 
+%% respond to the a timer error
 function timerErrorFcn(obj, event, handles)
     disp('timer error');
 end
@@ -224,7 +229,7 @@ end
 %% respond to a GUI close request 
 function windowCloseRequest(hObject, ~, handles)
 
-    % fist check whether the task is running
+    % first check whether the task is running
     if strcmp(get(handles.runButton, 'String'), 'Stop')
         return;
     end
