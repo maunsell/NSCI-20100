@@ -92,7 +92,7 @@ classdef EOGSaccades < handle
                 decayTrace = zeros(samples, 1);
                 decayValue = mean(data.posTrace(1:floor(data.sampleRateHz * 0.250))); 
                 multiplier = 1.0 / (0.250 * data.sampleRateHz);                % tau of 250 ms
-                for i = 1:samples
+                for i = 1:length(decayTrace)
                     decayTrace(i) = decayValue;
                     decayValue = decayValue * (1.0 - multiplier) + data.posTrace(i) * multiplier;
                 end
@@ -101,14 +101,13 @@ classdef EOGSaccades < handle
                 b = (1 / filterSamples) * ones(1, filterSamples);
                 data.posTrace = filter(b, 1, data.posTrace);
                 dt = 1/data.sampleRateHz;                   % seconds per sample
-                t = (0:dt:samples * dt - dt)';             % seconds
-                data.posTrace = data.posTrace + cos(2.0 * pi * 60 * t) * 0.025;
-%                 data.posTrace = cos(2.0 * pi * 60 * t);
-            end
-            % do 60 Hz filtering
-            if data.doFilter
-                data.posTrace = filter(data.filter, data.posTrace);
-            end
+   StopTime = 0.25;             % seconds
+   t = (0:dt:StopTime-dt)';     % seconds
+   %%Sine wave:
+   Fc = 60;                     % hertz
+   x = cos(2*pi*Fc*t);
+                sineNoise = ones(1, length(data.posTrace));
+           end
             % make the velocity trace and then apply boxcar filter
             data.velTrace(1:end - 1) = diff(data.posTrace);
             data.velTrace(end) = data.velTrace(end - 1);

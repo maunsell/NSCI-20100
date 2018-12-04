@@ -97,9 +97,9 @@ function collectData(obj, event)                                            %#ok
 end
 
 %% --- Executes on button press in Filter60.
-function filter60_Callback(hObject, eventdata, handles)
- 
-set60HzFilter(handles.data, get(hObject,'Value'));
+function Filter60Hz_Callback(hObject, eventdata, handles)
+
+    set60HzFilter(handles.data, get(hObject,'Value'));
 end
 
 %% initEOG: initialization
@@ -115,6 +115,7 @@ function varargout = initEOG(hObject, eventdata, handles)               %#ok<*IN
     set(handles.startButton, 'String', 'Start','BackgroundColor', 'green');
 end
 
+%% loadDataButton_Callback
 % --- Executes on button press in loadDataButton.
 function loadDataButton_Callback(hObject, ~, handles)
     EOGControlState(handles, 'off', {})
@@ -154,6 +155,7 @@ function loadDataButton_Callback(hObject, ~, handles)
     EOGControlState(handles, 'on', {})
 end
 
+%% openEOG
 % openEOG: just before gui is made visible.
 function openEOG(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
@@ -197,6 +199,7 @@ function openEOG(hObject, eventdata, handles, varargin)
     guidata(hObject, handles);                                                   % save the selection
 end
 
+%%sampleRateText_Callback
 function sampleRateText_Callback(hObject, eventdata, handles)
     requestedRateHz = str2double(get(handles.sampleRateText, 'string'));
     clippedRateHz = min([requestedRateHz, 1000, max(100, requestedRateHz)]);
@@ -213,7 +216,7 @@ function sampleRateText_Callback(hObject, eventdata, handles)
     end
 end
 
-% --- Executes on button press in saveDataButton.
+%% saveDataButton_Callback
 function saveDataButton_Callback(hObject, eventdata, handles)
 % Saving the workspace for a GUI isn't simple.  What we have accessible in this
 % environment is mostly the handles.  If we save, it's an attempt to save
@@ -235,7 +238,7 @@ function saveDataButton_Callback(hObject, eventdata, handles)
     EOGControlState(handles, 'on', {})
 end
 
-% --- Respond to button press in savePlotsButton.
+%% savePlotsButton_Callback
 function savePlotsButton_Callback(hObject, eventdata, handles)
 % hObject    handle to savePlotsButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -411,7 +414,7 @@ function taskController(obj, events, daqaxes)
     end
 end
 
-%% taskController: function to collect data from LabJack
+%% taskError: error function to collect data from LabJack
 function taskError(obj, events, handles)
     fprintf('timer error');
 end
