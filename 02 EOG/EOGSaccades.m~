@@ -23,11 +23,9 @@ classdef EOGSaccades < handle
             seqLength = 5;
             if data.calTrialsDone < 4                                    % still getting a calibration
                 if (stepSign == 1)
-                    DPV = abs(data.offsetsDeg(data.offsetIndex) /...
-                             (max(posTrace(:)) - mean(posTrace(1:startIndex)))); 
+                    DPV = abs(data.offsetsDeg(data.offsetIndex) / (max(posTrace(:)) - mean(posTrace(1:startIndex)))); 
                 else
-                    DPV = abs(data.offsetsDeg(data.offsetIndex) /...
-                             (mean(posTrace(1:startIndex) - min(posTrace(:)))));
+                    DPV = abs(data.offsetsDeg(data.offsetIndex) / (mean(posTrace(1:startIndex) - min(posTrace(:)))));
                 end
                 obj.degPerV = (obj.degPerV * data.calTrialsDone + DPV) / (data.calTrialsDone + 1);
                 obj.degPerSPerV = obj.degPerV * data.sampleRateHz;      % needed for velocity plots
@@ -86,34 +84,57 @@ classdef EOGSaccades < handle
 
         %% processSignals: function to process data from one trial
         function [startIndex, endIndex] = processSignals(obj, data)
-            data.posTrace = data.rawData - mean(data.rawData(1:floor(data.sampleRateHz * data.prestimDurS)));
-            if data.testMode                % in test mode filter and add some noise to make things realistic
+            % remove the DC offset
+            if ~data.testMode
+                data.posTrace = data.rawData - mean(data.rawData(1:floor(data.sampleRateHz * data.prestimDurS)));
+            else
                 samples = length(data.posTrace);
+                data.posTrace = zeros(samples, 1);
+                halfDistance = data.offsetsDeg(data.offsetIndex) / 2.0;
+                accel = 0.01;
+                time = floor(sqrt(2.0 * halfDistance / accel));
+                positions = zeros(time * 2, 1);
+                accel = accel * data.stepSign;
+                for t = 1:time
+                    positions(t) = 0.5 * accel * t^2;
+                end
+                for t = 1:time
+                    positions(time + t) = positions(time) + accel * time * t - 0.5 * accel * t^2;
+                end
+                preStimSamples = floor((data.stimTimeS + 0.1) * data.sampleRateHz);
+                data.posTrace(preStimSamples + 1:preStimSamples + length(positions)) = positions;
+                for i = preStimSamples + length(positions) + 1:length(data.posTrace)
+                    data.posTrace(i) = positions(time * 2);
+                end
+                % make the trace decay to zero
                 decayTrace = zeros(samples, 1);
                 decayValue = mean(data.posTrace(1:floor(data.sampleRateHz * 0.250))); 
                 multiplier = 1.0 / (0.250 * data.sampleRateHz);                % tau of 250 ms
-                for i = 1:length(decayTrace)
+                for i = 1:samples
                     decayTrace(i) = decayValue;
                     decayValue = decayValue * (1.0 - multiplier) + data.posTrace(i) * multiplier;
                 end
-                data.posTrace = data.posTrace - decayTrace + 0.3 * rand(size(data.posTrace)) - 0.15;
-                filterSamples = floor(data.sampleRateHz * 50.0 / 1000.0);      % smooth with 50 ms boxcar   
+                % decay to zero and add random noise
+                data.posTrace = data.posTrace - decayTrace + 0.030 * rand(size(data.posTrace)) - 0.015;
+                % smooth with a boxcar to take out the highest frequencies
+                filterSamples = max(1, floor(data.sampleRateHz * 10.0 / 1000.0));
                 b = (1 / filterSamples) * ones(1, filterSamples);
                 data.posTrace = filter(b, 1, data.posTrace);
+                % add 60Hz noise
                 dt = 1/data.sampleRateHz;                   % seconds per sample
-   StopTime = 0.25;             % seconds
-   t = (0:dt:StopTime-dt)';     % seconds
-   %%Sine wave:
-   Fc = 60;                     % hertz
-   x = cos(2*pi*Fc*t);
-                sineNoise = ones(1, length(data.posTrace));
-           end
+                t = (0:dt:samples * dt - dt)';             % seconds
+                data.posTrace = data.posTrace + cos(2.0 * pi * 60 * t) * 0.1;
+            end
+            % do 60 Hz filtering
+            if data.doFilter
+                data.posTrace = filter(data.filter60Hz, data.posTrace);
+            end
             % make the velocity trace and then apply boxcar filter
-            data.velTrace(1:end - 1) = diff(data.posTrace);
+            data.velTrace(1: end - 1) = diff(data.posTrace);
             data.velTrace(end) = data.velTrace(end - 1);
-            filterSamples = floor(data.sampleRateHz * obj.filterWidthMS / 1000.0);     
-            b = (1 / filterSamples) * ones(1, filterSamples);
-            data.velTrace = filter(b, 1, data.velTrace);
+            if data.doFilter
+%                 data.velTrace = filter(data.filterLP, data.velTrace);
+            end
             % find a saccade and make sure we have enough samples before and after its start
 %             sIndex = floor(data.stimTimeS * data.sampleRateHz);         % no saccades before stimon
             sIndex = floor(data.prestimDurS * data.sampleRateHz);
@@ -129,31 +150,26 @@ classdef EOGSaccades < handle
                 return;
             end
             % sum into the average pos and vel plot, inverting for negative steps
-            if (data.stepSign == 1)
-                data.posSummed(:, data.offsetIndex) = data.posSummed(:, data.offsetIndex)... 
-                            + data.posTrace(firstIndex:lastIndex);  
-                data.velSummed(:, data.offsetIndex) = data.velSummed(:, data.offsetIndex)... 
-                            + data.velTrace(firstIndex:lastIndex);  
-            else
-                data.posSummed(:, data.offsetIndex) = data.posSummed(:, data.offsetIndex)...
-                            - data.posTrace(firstIndex:lastIndex);  
-                data.velSummed(:, data.offsetIndex) = data.velSummed(:, data.offsetIndex)... 
-                            - data.velTrace(firstIndex:lastIndex);  
-            end
+            data.posSummed(:, data.offsetIndex) = data.posSummed(:, data.offsetIndex) + ...
+                data.posTrace(firstIndex:lastIndex);  
+            data.velSummed(:, data.offsetIndex) = data.velSummed(:, data.offsetIndex) + ...
+                data.velTrace(firstIndex:lastIndex);  
             % tally the sums and compute the averages
             data.numSummed(data.offsetIndex) = data.numSummed(data.offsetIndex) + 1;
             data.posAvg(:, data.offsetIndex) = data.posSummed(:, data.offsetIndex) / data.numSummed(data.offsetIndex);
             data.velAvg(:, data.offsetIndex) = data.velSummed(:, data.offsetIndex) / data.numSummed(data.offsetIndex);
             data.offsetsDone(data.offsetIndex) = data.offsetsDone(data.offsetIndex) + 1;
             % now that we've updated all the traces, compute the degrees per volt if we have enough trials
+            % take average peaks to get each point
             if sum(data.numSummed) > length(data.numSummed)
-                endPointsV = max(data.posAvg(:, :));                        % take average peaks to get each point
+                endPointsV = [max(data.posAvg(1:data.numOffsets / 2, :)) ...
+                                min(data.posAvg(data.numOffsets / 2 + 1:data.numOffsets, :))];
                 obj.degPerV = mean(data.offsetsDeg ./ endPointsV);
                 obj.degPerSPerV = obj.degPerV * data.sampleRateHz;          % needed for velocity plots
             end
             % find the average saccade duration using the average speed trace
             [sAvgIndex, eAvgIndex] = obj.findSaccade(data, data.posAvg(:, data.offsetIndex), ...
-                            data.velAvg(:, data.offsetIndex), 1, length(data.posAvg(:, data.offsetIndex)) / 2);
+                            data.velAvg(:, data.offsetIndex), data, length(data.posAvg(:, data.offsetIndex)) / 2);
             if eAvgIndex > sAvgIndex 
                 data.saccadeDurS(data.offsetIndex) = (eAvgIndex - sAvgIndex) / data.sampleRateHz;
             else

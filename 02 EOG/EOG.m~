@@ -23,7 +23,7 @@ function varargout = EOG(varargin)
 end
 
 %% clearButton_Callback
-function clearButton_Callback(hObject, eventdata, handles)                  
+function clearButton_Callback(hObject, eventdata, handles)                  %#ok<DEFNU>
 
     originalSize = get(0, 'DefaultUIControlFontSize');
     set(0, 'DefaultUIControlFontSize', 14);
@@ -33,9 +33,9 @@ function clearButton_Callback(hObject, eventdata, handles)
         case 'Yes'
         clearAll(handles.saccades);
         clearAll(handles.ampDur);
-%         for i = 1:handles.data.numOffsets
-%             clearAll(handles.rtDists{i});
-%         end
+        for i = 1:handles.data.numOffsets
+            clearAll(handles.rtDists{i});
+        end
         clearAll(handles.data);
         plot(handles.posVelPlots, handles, 0, 0, true);
         set(handles.calibrationText, 'string', '');
@@ -61,7 +61,7 @@ function closeEOG(hObject, eventdata, handles)
     case 'Yes'
         cleanup(handles.visStim);
         delete(handles.visStim);
-        try delete(handles.ampDur); catch, end
+        try delete(handles.ampDur); catch, end;
         try stop(timerfind); catch, end
         try delete(timerfind); catch, end
         try clear('handles.lbj'); catch, end
@@ -81,7 +81,7 @@ function collectData(obj, event)                                            %#ok
         case DataState.dataIdle
             return;
         case DataState.dataCollect
-            [dRaw, ~] = getStreamData(lbj);                                     %#ok<*NASGU> % get stream data
+            [dRaw, errorCode] = getStreamData(lbj);                                     %#ok<*NASGU> % get stream data
             numNew = min(length(dRaw), data.trialSamples - data.samplesRead);
             data.rawData(data.samplesRead + 1:data.samplesRead + numNew, :) = dRaw(1:numNew, :);
             data.samplesRead = data.samplesRead + numNew;
@@ -97,7 +97,7 @@ function collectData(obj, event)                                            %#ok
 end
 
 %% --- Executes on button press in Filter60.
-function Filter60Hz_Callback(hObject, eventdata, handles) 
+function Filter60Hz_Callback(hObject, eventdata, handles)
 
     set60HzFilter(handles.data, get(hObject,'Value'));
 end
@@ -117,7 +117,7 @@ end
 
 %% loadDataButton_Callback
 % --- Executes on button press in loadDataButton.
-function loadDataButton_Callback(hObject, ~, handles) %#ok<*DEFNU>
+function loadDataButton_Callback(hObject, ~, handles)
     EOGControlState(handles, 'off', {})
     [fileName, filePath] = uigetfile('*.mat', 'Load Matlab Data Workspace', '~/Desktop');
     if fileName ~= 0
@@ -128,28 +128,28 @@ function loadDataButton_Callback(hObject, ~, handles) %#ok<*DEFNU>
         handles.ampDur = a;
         handles.saccades = s;
         set(handles.calibrationText, 'string', sprintf('Calibration %.1f deg/V', handles.saccades.degPerV));
-%         handles.rtDists{1} = r1;
-%         handles.rtDists{2} = r2;
-%         handles.rtDists{3} = r3;
-%         handles.rtDists{4} = r4;
+        handles.rtDists{1} = r1;
+        handles.rtDists{2} = r2;
+        handles.rtDists{3} = r3;
+        handles.rtDists{4} = r4;
         
         % saved axes handles generally aren't valid if we are in a new run.
         % Load the handles with the current axes handles.
         
         handles.ampDur.fHandle = handles.axes5;                         % loaded axes handle might be invalid
-%         handles.rtDists{1}.fHandle = handles.axes6;
-%         handles.rtDists{2}.fHandle = handles.axes7;
-%         handles.rtDists{3}.fHandle = handles.axes8;
-%         handles.rtDists{4}.fHandle = handles.axes9;
+        handles.rtDists{1}.fHandle = handles.axes6;
+        handles.rtDists{2}.fHandle = handles.axes7;
+        handles.rtDists{3}.fHandle = handles.axes8;
+        handles.rtDists{4}.fHandle = handles.axes9;
         guidata(hObject, handles);                                      % save the selections
         
         [startIndex, endIndex] = processSignals(handles.saccades, d);
         plot(handles.posVelPlots, handles, startIndex, endIndex, true);
         handles.ampDur.lastN = 0;                                       % force ampDur to plot
         plotAmpDur(handles.ampDur);
-%         for i = 1:4
-%             plot(handles.rtDists{i});
-%         end
+        for i = 1:4
+            plot(handles.rtDists{i});
+        end
 
     end
     EOGControlState(handles, 'on', {})
@@ -184,11 +184,11 @@ function openEOG(hObject, eventdata, handles, varargin)
     handles.posVelPlots = EOGPosVelPlots(handles);
     handles.data = EOGTaskData(handles.lbj.numChannels, handles.lbj.SampleRateHz);
     handles.ampDur = EOGAmpDur(handles.axes5, handles.data.offsetsDeg, handles.lbj.SampleRateHz);
-%     axes = [handles.axes6 handles.axes7 handles.axes8 handles.axes9];
-%     handles.RTDist = cell(1, handles.data.numOffsets);
-%     for i = 1:length(axes)
-%         handles.rtDists{i} = EOGRTDist(i, handles.data.offsetsDeg(i), axes(i));
-%     end
+    axes = [handles.axes6 handles.axes7 handles.axes8 handles.axes9];
+    handles.RTDist = cell(1, handles.data.numOffsets);
+    for i = 1:length(axes)
+        handles.rtDists{i} = EOGRTDist(i, handles.data.offsetsDeg(i), axes(i));
+    end
     
     % set up test mode
     handles.data.testMode = testMode;
@@ -203,7 +203,7 @@ end
 function sampleRateText_Callback(hObject, eventdata, handles)
     requestedRateHz = str2double(get(handles.sampleRateText, 'string'));
     clippedRateHz = min([requestedRateHz, 1000, max(100, requestedRateHz)]);
-    if (clippedRateHz ~= requestedRateHz)
+    if (clippedRateHz ~= requestedRateHz);
         set(handles.sampleRateText, 'String', clippedRateHz);
     end
     if clippedRateHz ~= handles.data.sampleRateHz
@@ -229,11 +229,11 @@ function saveDataButton_Callback(hObject, eventdata, handles)
         d = handles.data;
         a = handles.ampDur;
         s = handles.saccades;
-%         r1 = handles.rtDists{1};
-%         r2 = handles.rtDists{2};
-%         r3 = handles.rtDists{3};
-%         r4 = handles.rtDists{4};
-       save([filePath fileName], 'd', 'a', 's');
+        r1 = handles.rtDists{1};
+        r2 = handles.rtDists{2};
+        r3 = handles.rtDists{3};
+        r4 = handles.rtDists{4};
+       save([filePath fileName], 'd', 'a', 's', 'r1', 'r2', 'r3', 'r4');
     end
     EOGControlState(handles, 'on', {})
 end
@@ -289,7 +289,7 @@ function lbj = setupLabJack()
 end
 
 %% respond to button presses
-function startButton_Callback(hObject, eventdata, handles)                  
+function startButton_Callback(hObject, eventdata, handles)                  %#ok<DEFNU>
 % hObject    handle to startButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -304,6 +304,7 @@ function startButton_Callback(hObject, eventdata, handles)
         end
         setViewDistanceCM(handles.visStim, str2double(get(handles.viewDistanceText, 'string')));
         handles.saccades.thresholdDeg = str2double(get(handles.thresholdDegText, 'string'));
+        handles.saccades.filterWidthMS = max(1, str2double(get(handles.filterWidthText, 'string')));
         % create timer to control the task
         taskRateHz = 25;
         handles.taskTimer = timer('Name', 'TaskTimer', 'ExecutionMode', 'fixedRate',...
@@ -351,7 +352,7 @@ function taskController(obj, events, daqaxes)
     visStim = handles.visStim;
     saccades = handles.saccades;
     ampDur = handles.ampDur;
-%     rtDists = handles.rtDists;
+    rtDists = handles.rtDists;
     switch data.taskState
         case TaskState.taskStarttrial
            if sum(data.offsetsDone) >= data.numOffsets                  % finished another block
@@ -378,60 +379,57 @@ function taskController(obj, events, daqaxes)
                 handles.lbj.verbose = 1;
                 data.dataState = DataState.dataCollect;
                 data.taskState = TaskState.taskPrestim;                     % go to prestim state
-%                 if data.testMode
-%                     data.stimStartPixel = visStim.currentOffsetPix;
-%                     data.saccHalfTimeS = -1;
-%                 end
+                if data.testMode
+                    data.stimStartPixel = visStim.currentOffsetPix;
+                    data.saccHalfTimeS = -1;
+                end
             end
         case TaskState.taskPrestim
+            elapsedTime = etime(clock, data.trialStartTimeS);
             if etime(clock, data.trialStartTimeS) > data.stimTimeS
                 data.stepSign = stepStimulus(visStim, data.offsetsDeg(data.offsetIndex));
                 data.taskState = TaskState.taskPoststim;
             end
         case TaskState.taskPoststim
-%             elapsedTimeS = etime(clock, data.trialStartTimeS);
-%             if data.testMode && elapsedTimeS > data.stimTimeS + 0.1
-%                 accelPixelPerSS = 5.0;
-%                 if data.saccHalfTimeS < 0                           % set up the saccade parameters
-%                     pixelOffset = visStim.currentOffsetPix - data.stimStartPixel; % stimulus step in pixels
-%                     data.saccHalfTimeS = sqrt(pixelOffset / 2.0 * accelPixelPerSS);
-%                     fprintf('saccade start %.3f\n', elapsedTimeS);
-%                 end
-%                 saccadeTimeS = data.stimTimeS + 0.100;
-%                 if elapsedTimeS > saccadeTimeS && elapsedTimeS < saccadeTimeS + data.saccHalfTimeS
-%                     fprintf('first half %.3f\n', elapsedTimeS);
-%                     currentPosPixels = 0.5 * accelPixelPerSS * (elapsedTimeS - saccadeTimeS)^2;
-%                     data.voltage = min(5.0, currentPosPixels / 500.0);
-%                     analogOut(lbj, 0, 2.5 + data.voltage);
-%                 elseif elapsedTimeS > saccadeTimeS + data.saccHalfTimeS && elapsedTimeS < saccadeTimeS + 2.0 * data.saccHalfTimeS
-%                     fprintf('second half %.3f\n', elapsedTimeS);
-%                     firstHalfPixels = 0.5 * accelPixelPerSS * (data.saccHalfTimeS)^2;
-%                     firstHalfSpeed = data.saccHalfTimeS * accelPixelPerSS;
-%                     secondHalfTimeS = elapsedTimeS - (saccadeTimeS + data.saccHalfTimeS);
-%                     currentPosPixels = firstHalfPixels + firstHalfSpeed * secondHalfTimeS +...
-%                         0.5 * -accelPixelPerSS * (secondHalfTimeS)^2; 
-%                     data.voltage = min(5.0, currentPosPixels / 500.0);
-%                     analogOut(lbj, 0, 2.5 + data.voltage);
-%                end
-%             end
+            if data.testMode && etime(clock, data.trialStartTimeS) > data.stimTimeS + 0.1
+                if data.saccHalfTimeS < 0                           % set up the saccade parameters
+                    pixelOffset = visStim.currentOffsetPix - data.stimStartPixel; % stimulus step in pixels
+                    data.saccHalfTimeS = sqrt(pixelOffset / 2.0 * accelPixelPerSS);
+                end
+                accelPixelPerSS = 5.0;
+                saccadeTimeS = data.stimTimeS + 0.100;
+                if elapsedTime > saccadeTimeS && elapsedTime < saccadeTimeS + data.saccHalfTimeS
+                    currentPosPixels = 0.5 * accelPixelPerSS * (elapsedTime - saccadeTimeS)^2;
+                    data.voltage = min(5.0, currentPosPixels / 500.0);
+                    analogOut(lbj, 0, 2.5 + data.voltage);
+                elseif elapsedTime > saccadeTimeS + data.saccHalfTimeS && elapsedTime < saccadeTimeS + 2.0 * data.saccHalfTimeS
+                    firstHalfPixels = 0.5 * accelPixelPerSS * (data.saccHalfTimeS)^2;
+                    firstHalfSpeed = data.saccHalfTimeS * accelPixelPerSS;
+                    secondHalfTimeS = elapsedTime - (saccadeTimeS + data.saccHalfTimeS);
+                    currentPosPixels = firstHalfPixels + firstHalfSpeed * secondHalfTimeS +...
+                        0.5 * -accelPixelPerSS * (secondHalfTimeS)^2; 
+                    data.voltage = min(5.0, currentPosPixels / 500.0);
+                    analogOut(lbj, 0, 2.5 + data.voltage);
+               end
+            end
         case TaskState.taskEndtrial
             [startIndex, endIndex] = processSignals(saccades, data);
             plot(handles.posVelPlots, handles, startIndex, endIndex, false);
             set(handles.calibrationText, 'string', sprintf('Calibration %.1f deg/V', saccades.degPerV));
             addAmpDur(ampDur, data.offsetIndex, startIndex, endIndex);
             plotAmpDur(ampDur);
-%             if startIndex > 0
-%                 addRT(rtDists{data.offsetIndex}, (startIndex / data.sampleRateHz  - data.stimTimeS) * 1000.0);
-%             end
-%             if (mod(sum(data.numSummed), data.numOffsets) == 0)
-%                 needsRescale = plot(rtDists{data.offsetIndex});
-%                 if needsRescale > 0
-%                      for i = 1:data.numOffsets
-%                          rescale(rtDists{i}, needsRescale);
-%                          plot(rtDists{i});
-%                     end
-%                 end
-%             end   
+            if startIndex > 0
+                addRT(rtDists{data.offsetIndex}, (startIndex / data.sampleRateHz  - data.stimTimeS) * 1000.0);
+            end
+            if (mod(sum(data.numSummed), data.numOffsets) == 0)
+                needsRescale = plot(rtDists{data.offsetIndex});
+                if needsRescale > 0
+                     for i = 1:data.numOffsets
+                         rescale(rtDists{i}, needsRescale);
+                         plot(rtDists{i});
+                    end
+                end
+            end   
             data.trialStartTimeS = 0;
             data.taskState = TaskState.taskStarttrial;
     end
