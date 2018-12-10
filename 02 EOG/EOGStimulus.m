@@ -72,19 +72,28 @@ classdef EOGStimulus < handle
         function limitDistCM = maxViewDistanceCM(obj, maxDeg)
             limitDistCM = (obj.windowRectPix(3) / 2.0 - obj.marginPix) / obj.pixPerMM / tan(maxDeg / 57.2958) / 10.0;
         end
+     %% stepOutOfRange -- Report whether a step would move the target offscreen       
+        function outOfRange = stepOutOfRange(obj, offsetDeg)
+            outOfRange = obj.currenOffsetDeg + offsetDeg > maxDeg(obj);
+        end
+  
+        %% setViewDistanceCM -- set the viewing distance
         
         function setViewDistanceCM(obj, newValueCM)
             obj.viewDistanceMM = newValueCM * 10.0;
         end
         
+        %% stepStimulus -- Step the stimulus
+ 
         function stepSign = stepStimulus(obj, offsetDeg)
-            stepSign = -sign(obj.currentOffsetPix);
-            if stepSign == 0
-                stepSign = sign(rand - 0.5);
-            end
+%             stepSign = -sign(obj.currentOffsetPix);
+%             if stepSign == 0
+%                 stepSign = sign(rand - 0.5);
+%             end
             obj.currentOffsetMM = obj.currentOffsetPix / obj.pixPerMM;
             currentOffsetDeg = atan2(obj.currentOffsetMM, obj.viewDistanceMM) * 57.2958;
-            newOffsetDeg = currentOffsetDeg + stepSign  * offsetDeg;
+%             newOffsetDeg = currentOffsetDeg + stepSign  * offsetDeg;
+            newOffsetDeg = currentOffsetDeg + offsetDeg;
             newOffsetMM = obj.viewDistanceMM * tan(newOffsetDeg / 57.2958);
             obj.currentOffsetPix = newOffsetMM * obj.pixPerMM;
             drawDot(obj);

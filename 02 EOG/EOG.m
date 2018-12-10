@@ -354,14 +354,12 @@ function taskController(obj, events, daqaxes)
 %     rtDists = handles.rtDists;
     switch data.taskState
         case TaskState.taskStarttrial
-            fprintf('finished %d trials\n', sum(data.offsetsDone));
-
             if sum(data.offsetsDone) >= data.numOffsets                 % finished another block
                 data.offsetsDone = zeros(1, data.numOffsets);           % clear counters
                 data.blocksDone = data.blocksDone + 1;                  % increment block counter
             end
-            data.offsetIndex = ceil(rand() * data.numOffsets);
-            while data.offsetsDone(data.offsetIndex) > 0
+            data.offsetIndex = ceil(rand() * data.numOffsets);          % randomly selected saccade step
+            while data.offsetsDone(data.offsetIndex) > 0                % if it's already done, find another
                 data.offsetIndex = mod(data.offsetIndex, data.numOffsets) + 1;
             end
             data.absStepIndex = mod(data.offsetIndex - 1, data.numOffsets / 2) + 1;

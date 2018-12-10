@@ -57,8 +57,8 @@ classdef EOGPosVelPlots < handle
                     hold(obj.posAvgAxes);
                     obj.posAvgAxes.ColorOrderIndex = 1;
                     plot(obj.posAvgAxes, saccadeTimes, data.posAvg(:, data.numOffsets / 2 + 1:data.numOffsets), '-');
-                    title(obj.posAvgAxes, ['Average position traces (left/right combined; ' ...
-                        sprintf('n>=%d)', data.blocksDone)], 'FontSize',12,'FontWeight','Bold')
+                    title(obj.posAvgAxes, sprintf('Average position traces (n>=%d)', data.blocksDone), ...
+                        'FontSize',12,'FontWeight','Bold')
                     % set both plots to the same y scale
                     a3 = axis(obj.posAvgAxes);
                     yLim = max(abs(a3(3:4)));
@@ -136,10 +136,9 @@ classdef EOGPosVelPlots < handle
                     hold(obj.velAvgAxes);
                     obj.velAvgAxes.ColorOrderIndex = 1;
                     plot(obj.velAvgAxes, saccadeTimes, data.velAvg(:, data.numOffsets / 2 + 1:data.numOffsets), '-');
-                    title(obj.velAvgAxes, 'Average velocity traces (left/right combined)', 'FontSize',12,...
-                        'FontWeight','Bold')
-                    ylabel(obj.velAvgAxes,'Analog Input (dV/dt)','FontSize',14);
-                    xlabel(obj.velAvgAxes,'Time (s)','FontSize',14);
+                    title(obj.velAvgAxes, 'Average velocity traces', 'FontSize', 12, 'FontWeight','Bold')
+                    ylabel(obj.velAvgAxes,'Analog Input (dV/dt)', 'FontSize', 14);
+                    xlabel(obj.velAvgAxes,'Time (s)','FontSize', 14);
                     % put both plots on the same y scale
                     a1 = axis(obj.velAxes);
                     a2 = axis(obj.velAvgAxes);

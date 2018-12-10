@@ -114,15 +114,15 @@ classdef EOGSaccades < handle
                     decayValue = decayValue * (1.0 - multiplier) + data.posTrace(i) * multiplier;
                 end
                 % decay to zero and add random noise
-                data.posTrace = data.posTrace - decayTrace + 0.030 * rand(size(data.posTrace)) - 0.015;
+                data.posTrace = data.posTrace - decayTrace + 2.0 * rand(size(data.posTrace)) - 1.0;
                 % smooth with a boxcar to take out the highest frequencies
                 filterSamples = max(1, floor(data.sampleRateHz * 10.0 / 1000.0));
                 b = (1 / filterSamples) * ones(1, filterSamples);
                 data.posTrace = filter(b, 1, data.posTrace);
                 % add 60Hz noise
                 dt = 1/data.sampleRateHz;                   % seconds per sample
-                t = (0:dt:samples * dt - dt)';             % seconds
-                data.posTrace = data.posTrace + cos(2.0 * pi * 60 * t) * 0.1;
+                t = (0:dt:samples * dt - dt)';              % seconds
+                data.posTrace = data.posTrace + cos(2.0 * pi * 60 * t) * 0.25;
             end
             % do 60 Hz filtering
                fprintf('processSignals 3\n') 
