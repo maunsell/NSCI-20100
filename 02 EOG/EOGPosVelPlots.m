@@ -31,17 +31,16 @@ classdef EOGPosVelPlots < handle
 
         %% posPlots: do the trial and average position plots
         function posPlots(obj, handles, startIndex, endIndex, mustPlot)
-     fprintf('posPlots 0\n') 
             data = handles.data;
             saccades = handles.saccades;
             timestepS = 1 / data.sampleRateHz;                            % time interval of samples
             trialTimes = (0:1:size(data.posTrace, 1) - 1) * timestepS;    % make array of trial time points
             saccadeTimes = (-(size(data.posAvg, 1) / 2):1:(size(data.posAvg,1) / 2) - 1) * timestepS;             
-          colors = get(obj.posAxes, 'ColorOrder');
+            colors = get(obj.posAxes, 'ColorOrder');
             % trial position trace
             cla(obj.posAxes);
             plot(obj.posAxes, trialTimes, data.posTrace, 'color', colors(data.absStepIndex,:));
-          if saccades.degPerV > 0
+            if saccades.degPerV > 0
                 hold(obj.posAxes, 'on');
                 thresholdV = saccades.thresholdDeg / saccades.degPerV * data.stepSign;
                plot(obj.posAxes, [trialTimes(1) trialTimes(end)], [thresholdV, thresholdV], ...
@@ -51,34 +50,34 @@ classdef EOGPosVelPlots < handle
             title(obj.posAxes, 'Most recent position trace', 'FontSize',12,'FontWeight','Bold')
             ylabel(obj.posAxes,'Analog Input (V)','FontSize',14);
             % average position traces every complete block
-           if mustPlot
+            if mustPlot
                 cla(obj.posAvgAxes);
                 if sum(data.numSummed) > 0
-                    plot(obj.posAvgAxes, saccadeTimes, data.posAvg, '-');
+                    plot(obj.posAvgAxes, saccadeTimes, data.posAvg(:, 1:data.numOffsets / 2), '-');
+                    hold(obj.posAvgAxes);
+                    obj.posAvgAxes.ColorOrderIndex = 1;
+                    plot(obj.posAvgAxes, saccadeTimes, data.posAvg(:, data.numOffsets / 2 + 1:data.numOffsets), '-');
                     title(obj.posAvgAxes, ['Average position traces (left/right combined; ' ...
                         sprintf('n>=%d)', data.blocksDone)], 'FontSize',12,'FontWeight','Bold')
                     % set both plots to the same y scale
                     a3 = axis(obj.posAvgAxes);
                     yLim = max(abs(a3(3:4)));
-%          fprintf('posPlots 6\n') 
-                  text(-0.112, 0.8 * yLim, '2', 'parent', obj.posAvgAxes, 'FontSize', 24, 'FontWeight', 'Bold');
+                    text(-0.112, 0.8 * yLim, '2', 'parent', obj.posAvgAxes, 'FontSize', 24, 'FontWeight', 'Bold');
                     axis(obj.posAvgAxes, [-inf inf -yLim yLim]);
                     hold(obj.posAvgAxes, 'on');
                     % averages are always aligned on onset, so draw a vertical line at that point
                     plot(obj.posAvgAxes, [0 0], [-yLim yLim], 'color', 'k', 'linestyle', ':');
-%           fprintf('posPlots 6.5 length(data.saccadeDurS): %d\n', length(data.saccadeDurS)); 
-                   for i = 1:length(data.saccadeDurS)          % draw saccade durations for average traces
+                    for i = 1:length(data.saccadeDurS)          % draw saccade durations for average traces
                         plot(obj.posAvgAxes, [data.saccadeDurS(i), data.saccadeDurS(i)], [-yLim, yLim], ':', ...
                                             'color', colors(mod(i, data.numOffsets / 2) + 1,:));
                     end
-         fprintf('posPlots 7\n') 
-                  hold(obj.posAvgAxes, 'off');
+                    hold(obj.posAvgAxes, 'off');
                     % if eye position has been calibrated, change the y scaling on the average to degrees 
                     % rather than volts
                     if saccades.degPerV > 0
-%                         yTicks = [fliplr(-data.offsetsDeg), 0, data.offsetsDeg] / saccades.degPerV;
                         yTicks = [fliplr(-data.offsetsDeg(1:data.numOffsets/2)), 0, ...
                                         data.offsetsDeg(1:data.numOffsets/2)] / saccades.degPerV;
+                        yLabels = cell(length(yTicks), 1);
                         for i = 1:length(yTicks)
                             yLabels{i} = num2str(yTicks(i) * saccades.degPerV, '%.0f');
                         end
@@ -87,10 +86,9 @@ classdef EOGPosVelPlots < handle
                         ylabel(obj.posAvgAxes,'Average Eye Position (absolute deg.)','FontSize',14);
                     end
                 end
-        fprintf('posPlots 8\n') 
            end
        fprintf('posPlots 10\n') 
-          if sum(data.numSummed) > data.numOffsets
+            if sum(data.numSummed) > data.numOffsets
                 a3 = axis(obj.posAvgAxes);                      % we don't plot the average on every pass
                 yLim = max(abs(a3(3:4)));                       %   so pick up the scaling here
                 axis(obj.posAxes, [-inf inf -yLim yLim]);       % scale pos plot to avgPos plot y-axis
@@ -134,7 +132,10 @@ classdef EOGPosVelPlots < handle
             if mustPlot
                 cla(obj.velAvgAxes);
                 if sum(data.numSummed) > 0                  % make sure there is at least one set of steps
-                    plot(obj.velAvgAxes, saccadeTimes, data.velAvg, '-');
+                    plot(obj.velAvgAxes, saccadeTimes, data.velAvg(:, 1:data.numOffsets / 2), '-');
+                    hold(obj.velAvgAxes);
+                    obj.velAvgAxes.ColorOrderIndex = 1;
+                    plot(obj.velAvgAxes, saccadeTimes, data.velAvg(:, data.numOffsets / 2 + 1:data.numOffsets), '-');
                     title(obj.velAvgAxes, 'Average velocity traces (left/right combined)', 'FontSize',12,...
                         'FontWeight','Bold')
                     ylabel(obj.velAvgAxes,'Analog Input (dV/dt)','FontSize',14);

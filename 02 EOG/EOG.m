@@ -354,18 +354,23 @@ function taskController(obj, events, daqaxes)
 %     rtDists = handles.rtDists;
     switch data.taskState
         case TaskState.taskStarttrial
+            fprintf('finished %d trials\n', sum(data.offsetsDone));
+
             if sum(data.offsetsDone) >= data.numOffsets                 % finished another block
                 data.offsetsDone = zeros(1, data.numOffsets);           % clear counters
                 data.blocksDone = data.blocksDone + 1;                  % increment block counter
-                fprintf('finsihed %d blocks\n', data.blocksDone);
             end
             data.offsetIndex = ceil(rand() * data.numOffsets);
             while data.offsetsDone(data.offsetIndex) > 0
                 data.offsetIndex = mod(data.offsetIndex, data.numOffsets) + 1;
             end
             data.absStepIndex = mod(data.offsetIndex - 1, data.numOffsets / 2) + 1;
-                 data.offsetsDone
-           fprintf('doing index %d, absIndex %d\n', data.offsetIndex, data.absStepIndex);
+            if data.offsetIndex <= data.numOffsets / 2
+                data.stepSign = 1;
+            else 
+                data.stepSign = -1;
+            end
+           fprintf('doing index %d,  %.0f\n', data.offsetIndex, data.offsetsDeg(data.offsetIndex));
             if data.testMode 
                 data.voltage = min(5.0, visStim.currentOffsetPix / 500.0);  % debugging- connect DACO0 to AIN0
                 analogOut(lbj, 0, 2.5 + data.voltage);
@@ -389,7 +394,8 @@ function taskController(obj, events, daqaxes)
             end
         case TaskState.taskPrestim
            if etime(clock, data.trialStartTimeS) > data.stimTimeS
-                data.stepSign = stepStimulus(visStim, data.offsetsDeg(data.offsetIndex));
+%                 data.stepSign = stepStimulus(visStim, data.offsetsDeg(data.offsetIndex));
+                stepStimulus(visStim, data.offsetsDeg(data.offsetIndex));
                 data.taskState = TaskState.taskPoststim;
             end
         case TaskState.taskPoststim

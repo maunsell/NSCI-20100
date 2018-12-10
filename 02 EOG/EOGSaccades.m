@@ -88,14 +88,13 @@ classdef EOGSaccades < handle
            if ~data.testMode
                 data.posTrace = data.rawData - mean(data.rawData(1:floor(data.sampleRateHz * data.prestimDurS)));
             else
-               samples = length(data.posTrace);
+                samples = length(data.posTrace);
                 data.posTrace = zeros(samples, 1);
-%                 halfDistance = fabs(data.offsetsDeg(data.offsetIndex) / 2.0)
-               accel = 0.01;
+                accel = 0.01;
                 time = floor(sqrt(2.0 * abs(data.offsetsDeg(data.offsetIndex)) / 2.0 / accel));
-               positions = zeros(time * 2, 1);
-              accel = accel * data.stepSign;
-              for t = 1:time
+                positions = zeros(time * 2, 1);
+                accel = accel * data.stepSign;
+                for t = 1:time
                     positions(t) = 0.5 * accel * t^2;
                 end
                 for t = 1:time
@@ -107,8 +106,7 @@ classdef EOGSaccades < handle
                     data.posTrace(i) = positions(time * 2);
                 end
                 % make the trace decay to zero
-                 fprintf('processSignals 2\n') 
-              decayTrace = zeros(samples, 1);
+                decayTrace = zeros(samples, 1);
                 decayValue = mean(data.posTrace(1:floor(data.sampleRateHz * 0.250))); 
                 multiplier = 1.0 / (0.250 * data.sampleRateHz);                % tau of 250 ms
                 for i = 1:samples

@@ -57,7 +57,7 @@ classdef EOGAmpDur < handle
             obj.lastN = 0;
             cla(obj.fHandle);
             axis(obj.fHandle, [0 1 0 1]);
-            text(0.05, 0.9, '5', 'parent', obj.fHandle, 'FontSize', 24, 'FontWeight', 'Bold');
+            text(0.05, 0.1, '5', 'parent', obj.fHandle, 'FontSize', 24, 'FontWeight', 'Bold');
         end
         
         %         function [yMean, sem] = stats(~, y)
@@ -90,7 +90,7 @@ classdef EOGAmpDur < handle
             axis(obj.fHandle, [a(1), a(2), (medians(indexMin) - 2.0 * (medians(indexMin) - minQ))...
                 (medians(indexMax) + 2.0 * (maxQ - medians(indexMax)))]);
             a = axis(obj.fHandle);
-            text(a(1) + 0.05 * (a(2) - a(1)), 0.9 * (a(4) - a(3)) + a(3), '5', 'parent', obj.fHandle, 'FontSize', 24,...
+            text(a(1) + 0.05 * (a(2) - a(1)), 0.1 * (a(4) - a(3)) + a(3), '5', 'parent', obj.fHandle, 'FontSize', 24,...
                 'FontWeight', 'Bold');
             hold(obj.fHandle, 'off');
             obj.lastN = minN;
