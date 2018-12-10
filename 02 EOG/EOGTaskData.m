@@ -3,6 +3,7 @@ classdef EOGTaskData < handle
     %   Support for processing eye traces and detecting saccades in EOG
     
     properties
+        absStepIndex
         blocksDone;
         calTrialsDone;
         dataState;
@@ -51,6 +52,7 @@ classdef EOGTaskData < handle
             obj.numChannels = numChannels;
             obj.numOffsets = length(obj.offsetsDeg);
             obj.offsetIndex = 1;
+            obj.absStepIndex = 1;
             obj.stepSign = 1;
             obj.saccadeTraceS = 0.250;                              % duratoin of saccade trace
             obj.trialDurS = max(1.0, 2 * obj.saccadeTraceS);

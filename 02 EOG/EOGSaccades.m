@@ -85,17 +85,17 @@ classdef EOGSaccades < handle
         %% processSignals: function to process data from one trial
         function [startIndex, endIndex] = processSignals(obj, data)
             % remove the DC offset
-            if ~data.testMode
+           if ~data.testMode
                 data.posTrace = data.rawData - mean(data.rawData(1:floor(data.sampleRateHz * data.prestimDurS)));
             else
-                samples = length(data.posTrace);
+               samples = length(data.posTrace);
                 data.posTrace = zeros(samples, 1);
-                halfDistance = data.offsetsDeg(data.offsetIndex) / 2.0;
-                accel = 0.01;
-                time = floor(sqrt(2.0 * halfDistance / accel));
-                positions = zeros(time * 2, 1);
-                accel = accel * data.stepSign;
-                for t = 1:time
+%                 halfDistance = fabs(data.offsetsDeg(data.offsetIndex) / 2.0)
+               accel = 0.01;
+                time = floor(sqrt(2.0 * abs(data.offsetsDeg(data.offsetIndex)) / 2.0 / accel));
+               positions = zeros(time * 2, 1);
+              accel = accel * data.stepSign;
+              for t = 1:time
                     positions(t) = 0.5 * accel * t^2;
                 end
                 for t = 1:time
@@ -107,7 +107,8 @@ classdef EOGSaccades < handle
                     data.posTrace(i) = positions(time * 2);
                 end
                 % make the trace decay to zero
-                decayTrace = zeros(samples, 1);
+                 fprintf('processSignals 2\n') 
+              decayTrace = zeros(samples, 1);
                 decayValue = mean(data.posTrace(1:floor(data.sampleRateHz * 0.250))); 
                 multiplier = 1.0 / (0.250 * data.sampleRateHz);                % tau of 250 ms
                 for i = 1:samples
@@ -126,6 +127,7 @@ classdef EOGSaccades < handle
                 data.posTrace = data.posTrace + cos(2.0 * pi * 60 * t) * 0.1;
             end
             % do 60 Hz filtering
+               fprintf('processSignals 3\n') 
             if data.doFilter
                 data.posTrace = filter(data.filter60Hz, data.posTrace);
             end
@@ -145,7 +147,8 @@ classdef EOGSaccades < handle
             if mod(data.saccadeSamples, 2) == 0                     % make sure the samples are divisible by 2
                 lastIndex = lastIndex - 1;
             end
-            if (firstIndex < 1 || lastIndex > data.trialSamples)    % not enough samples around saccade to process
+                fprintf('processSignals 4\n') 
+           if (firstIndex < 1 || lastIndex > data.trialSamples)    % not enough samples around saccade to process
                 startIndex = 0;
                 return;
             end
@@ -159,22 +162,24 @@ classdef EOGSaccades < handle
             data.posAvg(:, data.offsetIndex) = data.posSummed(:, data.offsetIndex) / data.numSummed(data.offsetIndex);
             data.velAvg(:, data.offsetIndex) = data.velSummed(:, data.offsetIndex) / data.numSummed(data.offsetIndex);
             data.offsetsDone(data.offsetIndex) = data.offsetsDone(data.offsetIndex) + 1;
-            % now that we've updated all the traces, compute the degrees per volt if we have enough trials
+                fprintf('processSignals 5\n') 
+           % now that we've updated all the traces, compute the degrees per volt if we have enough trials
             % take average peaks to get each point
             if sum(data.numSummed) > length(data.numSummed)
-                endPointsV = [max(data.posAvg(1:data.numOffsets / 2, :)) ...
-                                min(data.posAvg(data.numOffsets / 2 + 1:data.numOffsets, :))];
+                endPointsV = [max(data.posAvg(:, 1:data.numOffsets / 2)) ...
+                                min(data.posAvg(:, data.numOffsets / 2 + 1:data.numOffsets))];
                 obj.degPerV = mean(data.offsetsDeg ./ endPointsV);
                 obj.degPerSPerV = obj.degPerV * data.sampleRateHz;          % needed for velocity plots
             end
+                fprintf('processSignals 6\n') 
             % find the average saccade duration using the average speed trace
             [sAvgIndex, eAvgIndex] = obj.findSaccade(data, data.posAvg(:, data.offsetIndex), ...
                         data.velAvg(:, data.offsetIndex), data.stepSign, length(data.posAvg(:, data.offsetIndex)) / 2);
-            durIndex = mod(data.offsetIndex, data.numOffsets / 2) + 1; 
-            if eAvgIndex > sAvgIndex 
-                data.saccadeDurS(durIndex) = (eAvgIndex - sAvgIndex) / data.sampleRateHz;
+                 fprintf('processSignals 7\n') 
+           if eAvgIndex > sAvgIndex 
+                data.saccadeDurS(data.absStepIndex) = (eAvgIndex - sAvgIndex) / data.sampleRateHz;
             else
-                data.saccadeDurS(durIndex) = 0;
+                data.saccadeDurS(data.absStepIndex) = 0;
             end
         end
    

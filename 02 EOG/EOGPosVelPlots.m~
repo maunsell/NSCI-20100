@@ -77,7 +77,7 @@ classdef EOGPosVelPlots < handle
                     % rather than volts
                     if saccades.degPerV > 0
 %                         yTicks = [fliplr(-data.offsetsDeg), 0, data.offsetsDeg] / saccades.degPerV;
-                        yTicks = [fliplr(-data.offsetsDeg(1:data.numOffsets/2)), 0, ...
+                        yTicks = [fliplr(-data.offsetsDeg(1:data.numOffsets/2), 0, ...
                                         data.offsetsDeg(1:data.numOffsets/2)] / saccades.degPerV;
                         for i = 1:length(yTicks)
                             yLabels{i} = num2str(yTicks(i) * saccades.degPerV, '%.0f');

@@ -347,21 +347,25 @@ end
 function taskController(obj, events, daqaxes)
     handles = obj.UserData;
     data = handles.data;
-    lbj = handles.lbj;                                                      % get handle to LabJack
+    lbj = handles.lbj;                                              	% get handle to LabJack
     visStim = handles.visStim;
     saccades = handles.saccades;
     ampDur = handles.ampDur;
 %     rtDists = handles.rtDists;
     switch data.taskState
         case TaskState.taskStarttrial
-           if sum(data.offsetsDone) >= data.numOffsets                  % finished another block
+            if sum(data.offsetsDone) >= data.numOffsets                 % finished another block
                 data.offsetsDone = zeros(1, data.numOffsets);           % clear counters
                 data.blocksDone = data.blocksDone + 1;                  % increment block counter
+                fprintf('finsihed %d blocks\n', data.blocksDone);
             end
             data.offsetIndex = ceil(rand() * data.numOffsets);
             while data.offsetsDone(data.offsetIndex) > 0
                 data.offsetIndex = mod(data.offsetIndex, data.numOffsets) + 1;
             end
+            data.absStepIndex = mod(data.offsetIndex - 1, data.numOffsets / 2) + 1;
+                 data.offsetsDone
+           fprintf('doing index %d, absIndex %d\n', data.offsetIndex, data.absStepIndex);
             if data.testMode 
                 data.voltage = min(5.0, visStim.currentOffsetPix / 500.0);  % debugging- connect DACO0 to AIN0
                 analogOut(lbj, 0, 2.5 + data.voltage);
@@ -384,7 +388,7 @@ function taskController(obj, events, daqaxes)
 %                 end
             end
         case TaskState.taskPrestim
-            if etime(clock, data.trialStartTimeS) > data.stimTimeS
+           if etime(clock, data.trialStartTimeS) > data.stimTimeS
                 data.stepSign = stepStimulus(visStim, data.offsetsDeg(data.offsetIndex));
                 data.taskState = TaskState.taskPoststim;
             end
@@ -415,10 +419,14 @@ function taskController(obj, events, daqaxes)
 %                end
 %             end
         case TaskState.taskEndtrial
-            [startIndex, endIndex] = processSignals(saccades, data);
-            plot(handles.posVelPlots, handles, startIndex, endIndex, false);
+              fprintf('TaskState.taskEndtrial\n') 
+           [startIndex, endIndex] = processSignals(saccades, data);
+               fprintf('TaskState.taskEndtrial posVelPlots\n') 
+           plot(handles.posVelPlots, handles, startIndex, endIndex, false);
             set(handles.calibrationText, 'string', sprintf('Calibration %.1f deg/V', saccades.degPerV));
-            addAmpDur(ampDur, data.offsetIndex, startIndex, endIndex);
+               fprintf('TaskState.taskEndtrial addAmpDur\n') 
+           addAmpDur(ampDur, data.offsetIndex, startIndex, endIndex);
+              fprintf('TaskState.taskEndtrial plotAmpDur\n') 
             plotAmpDur(ampDur);
 %             if startIndex > 0
 %                 addRT(rtDists{data.offsetIndex}, (startIndex / data.sampleRateHz  - data.stimTimeS) * 1000.0);
@@ -434,10 +442,11 @@ function taskController(obj, events, daqaxes)
 %             end   
             data.trialStartTimeS = 0;
             data.taskState = TaskState.taskStarttrial;
+              fprintf('TaskState.taskEndtrial done\n') 
     end
 end
 
 %% taskError: error function to collect data from LabJack
 function taskError(obj, events, handles)
-    fprintf('timer error');
+    fprintf('timer error\n')
 end
