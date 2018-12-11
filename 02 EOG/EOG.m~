@@ -374,8 +374,8 @@ function taskController(obj, events, daqaxes)
                     break;
                 end
             end
-%             fprintf('Currently at %.0f; step asked %.0f; max doable %.0f\n',...
-%                         currentOffsetDeg(visStim), data.offsetsDeg(data.offsetIndex), maxDeg(visStim));
+                     fprintf('centering the stimulus: at %.0f step asked %.0f max %.0f',...
+                        currentOffsetDeg(visStim), data.offsetsDeg(data.offsetIndex), maxDeg(visStim));
            data.absStepIndex = mod(data.offsetIndex - 1, data.numOffsets / 2) + 1;
             data.stepSign = sign(data.offsetsDeg(data.offsetIndex));
             if data.centeringTrial

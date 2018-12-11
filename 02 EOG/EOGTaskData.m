@@ -6,6 +6,7 @@ classdef EOGTaskData < handle
         absStepIndex
         blocksDone;
         calTrialsDone;
+        centeringTrial;
         dataState;
         doFilter;
         filterLP;

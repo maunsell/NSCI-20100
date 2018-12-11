@@ -125,7 +125,6 @@ classdef EOGSaccades < handle
                 data.posTrace = data.posTrace + cos(2.0 * pi * 60 * t) * 0.25;
             end
             % do 60 Hz filtering
-               fprintf('processSignals 3\n') 
             if data.doFilter
                 data.posTrace = filter(data.filter60Hz, data.posTrace);
             end
@@ -145,7 +144,6 @@ classdef EOGSaccades < handle
             if mod(data.saccadeSamples, 2) == 0                     % make sure the samples are divisible by 2
                 lastIndex = lastIndex - 1;
             end
-                fprintf('processSignals 4\n') 
            if (firstIndex < 1 || lastIndex > data.trialSamples)    % not enough samples around saccade to process
                 startIndex = 0;
                 return;
@@ -160,7 +158,6 @@ classdef EOGSaccades < handle
             data.posAvg(:, data.offsetIndex) = data.posSummed(:, data.offsetIndex) / data.numSummed(data.offsetIndex);
             data.velAvg(:, data.offsetIndex) = data.velSummed(:, data.offsetIndex) / data.numSummed(data.offsetIndex);
             data.offsetsDone(data.offsetIndex) = data.offsetsDone(data.offsetIndex) + 1;
-                fprintf('processSignals 5\n') 
            % now that we've updated all the traces, compute the degrees per volt if we have enough trials
             % take average peaks to get each point
             if sum(data.numSummed) > length(data.numSummed)
@@ -169,11 +166,9 @@ classdef EOGSaccades < handle
                 obj.degPerV = mean(data.offsetsDeg ./ endPointsV);
                 obj.degPerSPerV = obj.degPerV * data.sampleRateHz;          % needed for velocity plots
             end
-                fprintf('processSignals 6\n') 
             % find the average saccade duration using the average speed trace
             [sAvgIndex, eAvgIndex] = obj.findSaccade(data, data.posAvg(:, data.offsetIndex), ...
                         data.velAvg(:, data.offsetIndex), data.stepSign, length(data.posAvg(:, data.offsetIndex)) / 2);
-                 fprintf('processSignals 7\n') 
            if eAvgIndex > sAvgIndex 
                 data.saccadeDurS(data.absStepIndex) = (eAvgIndex - sAvgIndex) / data.sampleRateHz;
             else

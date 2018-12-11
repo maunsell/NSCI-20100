@@ -54,9 +54,10 @@ classdef EOGPosVelPlots < handle
                 cla(obj.posAvgAxes);
                 if sum(data.numSummed) > 0
                     plot(obj.posAvgAxes, saccadeTimes, data.posAvg(:, 1:data.numOffsets / 2), '-');
-                    hold(obj.posAvgAxes);
+                    hold(obj.posAvgAxes, 'on');
                     obj.posAvgAxes.ColorOrderIndex = 1;
                     plot(obj.posAvgAxes, saccadeTimes, data.posAvg(:, data.numOffsets / 2 + 1:data.numOffsets), '-');
+                    hold(obj.posAvgAxes, 'off');
                     title(obj.posAvgAxes, sprintf('Average position traces (n>=%d)', data.blocksDone), ...
                         'FontSize',12,'FontWeight','Bold')
                     % set both plots to the same y scale
@@ -86,8 +87,7 @@ classdef EOGPosVelPlots < handle
                         ylabel(obj.posAvgAxes,'Average Eye Position (absolute deg.)','FontSize',14);
                     end
                 end
-           end
-       fprintf('posPlots 10\n') 
+            end
             if sum(data.numSummed) > data.numOffsets
                 a3 = axis(obj.posAvgAxes);                      % we don't plot the average on every pass
                 yLim = max(abs(a3(3:4)));                       %   so pick up the scaling here
@@ -112,7 +112,6 @@ classdef EOGPosVelPlots < handle
 
         %% velPlots: do the trial and average velocity plots
         function velPlots(obj, handles, startIndex, endIndex, mustPlot)
-                 fprintf('velPlots 0\n') 
             data = handles.data;
             saccades = handles.saccades;
             timestepS = 1 / data.sampleRateHz;                                  % time interval of samples
@@ -133,9 +132,10 @@ classdef EOGPosVelPlots < handle
                 cla(obj.velAvgAxes);
                 if sum(data.numSummed) > 0                  % make sure there is at least one set of steps
                     plot(obj.velAvgAxes, saccadeTimes, data.velAvg(:, 1:data.numOffsets / 2), '-');
-                    hold(obj.velAvgAxes);
+                    hold(obj.velAvgAxes, 'on');
                     obj.velAvgAxes.ColorOrderIndex = 1;
                     plot(obj.velAvgAxes, saccadeTimes, data.velAvg(:, data.numOffsets / 2 + 1:data.numOffsets), '-');
+                    hold(obj.velAvgAxes, 'off');
                     title(obj.velAvgAxes, 'Average velocity traces', 'FontSize', 12, 'FontWeight','Bold')
                     ylabel(obj.velAvgAxes,'Analog Input (dV/dt)', 'FontSize', 14);
                     xlabel(obj.velAvgAxes,'Time (s)','FontSize', 14);

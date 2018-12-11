@@ -71,9 +71,8 @@ classdef EOGStimulus < handle
             Screen('Flip', obj.window);
         end
         
-        %% maxDeg -- maximum extent of the display in degrees (left edge to right edge)
         function limitDeg = maxDeg(obj)
-            limitDeg = atan2((obj.windowRectPix(3) / 2.0 - obj.marginPix) / obj.pixPerMM, obj.viewDistanceMM) * 57.2958;
+            limitDeg = atan2(obj.windowRectPix(3) / 2.0 - obj.marginPix, obj.viewDistanceMM) * 57.2958;
         end
         
         function limitDistCM = maxViewDistanceCM(obj, maxDeg)
@@ -98,8 +97,10 @@ classdef EOGStimulus < handle
 %             if stepSign == 0
 %                 stepSign = sign(rand - 0.5);
 %             end
+            obj.currentOffsetMM = obj.currentOffsetPix / obj.pixPerMM;
+            currentOffsetDeg = atan2(obj.currentOffsetMM, obj.viewDistanceMM) * 57.2958;
 %             newOffsetDeg = currentOffsetDeg + stepSign  * offsetDeg;
-            newOffsetDeg = currentOffsetDeg(obj) + offsetDeg;
+            newOffsetDeg = currentOffsetDeg + offsetDeg;
             newOffsetMM = obj.viewDistanceMM * tan(newOffsetDeg / 57.2958);
             obj.currentOffsetPix = newOffsetMM * obj.pixPerMM;
             drawDot(obj);
