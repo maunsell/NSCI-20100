@@ -240,20 +240,18 @@ end
 
 %% savePlotsButton_Callback
 function savePlotsButton_Callback(hObject, eventdata, handles)
-% hObject    handle to savePlotsButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
     EOGControlState(handles, 'off', {})
-    [fileName, filePath] = uiputfile('*.pdf', 'Save Window Plots as PDF', '~/Desktop/EOGData.pdf');
+    [fileName, filePath] = uiputfile('*.pdf', 'Save Window Plots as PDF', '~/Desktop/EOGPlots.pdf');
     if fileName ~= 0
         set(handles.figure1, 'PaperUnits', 'inches');
         figurePos = get(handles.figure1, 'position');
         widthInch = figurePos(3) / 72;
         heightInch = figurePos(4) / 72;
+        set(handles.figure1, 'inverthardcopy', 'off');                  % keep gray background
         set(handles.figure1, 'PaperOrientation', 'landscape');
         set(handles.figure1, 'PaperSize', [widthInch + 1.0, heightInch + 1.0]);
         set(handles.figure1, 'PaperPosition', [0.5, 0.5, widthInch, heightInch]);
-        print(handles.figure1, '-dpdf', '-r600', '-noui', [filePath fileName]);
+        print(handles.figure1, '-dpdf', '-r600', [filePath fileName]);
     end
     EOGControlState(handles, 'on', {})
 end
