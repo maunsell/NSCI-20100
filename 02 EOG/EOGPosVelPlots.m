@@ -33,17 +33,17 @@ classdef EOGPosVelPlots < handle
         function posPlots(obj, handles, startIndex, endIndex, mustPlot)
             data = handles.data;
             saccades = handles.saccades;
-            timestepS = 1 / data.sampleRateHz;                            % time interval of samples
-            trialTimes = (0:1:size(data.posTrace, 1) - 1) * timestepS;    % make array of trial time points
-            saccadeTimes = (-(size(data.posAvg, 1) / 2):1:(size(data.posAvg,1) / 2) - 1) * timestepS;             
+            timestepMS = 1000.0 / data.sampleRateHz;                   	% time interval of samples
+            trialTimes = (0:1:size(data.posTrace, 1) - 1) * timestepMS;	% make array of trial time points
+            saccadeTimes = (-(size(data.posAvg, 1) / 2):1:(size(data.posAvg,1) / 2) - 1) * timestepMS;             
             colors = get(obj.posAxes, 'ColorOrder');
-            % trial position trace
+            % current trial position trace
             cla(obj.posAxes);
             plot(obj.posAxes, trialTimes, data.posTrace, 'color', colors(data.absStepIndex,:));
-            if saccades.degPerV > 0
+            if saccades.degPerV > 0                                     % plot saccade threshold
                 hold(obj.posAxes, 'on');
                 thresholdV = saccades.thresholdDeg / saccades.degPerV * data.stepSign;
-               plot(obj.posAxes, [trialTimes(1) trialTimes(end)], [thresholdV, thresholdV], ...
+                plot(obj.posAxes, [trialTimes(1) trialTimes(end)], [thresholdV, thresholdV], ...
                     ':', 'color', colors(data.absStepIndex,:));
                 hold(obj.posAxes, 'off');
             end
@@ -63,14 +63,14 @@ classdef EOGPosVelPlots < handle
                     % set both plots to the same y scale
                     a3 = axis(obj.posAvgAxes);
                     yLim = max(abs(a3(3:4)));
-                    text(-0.112, 0.8 * yLim, '2', 'parent', obj.posAvgAxes, 'FontSize', 24, 'FontWeight', 'Bold');
+                    text(-112, 0.8 * yLim, '2', 'parent', obj.posAvgAxes, 'FontSize', 24, 'FontWeight', 'Bold');
                     axis(obj.posAvgAxes, [-inf inf -yLim yLim]);
                     hold(obj.posAvgAxes, 'on');
                     % averages are always aligned on onset, so draw a vertical line at that point
                     plot(obj.posAvgAxes, [0 0], [-yLim yLim], 'color', 'k', 'linestyle', ':');
                     for i = 1:length(data.saccadeDurS)          % draw saccade durations for average traces
-                        plot(obj.posAvgAxes, [data.saccadeDurS(i), data.saccadeDurS(i)], [-yLim, yLim], ':', ...
-                                            'color', colors(mod(i, data.numOffsets / 2) + 1,:));
+                        plot(obj.posAvgAxes, [data.saccadeDurS(i) * 1000.0, data.saccadeDurS(i) * 1000.0], ...
+                            [-yLim, yLim], ':', 'color', colors(mod(i, data.numOffsets / 2) + 1,:));
                     end
                     hold(obj.posAvgAxes, 'off');
                     % if eye position has been calibrated, change the y scaling on the average to degrees 
@@ -93,17 +93,17 @@ classdef EOGPosVelPlots < handle
                 yLim = max(abs(a3(3:4)));                       %   so pick up the scaling here
                 axis(obj.posAxes, [-inf inf -yLim yLim]);       % scale pos plot to avgPos plot y-axis
             end
-            a1 = axis(obj.posAxes);
+            a1 = axis(obj.posAxes);                             % label the pos plot "1"
             text(trialTimes(1) + 0.05 * (trialTimes(end) - trialTimes(1)), ...
                 a1(3) + 0.9 * (a1(4) - a1(3)), '1', 'parent', obj.posAxes, 'FontSize', 24, 'FontWeight', 'Bold');
             % Once the y-axis scaling is set, we can draw vertical marks for stimOn and saccades
             hold(obj.posAxes, 'on');
-            plot(obj.posAxes, [data.stimTimeS, data.stimTimeS], [a1(3), a1(4)], 'k-.');
+            plot(obj.posAxes, [data.stimTimeS * 1000.0, data.stimTimeS * 1000.0], [a1(3), a1(4)], 'k-.');
             if (startIndex > 0)
-                plot(obj.posAxes, [startIndex, startIndex] * timestepS, [a1(3), a1(4)], 'color', ...
+                plot(obj.posAxes, [startIndex, startIndex] * timestepMS, [a1(3), a1(4)], 'color', ...
                     colors(data.absStepIndex,:), 'linestyle', ':');
                 if (endIndex > 0)
-                    plot(obj.posAxes, [endIndex, endIndex] * timestepS, [a1(3), a1(4)], 'color', ...
+                    plot(obj.posAxes, [endIndex, endIndex] * timestepMS, [a1(3), a1(4)], 'color', ...
                     colors(data.absStepIndex,:), 'linestyle', ':');
                 end
             end
@@ -114,9 +114,9 @@ classdef EOGPosVelPlots < handle
         function velPlots(obj, handles, startIndex, endIndex, mustPlot)
             data = handles.data;
             saccades = handles.saccades;
-            timestepS = 1 / data.sampleRateHz;                                  % time interval of samples
-            trialTimes = (0:1:size(data.posTrace, 1) - 1) * timestepS;          % make array of trial time points
-            saccadeTimes = (-(size(data.posAvg, 1) / 2):1:(size(data.posAvg,1) / 2) - 1) * timestepS;              
+            timestepMS = 1000.0 / data.sampleRateHz;                       	% time interval of samples
+            trialTimes = (0:1:size(data.posTrace, 1) - 1) * timestepMS;     % make array of trial time points
+            saccadeTimes = (-(size(data.posAvg, 1) / 2):1:(size(data.posAvg,1) / 2) - 1) * timestepMS;              
             colors = get(obj.velAxes, 'ColorOrder');
             % plot the trial velocity trace
             cla(obj.velAxes);
@@ -126,7 +126,7 @@ classdef EOGPosVelPlots < handle
             axis(obj.velAxes, [-inf inf -yLim yLim]);
             title(obj.velAxes, 'Most recent velocity trace', 'FontSize',12,'FontWeight','Bold');
             ylabel(obj.velAxes,'Analog Input (dV/dt)','FontSize',14);
-            xlabel(obj.velAxes,'Time (s)','FontSize',14);
+            xlabel(obj.velAxes,'Time (ms)','FontSize',14);
             % plot the average velocity traces every time a set of step sizes is completed
             if mustPlot
                 cla(obj.velAvgAxes);
@@ -138,12 +138,12 @@ classdef EOGPosVelPlots < handle
                     hold(obj.velAvgAxes, 'off');
                     title(obj.velAvgAxes, 'Average velocity traces', 'FontSize', 12, 'FontWeight','Bold')
                     ylabel(obj.velAvgAxes,'Analog Input (dV/dt)', 'FontSize', 14);
-                    xlabel(obj.velAvgAxes,'Time (s)','FontSize', 14);
+                    xlabel(obj.velAvgAxes,'Time (ms)','FontSize', 14);
                     % put both plots on the same y scale
                     a1 = axis(obj.velAxes);
                     a2 = axis(obj.velAvgAxes);
                     yLim = max([abs(a1(3)), abs(a1(4)), abs(a2(3)), abs(a2(4))]);
-                    text(-0.112, 0.8 * yLim, '4', 'parent', obj.velAvgAxes, 'FontSize', 24, 'FontWeight', 'Bold');
+                    text(-112, 0.8 * yLim, '4', 'parent', obj.velAvgAxes, 'FontSize', 24, 'FontWeight', 'Bold');
                     axis(obj.velAxes, [-inf inf -yLim yLim]);
                     axis(obj.velAvgAxes, [-inf inf -yLim yLim]);
                     % averages are always aligned on onset, so draw a vertical line at that point
@@ -178,12 +178,12 @@ classdef EOGPosVelPlots < handle
                 a1(3) + 0.9 * (a1(4) - a1(3)), '3', 'parent', obj.velAxes, 'FontSize', 24, 'FontWeight', 'Bold');
             % Once the y-axis scaling is set, we can draw vertical marks for stimOn and saccades
             hold(obj.velAxes, 'on');
-            plot(obj.velAxes, [data.stimTimeS, data.stimTimeS], [a1(3), a1(4)], 'k-.');
+            plot(obj.velAxes, [data.stimTimeS * 1000.0, data.stimTimeS * 1000.0], [a1(3), a1(4)], 'k-.');
             if (startIndex > 0)
-                plot(obj.velAxes, [startIndex, startIndex] * timestepS, [a1(3), a1(4)], 'color', ...
+                plot(obj.velAxes, [startIndex, startIndex] * timestepMS, [a1(3), a1(4)], 'color', ...
                     colors(data.absStepIndex,:), 'linestyle', ':');
                 if (endIndex > 0)
-                    plot(obj.velAxes, [endIndex, endIndex] * timestepS, [a1(3), a1(4)], 'color', ...
+                    plot(obj.velAxes, [endIndex, endIndex] * timestepMS, [a1(3), a1(4)], 'color', ...
                     colors(data.absStepIndex,:), 'linestyle', ':');
                 end
             end
