@@ -197,7 +197,8 @@ function savePlotsButton_Callback(hObject, ~, handles)
         heightInch = figurePos(4) / 72;
         set(handles.figure1, 'PaperSize', [widthInch + 1.0, heightInch + 1.0]);
         set(handles.figure1, 'PaperPosition', [0.5, 0.5, widthInch, heightInch]);
-        sprintf(handles.figure1, '-dpdf', '-r600', [filePath fileName]);
+        set(handles.figure1, 'InvertHardcopy', 'off');
+        print(handles.figure1, [filePath fileName],'-dpdf', '-r600');
     end
     handles.stimuli = ctStimuli();
     set(handles.runButton, 'backgroundColor', 'green');
