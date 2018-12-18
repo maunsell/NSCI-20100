@@ -156,29 +156,6 @@ function contMSPerDivButton_Callback(hObject, ~, handles) %#ok<*DEFNU>
     end
 end
 
-%% fakeSpike: make a fake spike on LabJack
-function fakeSpike(obj, event)                                              %#ok<*INUSD>
-    persistent count;
-    
-    if isempty(count)
-        count = 1;
-    else
-        count = count + 1;
-    end
-    numSpikes = 1 + (mod(count, 5) == 0);
-    
-    handles = obj.UserData;                                             % obj.UserData is pointer to handles
-    lbj = handles.lbj;                                                  % get lbj
-    for s = 1:numSpikes
-        analogOut(lbj, 0, 4.5);
-        java.lang.Thread.sleep(1.5);
-        analogOut(lbj, 0, 1.5);
-        java.lang.Thread.sleep(3.0);
-        analogOut(lbj, 0, 2.5);
-        java.lang.Thread.sleep(3.0);
-   end    
-end
-
 %% fakeSpikeError: function to collect data from LabJack
 function fakeSpikeError(obj, events, handles)
     fprintf('fake spike error\n');
@@ -259,9 +236,6 @@ function openO(hObject, eventdata, handles, varargin)
        
     % set up test mode
     handles.data.testMode = testMode;
-    if handles.data.testMode
-        analogOut(handles.lbj, 0, 2.5);                             % For debugging (AOuts to AIns)
-    end
     movegui(hObject, 'northeast');
     guidata(hObject, handles);                                                   % save the selection
 end
@@ -323,13 +297,6 @@ function startButton_Callback(hObject, eventdata, handles)
         handles.dataTimer = timer('Name', 'CollectData', 'ExecutionMode', 'fixedRate',...
             'Period', 1.0 / dataCollectRateHz, 'UserData', handles, 'ErrorFcn', {@collectError, handles},...
             'TimerFcn', {@collectData}, 'StartDelay', 0.050);   % startDelay allows rest of the gui to execute
-
-        % create timer to make fake spikes for LabJack
-        fakeSpikeRateHz = 4;
-        handles.fakeSpikeTimer = timer('Name', 'FakeSpikes', 'ExecutionMode', 'fixedRate',...
-            'Period', 1.0 / fakeSpikeRateHz, 'UserData', handles, 'ErrorFcn', {@fakeSpikeError, handles},...
-            'TimerFcn', {@fakeSpike}, 'StartDelay', 0.050);
-       
         % set the gui button to "running" state
         % clear the plots
         if handles.plots.singleSpike
@@ -345,7 +312,6 @@ function startButton_Callback(hObject, eventdata, handles)
 
         % Start plots, data pickup, and data acquisition 
         start(handles.dataTimer);    
-        start(handles.fakeSpikeTimer);
 %         profile on;
 
     % Stop -- we're already running, so it's a the stop button    
@@ -353,7 +319,6 @@ function startButton_Callback(hObject, eventdata, handles)
         stop(timerfind);                                        % stop/delete timers; pause data stream
         delete(timerfind);      
         handles.dataTimer = 0;
-        handles.fakeSpikeTimer = 0;
         stopStream(handles.lbj);
         clearAll(handles.signals);                              % stop audio processing
         set(handles.startButton, 'string', 'Start','backgroundColor', 'green');

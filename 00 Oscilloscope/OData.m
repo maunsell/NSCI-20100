@@ -11,7 +11,7 @@ classdef OData < handle
         filter;                     % pointer to filter in use
         filters;                    % pointer to all the filters we have made
         filteredTrace;              % filtered version of samples
-        inSpike;                    % flag showing that spike finding routine is in middle of a spike
+        inTrigger;                  % flag showing that trigger finding routine is in middle of a triggered trace
         lastSpikeIndex;             % index of last triggered spike
         maxContSamples;             % allocate large buffers to avoid auto-lengthening.
         rawData;                    % most recent raw snippet of sampled data
@@ -56,7 +56,7 @@ classdef OData < handle
             end
             selectFilter(obj);
             obj.singleTrace = false;
-            obj.inSpike = false;
+            obj.inTrigger = false;
             obj.testMode = false;                                           % testMode is set in O, not here
             obj.thresholdV = 1.0;
             obj.vPerDiv = 1.0;
@@ -69,7 +69,7 @@ classdef OData < handle
         %% clearAll
         function clearAll(obj)
             obj.spikeIndices = [];
-            obj.inSpike = false;
+            obj.inTrigger = false;
             obj.samplesRead = 0;
             obj.lastSpikeIndex = 2 * obj.maxContSamples;                    % flag start with invalid index
         end

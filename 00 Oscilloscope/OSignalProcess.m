@@ -22,7 +22,7 @@ classdef OSignalProcess < handle
         
         %% clearAll: clear buffers
         function clearAll(obj)
-            obj.fH.data.inSpike = false;
+            obj.fH.data.inTrigger = false;
         end
         
         %% processSignals: function to process data from one trial
@@ -35,31 +35,31 @@ classdef OSignalProcess < handle
                     + 0.25 * rand(new, 1) - 0.125;
             end
             data.filteredTrace(old + 1:old + new) = filter(data.filter, data.rawData(old + 1:old + new));
-            % Find spikes
+            % Find parts of the trace above the trigger level
             if data.thresholdV >= 0
                 sIndices = find(data.filteredTrace(old + 1:old + new) > data.thresholdV);
             else
                 sIndices = find(data.filteredTrace(old + 1:old + new) < data.thresholdV);
             end
             if isempty(sIndices)                                    % nothing above threshold
-                data.inSpike = false;                               % clear the inSpike flag
+                data.inTrigger = false;                           	% clear the inTrigger flag
             else
-            % If we entered this call partway through a spike, we need to get rid of any trailing parts of the spike.
+            % If we entered this call partway through a spike, we need to get past any trailing parts of the spike.
             % That tail will start at index 1, so we can just eliminate from sIndices all indices that are equal to
             % their own index
-                if data.inSpike                                     % we were part way through a spike before
+                if data.inTrigger                                 	% we were part way through a spike before
                     for i = 1:length(sIndices)
                         if sIndices(i) ~= i
-                            data.inSpike = false;                   % clear the inSpike flag
+                            data.inTrigger = false;               	% clear the inTrigger flag
                             break;
                         end
                     end
-                    if data.inSpike                                 % never got out of spike, return
+                    if data.inTrigger                            	% never got below trigger level, return
                         return;
                     end
-                    sIndices = sIndices(i:end);
+                    sIndices = sIndices(i:end);                     % remove the eliminated indices
                 end
-                numSpikes = 1;                                      % we have one spike (at least)
+                numSpikes = 1;                                      % we have one above trigger sample (at least)
                 lastIndex = sIndices(1);                            % used to find gaps between spikes
                 spikeIndices = lastIndex;                           % save the start of this spike
                 if length(sIndices) > 1                             % for all the remaining indices...
@@ -71,8 +71,8 @@ classdef OSignalProcess < handle
                         lastIndex = sIndices(i);                    % used to find gaps between spikes
                     end
                 end
-                if sIndices(end) == new                             % end of new data in middle of a spike?
-                    data.inSpike = true;
+                if sIndices(end) == new                             % end of new data in middle of a triggered trace?
+                    data.inTrigger = true;
                 end
                 data.spikeIndices = [data.spikeIndices, spikeIndices + old]; % add new spikes to the list of spikes
             end
