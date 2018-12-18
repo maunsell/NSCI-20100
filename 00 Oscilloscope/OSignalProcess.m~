@@ -27,12 +27,14 @@ classdef OSignalProcess < handle
         
         %% processSignals: function to process data from one trial
         function processSignals(obj, data, old, new)
-            if data.testMode
-                % add 60Hz noise and random noise
+            if ~data.testMode
+                data.rawTrace(old + 1:old + new) = data.rawData(old + 1:old + new);
+            else
+                % add 60Hz noise
                 dt = 1/data.sampleRateHz;                   % seconds per sample
                 samples = old + 1:old + new;                 % seconds
-                data.rawData(old + 1:old + new) = ones(new, 1) + cos(2.0 * pi * 60 * samples * dt)' * 0.5...
-                    + 0.25 * rand(new, 1) - 0.125;
+                data.rawTrace(old + 1:old + new) = ones(new, 1) + cos(2.0 * pi * 60 * samples * dt)' * 25000.0...
+                    + 20.0 * rand(new, 1) - 10.0;
             end
             data.filteredTrace(old + 1:old + new) = filter(data.filter, data.rawData(old + 1:old + new));
             % Find spikes
