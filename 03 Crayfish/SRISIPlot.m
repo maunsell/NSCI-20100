@@ -18,6 +18,8 @@ classdef SRISIPlot < handle
         isiMedianIsiMS  % median isi
         isiMS;          % array of all isi in ms
         isiNum;         % number of isi in the isi buffer
+        isiQuartIsiMS;  % quartiles of ISIs
+        isiSDIsiMS;     % SD of ISIs
         isiStartMaxY;   % initial y scaling
         isiXTicks       % number of ticks on x axis
     end
@@ -36,6 +38,7 @@ classdef SRISIPlot < handle
             obj.isiMaxMS = 0;                   % force rescaling
             obj.isiMeanRate = 0;
             obj.isiMedianIsiMS = 0;
+            obj.isiSDIsiMS = 0;
             obj.isiMaxY = obj.isiStartMaxY;
             obj.isiBins = 25;
             obj.isiXTicks = 10;
@@ -60,6 +63,8 @@ classdef SRISIPlot < handle
             end
             if etime(clock, obj.isiLastPlotTime) > 1.0                      % refresh once a second
                 obj.isiMedianIsiMS = median(obj.isiMS(1:obj.isiNum));
+                obj.isiSDIsiMS = std(obj.isiMS(1:obj.isiNum));
+                obj.isiQuartIsiMS = prctile(obj.isiMS(1:obj.isiNum), [25, 75]);
                 obj.isiMeanRate = obj.isiNum / (sum(obj.isiMS(1:obj.isiNum)) / 1000.0);
                 cla(obj.isiAxes);
                 plotISI(obj);
@@ -104,10 +109,11 @@ classdef SRISIPlot < handle
         function plotISI(obj)
             histogram(obj.isiAxes, 'binedges', 0:obj.isiBins, 'bincounts', obj.isiHist, 'facecolor', 'blue');
             if obj.isiMedianIsiMS > 0 && obj.isiMeanRate > 0
-                rateText = sprintf('%d spikes\nMedian ISI %.0f ms\nMean %.1f (spikes/s)\n', ...
-                    obj.isiNum, obj.isiMedianIsiMS, obj.isiMeanRate);
+                rateText = sprintf('%d spikes\nISI Med. %.0f ms\nISI Quart. %.0f/%.0f ms\nISI SD %.0f ms\nMean %.1f (spk/s)\n', ...
+                    obj.isiNum, obj.isiMedianIsiMS, obj.isiQuartIsiMS(1),  obj.isiQuartIsiMS(2),  obj.isiSDIsiMS, ...
+                    obj.isiMeanRate);
                 if obj.isiNum > 0 && max(obj.isiMS(1:obj.isiNum)) > obj.isiMaxMS
-                    rateText = [rateText, '(some off x-axis scale)'];
+                    rateText = [rateText, '(some off scale)'];
                 end
                 a = axis(obj.isiAxes);
                 text(obj.isiAxes, a(2) * 0.57, a(4) * 0.95, rateText, 'fontsize', 12, 'verticalalignment', 'top');

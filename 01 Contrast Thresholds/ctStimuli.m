@@ -119,7 +119,9 @@ classdef ctStimuli
                     kPsychDontDoRotation, propertiesMat');
         end
         
-        %% testStimuli -- make sure all the contrast settings are distinct from each other
+        %% testStimuli -- make sure all the contrast settings are distinct from each other. If they
+        % are not, the full list of possible contrasts will be dumped so
+        % they can be used to make adjustments (by hand) to the multipliers
         function testStimuli(obj, handles)
             clean = true;
             propertiesMat = [0, obj.gaborFreqPix, obj.gaborSigma, obj.gaborContrast, 1.0, 0, 0, 0];

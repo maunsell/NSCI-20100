@@ -133,8 +133,7 @@ function openContrastThresholds(hObject, ~, handles, varargin)
     handles.output = hObject;                                                   % select default command line output
     handles.stimuli = ctStimuli;
     
-    testStimuli(handles.stimuli, handles);
-    
+%     testStimuli(handles.stimuli, handles);                  % check the screen for contrasts available
     
     ctDrawStatusText(handles, 'idle');
     movegui(handles.figure1, 'northwest');
@@ -156,7 +155,7 @@ function runButton_Callback(hObject, ~, handles)
         handles.data.taskState = ctTaskState.taskStopRunning;
     else
         baseIndex = get(handles.baseContrastMenu, 'value');
-        stimReps = str2num(get(handles.stimRepsText, 'string'));
+        stimReps = str2double(get(handles.stimRepsText, 'string'));
         data = handles.data;
         if sum(data.trialsDone(baseIndex, :)) < stimReps * data.numIncrements
             data.taskState = ctTaskState.taskStartRunning;

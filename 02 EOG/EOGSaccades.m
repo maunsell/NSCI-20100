@@ -80,6 +80,12 @@ classdef EOGSaccades < handle
                 sIndex = 0;
                 eIndex = 0;
             end
+            % add some jitter to defeat the alignment on noise
+            if sIndex > 0 && eIndex > 0
+                offset = floor(data.sampleRateHz * 0.01666 * rand(1));
+                sIndex = sIndex - offset;
+                eIndex = eIndex - offset;
+            end
         end
 
         %% processSignals: function to process data from one trial
@@ -132,7 +138,7 @@ classdef EOGSaccades < handle
             data.velTrace(1: end - 1) = diff(data.posTrace);
             data.velTrace(end) = data.velTrace(end - 1);
             if data.doFilter
-%                 data.velTrace = filter(data.filterLP, data.velTrace);
+                data.velTrace = filter(data.filterLP, data.velTrace);
             end
             % find a saccade and make sure we have enough samples before and after its start
 %             sIndex = floor(data.stimTimeS * data.sampleRateHz);         % no saccades before stimon

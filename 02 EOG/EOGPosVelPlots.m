@@ -70,7 +70,7 @@ classdef EOGPosVelPlots < handle
                     plot(obj.posAvgAxes, [0 0], [-yLim yLim], 'color', 'k', 'linestyle', ':');
                     for i = 1:length(data.saccadeDurS)          % draw saccade durations for average traces
                         plot(obj.posAvgAxes, [data.saccadeDurS(i) * 1000.0, data.saccadeDurS(i) * 1000.0], ...
-                            [-yLim, yLim], ':', 'color', colors(mod(i, data.numOffsets / 2) + 1,:));
+                            [-yLim, yLim], ':', 'color', colors(mod(i - 1, data.numOffsets / 2) + 1, :));
                     end
                     hold(obj.posAvgAxes, 'off');
                     % if eye position has been calibrated, change the y scaling on the average to degrees 

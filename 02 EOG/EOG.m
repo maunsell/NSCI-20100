@@ -171,7 +171,7 @@ function openEOG(hObject, eventdata, handles, varargin)
         testMode = false;
     end
     
-    testMode = true;
+%     testMode = true;
     
     if testMode
         set(handles.warnText, 'string', 'Test Mode');
@@ -376,11 +376,11 @@ function taskController(obj, events, daqaxes)
 %                         currentOffsetDeg(visStim), data.offsetsDeg(data.offsetIndex), maxDeg(visStim));
            data.absStepIndex = mod(data.offsetIndex - 1, data.numOffsets / 2) + 1;
             data.stepSign = sign(data.offsetsDeg(data.offsetIndex));
-            if data.centeringTrial
-                fprintf('centering the stimulus');
-            else
-                fprintf('doing index %d,  %.0f\n', data.offsetIndex, data.offsetsDeg(data.offsetIndex));
-            end
+%             if data.centeringTrial
+%                 fprintf('centering the stimulus');
+%             else
+%                 fprintf('doing index %d,  %.0f\n', data.offsetIndex, data.offsetsDeg(data.offsetIndex));
+%             end
             if data.testMode 
                 data.voltage = min(5.0, visStim.currentOffsetPix / 500.0);  % debugging- connect DACO0 to AIN0
                 analogOut(lbj, 0, 2.5 + data.voltage);

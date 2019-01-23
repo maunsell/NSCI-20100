@@ -249,7 +249,7 @@ function openSR(hObject, eventdata, handles, varargin)
     if ~isempty(varargin)
         testMode = strcmp(varargin{1}, 'debug') || strcmp(varargin{1}, 'test');
     else
-        testMode = true;
+        testMode = false;
     end
     if testMode
         set(handles.warnText, 'string', 'Test Mode');
