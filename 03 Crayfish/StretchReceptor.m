@@ -348,11 +348,13 @@ function startButton_Callback(hObject, eventdata, handles)
             'TimerFcn', {@collectData}, 'StartDelay', 0.050);   % startDelay allows rest of the gui to execute
 
         % create timer to make fake spikes for LabJack
-        fakeSpikeRateHz = 4;
-        handles.fakeSpikeTimer = timer('Name', 'FakeSpikes', 'ExecutionMode', 'fixedRate',...
-            'Period', 1.0 / fakeSpikeRateHz, 'UserData', handles, 'ErrorFcn', {@fakeSpikeError, handles},...
-            'TimerFcn', {@fakeSpike}, 'StartDelay', 0.050);
-       
+        if handles.data.testMode
+            fakeSpikeRateHz = 4;
+            handles.fakeSpikeTimer = timer('Name', 'FakeSpikes', 'ExecutionMode', 'fixedRate',...
+                'Period', 1.0 / fakeSpikeRateHz, 'UserData', handles, 'ErrorFcn', {@fakeSpikeError, handles},...
+                'TimerFcn', {@fakeSpike}, 'StartDelay', 0.050);
+        end
+        
         % set the gui button to "running" state
         % clear the plots
         if handles.plots.singleSpike
@@ -367,8 +369,10 @@ function startButton_Callback(hObject, eventdata, handles)
         startStream(handles.lbj);
 
         % Start plots, data pickup, and data acquisition 
-        start(handles.dataTimer);    
-        start(handles.fakeSpikeTimer);
+        start(handles.dataTimer);
+        if handles.data.testMode
+            start(handles.fakeSpikeTimer);
+        end
 %         profile on;
 
     % Stop -- we're already running, so it's a the stop button    

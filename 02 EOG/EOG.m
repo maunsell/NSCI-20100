@@ -171,7 +171,7 @@ function openEOG(hObject, eventdata, handles, varargin)
         testMode = false;
     end
     
-%     testMode = true;
+    testMode = true;
     
     if testMode
         set(handles.warnText, 'string', 'Test Mode');
