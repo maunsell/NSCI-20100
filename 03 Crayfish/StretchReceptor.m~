@@ -401,39 +401,39 @@ function startButton_Callback(hObject, eventdata, handles)
     if strcmp(get(handles.startButton, 'String'), 'Start') % if start button, do the following
         fprintf(1,'\nStretchReceptor v1.0\n %s\n', datestr(clock));
 %         handles.data.dataState = DataState.dataIdle;            % set data state to idle
-%         dataCollectRateHz = 25;                                 % prevent overflow w/o blocking other activity
-%         handles.dataTimer = timer('Name', 'CollectData', 'ExecutionMode', 'fixedRate',...
-%             'Period', 1.0 / dataCollectRateHz, 'UserData', handles, 'ErrorFcn', {@collectError, handles},...
-%             'TimerFcn', {@collectData}, 'StartDelay', 0.050);   % startDelay allows rest of the gui to execute
-% 
-%         % create timer to make fake spikes for LabJack
-%         if handles.data.testMode
-%             fakeSpikeRateHz = 4;
-%             handles.fakeSpikeTimer = timer('Name', 'FakeSpikes', 'ExecutionMode', 'fixedRate',...
-%                 'Period', 1.0 / fakeSpikeRateHz, 'UserData', handles, 'ErrorFcn', {@fakeSpikeError, handles},...
-%                 'TimerFcn', {@fakeSpike}, 'StartDelay', 0.050);
-%         end
-%         
-%         % set the gui button to "running" state
-%         % clear the plots
-%         if handles.plots.singleSpike
-%             clearContPlot(handles.plots, handles);
-%         else
-%            	clearAll(handles.plots, handles);
-%             handles.data.lastSpikeIndex = 2 * handles.data.maxContSamples;      % flag start of ISI sequence
-%         end
+        doStart(handles);
+        dataCollectRateHz = 25;                                 % prevent overflow w/o blocking other activity
+        handles.dataTimer = timer('Name', 'CollectData', 'ExecutionMode', 'fixedRate',...
+            'Period', 1.0 / dataCollectRateHz, 'UserData', handles, 'ErrorFcn', {@collectError, handles},...
+            'TimerFcn', {@collectData}, 'StartDelay', 0.050);   % startDelay allows rest of the gui to execute
+
+        % create timer to make fake spikes for LabJack
+        if handles.data.testMode
+            fakeSpikeRateHz = 4;
+            handles.fakeSpikeTimer = timer('Name', 'FakeSpikes', 'ExecutionMode', 'fixedRate',...
+                'Period', 1.0 / fakeSpikeRateHz, 'UserData', handles, 'ErrorFcn', {@fakeSpikeError, handles},...
+                'TimerFcn', {@fakeSpike}, 'StartDelay', 0.050);
+        end
+        
+        % set the gui button to "running" state
+        % clear the plots
+        if handles.plots.singleSpike
+            clearContPlot(handles.plots, handles);
+        else
+           	clearAll(handles.plots, handles);
+            handles.data.lastSpikeIndex = 2 * handles.data.maxContSamples;      % flag start of ISI sequence
+        end
         
         set(handles.startButton, 'String', 'Stop', 'BackgroundColor', 'red');
         SRControlState(handles, 'off', {handles.startButton})
-%         startStream(handles.lbj);
-% 
-%         % Start plots, data pickup, and data acquisition 
-%         start(handles.dataTimer);
-%         if handles.data.testMode
-%             start(handles.fakeSpikeTimer);
-%         end
+        startStream(handles.lbj);
+
+        % Start plots, data pickup, and data acquisition 
+        start(handles.dataTimer);
+        if handles.data.testMode
+            start(handles.fakeSpikeTimer);
+        end
 %         profile on;
-        doStart(handles);
 
     % Stop -- we're already running, so it's a the stop button    
     else % stop
