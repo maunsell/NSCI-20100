@@ -337,39 +337,43 @@ function retriggerButton_Callback(hObject, eventdata, handles)
     clearTriggerPlot(handles.plots, handles);
 end   % retriggerButton_Callback()
 
-%% executes on button press in saveDataButton.
-function saveDataButton_Callback(hObject, eventdata, handles)
-% Saving the workspace for a GUI isn't simple.  What we have accessible in this
-% environment is mostly the handles.  If we save, it's an attempt to save
-% handles, which doesn't work.  Instead, we get a list of all the properties
-% from the SRTaskData class, and then use eval statement to assign those to
-% local variable and save them (one by one).
-    SRControlState(handles, 'off', {})
-    [fileName, filePath] = uiputfile('*.mat', 'Save Matlab Data Workspace', '~/Desktop/SRData.mat');
-    if fileName ~= 0
-        isiMS = handles.isiPlot.isiMS(1:handles.isiPlot.isiNum);
-        save([filePath fileName], 'isiMS');
-    end
-    SRControlState(handles, 'on', {})
-end
-
 %% respond to button press in savePlotsButton.
 function savePlotsButton_Callback(hObject, eventdata, handles)
 % hObject    handle to savePlotsButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     SRControlState(handles, 'off', {})
-    [fileName, filePath] = uiputfile('*.pdf', 'Save Window Plots as PDF', '~/Desktop/SRPlots.pdf');
-    if fileName ~= 0
-        set(handles.figure1, 'PaperUnits', 'inches');
-        figurePos = get(handles.figure1, 'position');
-        widthInch = figurePos(3) / 72;
-        heightInch = figurePos(4) / 72;
-        set(handles.figure1, 'PaperOrientation', 'landscape');
-        set(handles.figure1, 'PaperSize', [widthInch + 1.0, heightInch + 1.0]);
-        set(handles.figure1, 'PaperPosition', [0.5, 0.5, widthInch, heightInch]);
-        print(handles.figure1, '-dpdf', '-r600', '-noui', [filePath fileName]);
+    timeString = datestr(now,'HHMMSS');
+    filePath = '~/Desktop/SRData/PDF/';
+    if ~isfolder(filePath)                      % folder exist?
+        mkdir(filePath);
     end
+	fileName = sprintf('SR%s.pdf', timeString);
+    set(handles.figure1, 'PaperUnits', 'inches');
+    figurePos = get(handles.figure1, 'position');
+    widthInch = figurePos(3) / 72;
+    heightInch = figurePos(4) / 72;
+    set(handles.figure1, 'PaperOrientation', 'landscape');
+    set(handles.figure1, 'PaperSize', [widthInch + 1.0, heightInch + 1.0]);
+    set(handles.figure1, 'PaperPosition', [0.5, 0.5, widthInch, heightInch]);
+    print(handles.figure1, '-dpdf', '-r600', '-noui', [filePath fileName]);
+
+    filePath = '~/Desktop/SRData/Matlab/';
+    if ~isfolder(filePath)                      % folder exist?
+        mkdir(filePath);
+    end
+	fileName = sprintf('SR%s.mat', timeString);
+    isiMS = handles.isiPlot.isiMS(1:handles.isiPlot.isiNum);
+    save([filePath fileName], 'isiMS');
+
+    filePath = '~/Desktop/SRData/Excel/';
+    if ~isfolder(filePath)                      % folder exist?
+        mkdir(filePath);
+    end
+	fileName = sprintf('SR%s.xlsx', timeString);
+    t = table(isiMS);
+    writetable(t, [filePath fileName]);
+    
     SRControlState(handles, 'on', {})
 end
 
@@ -424,7 +428,7 @@ function startButton_Callback(hObject, eventdata, handles)
 %         end
         
         set(handles.startButton, 'String', 'Stop', 'BackgroundColor', 'red');
-        SRControlState(handles, 'off', {handles.startButton})
+        SRControlState(handles, 'off', {handles.startButton, handles.clearButton})
 %         startStream(handles.lbj);
 % 
 %         % Start plots, data pickup, and data acquisition 
@@ -445,7 +449,7 @@ function startButton_Callback(hObject, eventdata, handles)
 %         stopStream(handles.lbj);
 %         clearAll(handles.signals);                              % stop audio processing
         set(handles.startButton, 'string', 'Start','backgroundColor', 'green');
-        SRControlState(handles, 'on', {handles.startButton})
+        SRControlState(handles, 'on', {handles.startButton, handles.clearButton})
         drawnow;
 %         profile viewer
     end
