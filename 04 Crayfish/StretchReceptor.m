@@ -37,7 +37,7 @@ function clearButton_Callback(hObject, eventdata, handles)
     guidata(hObject, handles);
 end
 
-%% clearPlots
+%% clearPlots=
 function clearPlots(handles)                  
     clearAll(handles.data);
     clearAll(handles.plots, handles);
@@ -308,7 +308,7 @@ function openSR(hObject, eventdata, handles, varargin)
     if ~isempty(varargin)
         testMode = strcmp(varargin{1}, 'debug') || strcmp(varargin{1}, 'test');
     else
-        testMode = true;
+        testMode = false;
     end
     if testMode
         set(handles.warnText, 'string', 'Test Mode');

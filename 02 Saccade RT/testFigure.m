@@ -1,0 +1,82 @@
+function testFigure
+
+    clc;                                % Clear the command window.
+    close all;                          % Close all figures (except those of imtool.)
+    imtool close all;                   % Close all imtool figures if you have the Image Processing Toolbox.
+    clear;                              % Erase all existing variables. Or clearvars if you want.
+
+    screenRect = get(0, 'MonitorPositions');
+    offsetPix = 10;
+    windowHeightPix = 60;                      % must be at least this 44 for 'tight' borders to work
+    windowWidthPix = screenRect(3) - 2 * offsetPix;
+    spotRadiusPix = 10;
+    stepPix = windowWidthPix / 10 / 2;
+    rawSteps = floor(windowWidthPix / stepPix);
+    steps = rawSteps - (mod(rawSteps, 2) == 0);                 % force an odd number of steps
+    stepOffsetPix = [-floor(steps / 2):floor(steps / 2)] * stepPix + floor(windowWidthPix / 2 - stepPix / 2);
+
+    hFig = figure('Renderer', 'painters', 'Position', [offsetPix, offsetPix, windowWidthPix, windowHeightPix]);
+    set(hFig, 'menubar', 'none', 'toolbar', 'none', 'NumberTitle', 'off', 'resize', 'off');
+    set(hFig, 'color', [0.5, 0.5, 0.5]);
+    set(hFig, 'Name', 'NSCI 20100 Saccadic Reaction Time', 'NumberTitle', 'Off');
+    axis off;
+    hold on;
+    % restore the window position if it has moved
+    t = get(hFig, 'Position');
+    if t(1) ~= offsetPix || t(2) ~= offsetPix
+        set(hFig, 'Position', [offsetPix, offsetPix, windowWidthPix, windowHeightPix]);
+    end
+    % create the image and get drawing axes
+%     fpos = get(hFig, 'position');
+%     axOffset = (fpos(3:4) - [size(circleImg, 2) size(circleImg, 1)]) / 2;
+    ha = axes('Parent', hFig, 'units', 'pixels', 'position', [0, 0, stepPix, windowHeightPix], 'visible', 'off');
+%     make some images the same size as the window
+    windowMat = ones(windowHeightPix, stepPix) * 255;
+    [windowImage, ~] = gray2ind(windowMat, 2);
+    [images] = makeSpotImages(windowHeightPix, stepPix, spotRadiusPix, 127, 255);
+    % draw the image
+    for pos = 1:steps
+        tic
+        ha.Position(1) = stepOffsetPix(pos);
+        ha.Position(3) = stepPix * 2;
+        theImage = squeeze(images(mod(pos, 4) + 1, :, :));
+        imshow(theImage, [0.5, 0.5, 0.5; 1.0, 1.0, 1.0], 'parent', ha);
+%         imshow(windowImage, [0.5, 0.5, 0.5; 1.0, 0.0, 0.0], 'parent', ha);
+        drawnow;
+        tocVector(pos) = toc;
+%         tic;
+%         imshow(windowImage, [0.5, 0.5, 0.5; 0.0, 0.0, 1.0], 'parent', ha);
+%         drawnow;
+%         tocVector(steps + pos) = toc;
+    end
+	fprintf('latency mean %f std %f min %f max %f\n', mean(tocVector), std(tocVector), min(tocVector), max(tocVector));
+
+end
+
+% Create a logical image of a circle with specified
+% diameter, center, and image size.
+% First create the image.
+function [images] = makeSpotImages(heightPix, stepPix, radiusPix, backColor, foreColor)
+
+    % make a circleImage
+    circlePix = 1:radiusPix * 2;
+    [imgCols, imgRows] = meshgrid(circlePix, circlePix);
+    circlePixels = (imgRows - radiusPix).^2 + (imgCols - radiusPix).^2 <= radiusPix^2;
+    grayMat = ones(radiusPix * 2, 'uint8') * foreColor;
+    grayMat(circlePixels == 0) = backColor;
+    [circleImg, ~] = gray2ind(circlePixels, 2);
+    % make the background rectangle
+    images = zeros(4, heightPix, stepPix * 2, 'uint8');
+    leftCenterPix = floor(0.5 * stepPix);
+    rightCenterPix = floor(1.5 * stepPix);
+    heightCenterPix = floor(heightPix / 2);
+    pRange = circlePix - radiusPix;
+    for i = 1:4
+        if mod(i, 2) == 1                           % needs a right hand dot
+            images(i, heightCenterPix + pRange, rightCenterPix + pRange) = circleImg(circlePix, circlePix);
+        end
+        if i >= 2                                   % needs a left hand dot
+            images(i, heightCenterPix + pRange, leftCenterPix + pRange) = circleImg(circlePix, circlePix);
+        end
+    end
+end

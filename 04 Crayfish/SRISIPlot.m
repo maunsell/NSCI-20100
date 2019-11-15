@@ -15,6 +15,7 @@ classdef SRISIPlot < handle
         isiMaxMS;       % maximum ISI included in the plot
         isiMaxY;        % maximum of the count axis
         isiMeanRate     % mean rate in spikes/s from ISIs
+        isiMeanIsiMS    % mean isi
         isiMedianIsiMS  % median isi
         isiMS;          % array of all isi in ms
         isiNum;         % number of isi in the isi buffer
@@ -37,6 +38,7 @@ classdef SRISIPlot < handle
             obj.isiMS = zeros(1000, 1);
             obj.isiMaxMS = 0;                   % force rescaling
             obj.isiMeanRate = 0;
+            obj.isiMeanIsiMS = 0;
             obj.isiMedianIsiMS = 0;
             obj.isiSDIsiMS = 0;
             obj.isiMaxY = obj.isiStartMaxY;
@@ -62,6 +64,7 @@ classdef SRISIPlot < handle
                 end
             end
             if etime(clock, obj.isiLastPlotTime) > 1.0                      % refresh once a second
+                obj.isiMeanIsiMS = mean(obj.isiMS(1:obj.isiNum));
                 obj.isiMedianIsiMS = median(obj.isiMS(1:obj.isiNum));
                 obj.isiSDIsiMS = std(obj.isiMS(1:obj.isiNum));
                 obj.isiQuartIsiMS = prctile(obj.isiMS(1:obj.isiNum), [25, 75]);
@@ -75,6 +78,7 @@ classdef SRISIPlot < handle
         %% clearAll -- clear all values
         function clearAll(obj)
             obj.isiNum = 0;
+            obj.isiMeanIsiMS = 0;
             obj.isiMedianIsiMS = 0;
             obj.isiMeanRate = 0;
             obj.isiMaxY = obj.isiStartMaxY;
@@ -109,14 +113,21 @@ classdef SRISIPlot < handle
         function plotISI(obj)
             histogram(obj.isiAxes, 'binedges', 0:obj.isiBins, 'bincounts', obj.isiHist, 'facecolor', 'blue');
             if obj.isiMedianIsiMS > 0 && obj.isiMeanRate > 0
-                rateText = sprintf('%d spikes\nISI Med. %.0f ms\nISI Quart. %.0f/%.0f ms\nISI SD %.0f ms\nMean %.1f (spk/s)\n', ...
-                    obj.isiNum, obj.isiMedianIsiMS, obj.isiQuartIsiMS(1),  obj.isiQuartIsiMS(2),  obj.isiSDIsiMS, ...
-                    obj.isiMeanRate);
-                if obj.isiNum > 0 && max(obj.isiMS(1:obj.isiNum)) > obj.isiMaxMS
-                    rateText = [rateText, '(some off scale)'];
+                if obj.isiSDIsiMS < 10
+                    precisionSD = 1;
+                else
+                    precisionSD = 0;
                 end
+                rateText = sprintf(['%d spikes\nISI Mean %.0f ms\nISI SD %.*f ms\nISI Med. %.0f ms\n',...
+                    'ISI Quart. %.0f/%.0f ms\nRate Mean %.1f spk/s\n'], ...
+                    obj.isiNum, obj.isiMeanIsiMS, precisionSD, obj.isiSDIsiMS, obj.isiMedianIsiMS, ...
+                    obj.isiQuartIsiMS(1),  obj.isiQuartIsiMS(2), obj.isiMeanRate);
                 a = axis(obj.isiAxes);
                 text(obj.isiAxes, a(2) * 0.57, a(4) * 0.95, rateText, 'fontsize', 12, 'verticalalignment', 'top');
+                if obj.isiNum > 0 && max(obj.isiMS(1:obj.isiNum)) > obj.isiMaxMS
+                    text(obj.isiAxes, a(2) * 0.05, a(4) * 0.95, '(some ISIs off scale)', 'color', [0.75, 0, 0], ...
+                        'fontsize', 12, 'verticalalignment', 'top');
+                end
             end
             drawnow limitrate nocallbacks;             	% don't plot too often, or notify callbacks
         end

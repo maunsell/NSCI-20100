@@ -1,6 +1,4 @@
-addpath('~/Desktop/NSCI-20100 Code/Setup')
-addpath('~/Desktop/NSCI-20100 Code/00 Oscilloscope')
-addpath('~/Desktop/NSCI-20100 Code/01 Contrast Thresholds')
-addpath('~/Desktop/NSCI-20100 Code/02 EOG')
-addpath('~/Desktop/NSCI-20100 Code/03 Crayfish')
+addpath(genpath('~/Desktop/NSCI-20100 Code'))
 addpath(genpath('/Users/Shared/Psychtoolbox'))
+
+
