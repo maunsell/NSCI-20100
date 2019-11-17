@@ -36,7 +36,7 @@ classdef RTStimulus < handle
     methods (Static)
     end
     methods
-        function obj = RTStimulus()
+        function obj = RTStimulus(stepDeg)
             %Screen('CloseAll');
             imtool close all;                               % close imtool figures from Image Processing Toolbox
 %             PsychDefaultSetup(2);
@@ -54,7 +54,7 @@ classdef RTStimulus < handle
             obj.images = cell(1, 4);
             obj.nextImageIndex = 0;
             obj.spotRadiusPix = 10;
-            obj.stepSizeDeg = 5.0;
+            obj.stepSizeDeg = stepDeg;
             obj.viewDistanceMM = 0;
             windHeightPix = 60;
             marginPix = 10;
@@ -87,21 +87,20 @@ classdef RTStimulus < handle
         end
   
         %%
-        function cleanup(obj)
+        function cleanup(~)
             sca;
         end
         
         %%
-        function clearScreen(obj)
+        function clearScreen(~)
 %             Screen('Flip', obj.window);
         end
         
-%         %% currentOffsetDeg -- offset of the spot from screen center in degrees
-%         function offsetDeg = currentOffsetDeg(obj)
-%             offsetMM = obj.currentOffsetPix / obj.pixPerMM;
-%             offsetDeg = atan2(offsetMM, obj.viewDistanceMM) * 57.2958;
-%         end
-% 
+        %% currentOffsetDeg -- offset of the spot from screen center in degrees
+        function offsetPix = currentOffsetPix(obj)
+            offsetPix = obj.imagePosPix(obj.currentOffsetIndex);
+        end
+
         %%
         function pix = degToPix(obj, deg)
             assert(obj.viewDistanceMM > 0, 'RTStimulus, degToPix: viewDistanceMM has not yet been set');
@@ -187,24 +186,23 @@ classdef RTStimulus < handle
             if trialType == c.kCenteringTrial
                 drawImage(obj, obj.currentImageIndex);                  % must draw for trial equivalence
             else
-                fprintf('doing %.0f\n', data.stepSizeDeg);
                 if stepDirection == c.kLeft                           	% going to step left
                     if obj.currentImageIndex == c.kLeftStim
                         obj.currentOffsetIndex = obj.currentOffsetIndex - 1;    % shift one position leftward
                     end
-                    drawImage(obj, kRightStim);                         % draw same spot with new image
+                    drawImage(obj, c.kRightStim);                         % draw same spot with new image
                     obj.finalStim = c.kLeftStim;
                 else
                     if obj.currentImageIndex == c.kRightStim             % going to step right
                         obj.currentOffsetIndex = obj.currentOffsetIndex + 1; % shift one position leftward
                     end
-                    drawImage(obj, kLeftStim);
+                    drawImage(obj, c.kLeftStim);
                     obj.finalStim = c.kRightStim;
                end
             end
             % set up the gap stimuli 
             switch trialType
-                case c.kCenterTrial
+                case c.kCenteringTrial
                     obj.gapStim = obj.finalStim;
                 case c.kStepTrial
                     obj.gapStim = obj.finalStim;

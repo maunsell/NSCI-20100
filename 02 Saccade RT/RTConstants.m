@@ -12,7 +12,7 @@
         kBothStim = 4
         kStimTypes = 4
         
-        kLeft = 0
+        kLeft = -1
         kRight = 1
     end
  end

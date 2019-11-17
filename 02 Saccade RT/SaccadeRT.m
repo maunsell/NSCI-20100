@@ -178,17 +178,17 @@ function openRT(hObject, eventdata, handles, varargin)
         set(handles.warnText, 'string', 'Test Mode');
     end   
     handles.output = hObject;                                               % select default command line output
-    handles.visStim = RTStimulus;
     handles.saccades = RTSaccades;
     set(hObject, 'CloseRequestFcn', {@closeRT, handles});                  % close function will close LabJack
     handles.lbj = setupLabJack();
-    handles.posVelPlots = RTPosVelPlots(handles);
     handles.data = RTTaskData(handles.lbj.numChannels, handles.lbj.SampleRateHz);
+    handles.visStim = RTStimulus(handles.data.stepSizeDeg);
+    handles.posVelPlots = RTPosVelPlots(handles);
 %     handles.ampDur = RTAmpDur(handles.axes5, handles.data.offsetsDeg, handles.lbj.SampleRateHz);
     axes = [handles.axes6 handles.axes7 handles.axes8];
     handles.RTDist = cell(1, handles.data.numTrialTypes);
     for i = 1:length(axes)
-        handles.rtDists{i} = RTDist(i, handles.data.offsetsDeg(i), axes(i));
+        handles.rtDists{i} = RTDist(i, axes(i));
     end
     
     % set up test mode
@@ -364,11 +364,9 @@ function taskController(obj, events, daqaxes)
     lbj = handles.lbj;                                              	% get handle to LabJack
     visStim = handles.visStim;
     saccades = handles.saccades;
-%     ampDur = handles.ampDur;
     rtDists = handles.rtDists;
     switch data.taskState
         case RTTaskState.taskStarttrial
-            fprintf('startTrial 0\n');
             if sum(data.trialTypesDone) >= data.numTrialTypes          	% finished another block
                 data.trialTypesDone = zeros(1, data.numTrialTypes);    	% clear counters
                 data.blocksDone = data.blocksDone + 1;                  % increment block counter
@@ -393,14 +391,12 @@ function taskController(obj, events, daqaxes)
             end
             prepareImages(visStim, data.trialType, data.stepDirection);
             if data.testMode 
-                data.voltage = min(5.0, visStim.currentOffsetPix / 500.0);  % debugging - DACO0 should go to AIN0
+                data.voltage = min(5.0, visStim.currentOffsetPix / 750.0);  % debugging - DACO0 should go to AIN0
                 analogOut(lbj, 0, 2.5 + data.voltage);
             end
             data.trialStartTimeS = clock;
             data.taskState = RTTaskState.taskSettle;                      % go to settle state
-             fprintf('startTrial end\n');
        case RTTaskState.taskSettle
-           	fprintf('taskSettle\n');
             if etime(clock, data.trialStartTimeS) > 0.015               % data settled for one taskTimer cycle
                 data.trialStartTimeS = clock;                         	% reset the trial clock
                 data.stimTimeS = data.prestimDurS + rand() * 0.125;   	% jitter the stimon time a bit
@@ -426,17 +422,12 @@ function taskController(obj, events, daqaxes)
                	data.taskState = RTTaskState.taskPoststim;
             end
         case RTTaskState.taskEndtrial
-           	fprintf('taskPoststim\n');
             if data.trialType ~= c.kCenteringTrial                          % no updates needed on centering trials
                 [startIndex, endIndex] = processSignals(saccades, data);
-                fprintf('taskPoststim posVelPlots\n');
                 plot(handles.posVelPlots, handles, startIndex, endIndex, false);
-                fprintf('taskPoststim 1\n');
                 if startIndex > 0
-                    fprintf('taskPoststim 1.1\n');
                     addRT(rtDists{data.trialType}, (startIndex / data.sampleRateHz  - data.stimTimeS) * 1000.0);
                 end
-                fprintf('taskPoststim 2\n');
                 if (mod(sum(data.numSummed), data.numTrialTypes) == 0)         % finished a block
                     needsRescale = plot(rtDists{data.trialType});
                     if needsRescale > 0
@@ -448,7 +439,6 @@ function taskController(obj, events, daqaxes)
                 end   
                 set(handles.calibrationText, 'string', sprintf('Calibration %.1f deg/V', saccades.degPerV));
             end
-               fprintf('taskPoststim 3\n');
            data.trialStartTimeS = 0;
             data.taskState = RTTaskState.taskStarttrial;
     end

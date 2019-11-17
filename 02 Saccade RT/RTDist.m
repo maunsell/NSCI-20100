@@ -8,21 +8,16 @@ classdef RTDist < handle
         index;
         maxRT;
         n
-        offsetDeg;
         reactTimesMS
     end
         
     methods
         %% Initialization
-        function obj = RTDist(i, offset, axes)
-             if nargin == 0                                     % pre initialization
-                offset = 10;
-             end
+        function obj = RTDist(i, axes)
              obj = obj@handle();                                % object initiatlization
              obj.index = i;                                     % post initialization
              obj.fHandle = axes;
-             obj.offsetDeg = offset;
-             obj.ampLabel = sprintf('%.0f', offset);
+             obj.ampLabel = sprintf('%.0f', 25.3);
              obj.reactTimesMS = zeros(1, 10000);             	% preallocate a generous buffer
              obj.n = 0;
              obj.maxRT = 0;

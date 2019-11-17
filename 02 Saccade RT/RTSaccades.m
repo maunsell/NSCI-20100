@@ -99,7 +99,7 @@ classdef RTSaccades < handle
                 accel = 0.01;
                 time = floor(sqrt(2.0 * data.stepSizeDeg / 2.0 / accel));
                 positions = zeros(time * 2, 1);
-                accel = accel * data.stepSign;
+                accel = accel * data.stepDirection;
                 for t = 1:time
                     positions(t) = 0.5 * accel * t^2;
                 end
@@ -143,7 +143,7 @@ classdef RTSaccades < handle
             % find a saccade and make sure we have enough samples before and after its start
 %             sIndex = floor(data.stimTimeS * data.sampleRateHz);         % no saccades before stimon
             sIndex = floor(data.prestimDurS * data.sampleRateHz);
-            [startIndex, endIndex] = obj.findSaccade(data, data.posTrace, data.velTrace, data.stepSign, sIndex);
+            [startIndex, endIndex] = obj.findSaccade(data, data.posTrace, data.velTrace, data.stepDirection, sIndex);
             saccadeOffset = floor(data.saccadeSamples / 2);
             firstIndex = startIndex - saccadeOffset;
             lastIndex = startIndex + saccadeOffset;
@@ -169,12 +169,12 @@ classdef RTSaccades < handle
             if sum(data.numSummed) > length(data.numSummed)
                 endPointsV = [max(data.posAvg(:, 1:data.numTrialTypes / 2)) ...
                                 min(data.posAvg(:, data.numTrialTypes / 2 + 1:data.numTrialTypes))];
-                obj.degPerV = mean(data.offsetsDeg ./ endPointsV);
+                obj.degPerV = mean(data.stepSizeDeg ./ endPointsV);
                 obj.degPerSPerV = obj.degPerV * data.sampleRateHz;          % needed for velocity plots
             end
             % find the average saccade duration using the average speed trace
             [sAvgIndex, eAvgIndex] = obj.findSaccade(data, data.posAvg(:, data.trialType), ...
-                        data.velAvg(:, data.trialType), data.stepSign, length(data.posAvg(:, data.trialType)) / 2);
+                        data.velAvg(:, data.trialType), data.stepDirection, length(data.posAvg(:, data.trialType)) / 2);
            if eAvgIndex > sAvgIndex 
                 data.saccadeDurS(data.absStepIndex) = (eAvgIndex - sAvgIndex) / data.sampleRateHz;
             else

@@ -31,7 +31,6 @@ classdef RTPosVelPlots < handle
 
         %% posPlots: do the trial and average position plots
         function posPlots(obj, handles, startIndex, endIndex, mustPlot)
-            fprintf(' posPlots\n');
             data = handles.data;
             saccades = handles.saccades;
             timestepMS = 1000.0 / data.sampleRateHz;                   	% time interval of samples
@@ -43,7 +42,7 @@ classdef RTPosVelPlots < handle
             plot(obj.posAxes, trialTimes, data.posTrace, 'color', colors(data.absStepIndex,:));
             if saccades.degPerV > 0                                     % plot saccade threshold
                 hold(obj.posAxes, 'on');
-                thresholdV = saccades.thresholdDeg / saccades.degPerV * data.stepSign;
+                thresholdV = saccades.thresholdDeg / saccades.degPerV * data.stepDirection;
                 plot(obj.posAxes, [trialTimes(1) trialTimes(end)], [thresholdV, thresholdV], ...
                     ':', 'color', colors(data.absStepIndex,:));
                 hold(obj.posAxes, 'off');
@@ -51,7 +50,6 @@ classdef RTPosVelPlots < handle
             title(obj.posAxes, 'Most recent position trace', 'FontSize',12,'FontWeight','Bold')
             ylabel(obj.posAxes,'Analog Input (V)','FontSize',14);
             % average position traces every complete block
-            fprintf(' posPlots 1\n');
             if mustPlot
 %                 cla(obj.posAvgAxes);
                 if sum(data.numSummed) > 0
@@ -114,7 +112,6 @@ classdef RTPosVelPlots < handle
 
         %% velPlots: do the trial and average velocity plots
         function velPlots(obj, handles, startIndex, endIndex, mustPlot)
-            fprintf(' velPlots\n');
             data = handles.data;
             saccades = handles.saccades;
             timestepMS = 1000.0 / data.sampleRateHz;                       	% time interval of samples
