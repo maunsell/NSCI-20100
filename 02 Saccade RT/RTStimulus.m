@@ -104,7 +104,7 @@ classdef RTStimulus < handle
         %%
         function pix = degToPix(obj, deg)
             assert(obj.viewDistanceMM > 0, 'RTStimulus, degToPix: viewDistanceMM has not yet been set');
-            pix = round(tan(deg / obj.degPerRadian) * obj.viewDistanceMM);
+            pix = round(tan(deg / obj.degPerRadian) * obj.viewDistanceMM * obj.pixPerMM);
         end
         
         %%
@@ -117,8 +117,12 @@ classdef RTStimulus < handle
         %% drawImage -- draw the dot at the currently specified pixel offset
         function drawImage(obj, imageIndex)
             obj.hAxes.Position(1) = obj.imagePosPix(obj.currentOffsetIndex);
+            fprintf(' hAxes position %d %d %d %d\n', ...
+                round(obj.hAxes.Position(1)), round(obj.hAxes.Position(2)), ...
+                round(obj.hAxes.Position(3)), round(obj.hAxes.Position(4)));
             imshow(obj.images{imageIndex}, [0.5, 0.5, 0.5; 1.0, 1.0, 1.0], 'parent', obj.hAxes);
             drawnow;
+            fprintf('drawing image %d at currentIndex %d, x = %d\n', imageIndex, obj.currentOffsetIndex, obj.imagePosPix(obj.currentOffsetIndex))
             obj.currentImageIndex = imageIndex;
        end
         
@@ -139,16 +143,20 @@ classdef RTStimulus < handle
         function makeSpotImages(obj)
             % make a circleImage
             c = RTConstants;
-            diameterPix = obj.spotRadiusPix * 2;
+            diameterPix = floor(obj.spotRadiusPix) * 2;
             circlePix = 1:diameterPix;
             [imgCols, imgRows] = meshgrid(circlePix, circlePix);
             circlePixels = (imgRows - obj.spotRadiusPix).^2 + (imgCols - obj.spotRadiusPix).^2 <= obj.spotRadiusPix^2;
             [circleImg, ~] = gray2ind(circlePixels, 2);         % make an image from the circle matrix
             % make the background rectangle
             obj.stepSizePix  = degToPix(obj, obj.stepSizeDeg);
+            obj.hAxes.Position(2) = (obj.windRectPix(4) - diameterPix) / 2;
+            obj.hAxes.Position(3) = obj.stepSizePix  * 2;
+            obj.hAxes.Position(4) = diameterPix;
+
             imageSet = zeros(4, diameterPix, obj.stepSizePix  * 2, 'uint8');   % images will be the height of the circle
-            leftCenterPix = floor(0.5 * obj.stepSizePix );               % image is 2 * stepSizePix  so circles are at 0.5 and 1.5 stepSizePix 
-            rightCenterPix = floor(1.5 * obj.stepSizePix );
+            leftCenterPix = floor(0.5 * obj.stepSizePix);               % image is 2 * stepSizePix  so circles are at 0.5 and 1.5 stepSizePix 
+            rightCenterPix = floor(1.5 * obj.stepSizePix);
             heightCenterPix = floor(diameterPix / 2);
             pRange = circlePix - obj.spotRadiusPix;
             for i = 1:c.kStimTypes                           	% four images, one for each possible mix of dot/no-dot
@@ -161,14 +169,14 @@ classdef RTStimulus < handle
                 obj.images{i} = squeeze(imageSet(i, :, :));     % save the image in a cell array
             end
             % update the image position values
-            obj.numPos = floor(pixToDeg(obj, obj.windRectPix(3)) / obj.stepSizeDeg);
+            obj.numPos = floor(obj.windRectPix(3) / obj.stepSizePix);
             obj.numPos = obj.numPos - (1 - mod(obj.numPos, 2)); % numPos must be odd
             centerIndex = ceil(obj.numPos / 2);
             obj.imagePosPix = zeros(1, obj.numPos);
-            obj.imagePosPix(centerIndex) = obj.windRectPix(3) / 2;
+            obj.imagePosPix(centerIndex) = floor(obj.windRectPix(3) / 2 - 0.5 * obj.stepSizePix);
             for p = 1:floor(obj.numPos / 2)
-                obj.imagePosPix(centerIndex - p) = obj.imagePosPix(centerIndex - p + 1) - obj.stepSizePix ;
-                obj.imagePosPix(centerIndex + p) = obj.imagePosPix(centerIndex + p - 1) + obj.stepSizePix ;
+                obj.imagePosPix(centerIndex - p) = obj.imagePosPix(centerIndex - p + 1) - obj.stepSizePix;
+                obj.imagePosPix(centerIndex + p) = obj.imagePosPix(centerIndex + p - 1) + obj.stepSizePix;
             end
         end    
 

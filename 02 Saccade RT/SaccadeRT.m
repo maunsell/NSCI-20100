@@ -5,7 +5,6 @@ function varargout = SaccadeRT(varargin)
 % for debugging with synthetic eye movements.
 %
 % Initialization code
-    clc;                                % Clear the command window.
     gui_Singleton = 1;
     gui_State = struct('gui_Name',       mfilename, ...
                        'gui_Singleton',  gui_Singleton, ...
@@ -385,13 +384,15 @@ function taskController(obj, events, daqaxes)
                 end
             end
             if rand() > 0.5
-                stepDirection = c.kLeft;
+                data.stepDirection = c.kLeft;
+                fprintf('stepping left');
             else
-                stepDireciton = c.kRight;
+                data.stepDirection = c.kRight;
+                fprintf('stepping right');
             end
             prepareImages(visStim, data.trialType, data.stepDirection);
             if data.testMode 
-                data.voltage = min(5.0, visStim.currentOffsetPix / 750.0);  % debugging - DACO0 should go to AIN0
+                data.voltage = min(5.0, visStim.currentOffsetPix / 1000.0);  % debugging - DACO0 should go to AIN0
                 analogOut(lbj, 0, 2.5 + data.voltage);
             end
             data.trialStartTimeS = clock;

@@ -2,7 +2,9 @@ classdef RTStimulus < handle
     % Contrast threshold stimuli controller
     % This is the first stimulus for which we've cut loose from Psychtoolbox
     properties
-        currentOffsetPix
+%         currentOffsetPix
+      	finalStim
+        gapStim
         tag
     end
     properties (GetAccess = private)
@@ -11,8 +13,6 @@ classdef RTStimulus < handle
         degPerRadian
         frameDurS
         hAxes
-        finalStim
-        gapStim
         grayColor
         pixPerMM
         g
@@ -36,7 +36,7 @@ classdef RTStimulus < handle
     methods (Static)
     end
     methods
-        function obj = RTStimulus()
+        function obj = RTStimulus(stepDeg)
             %Screen('CloseAll');
             imtool close all;                               % close imtool figures from Image Processing Toolbox
 %             PsychDefaultSetup(2);
@@ -45,7 +45,7 @@ classdef RTStimulus < handle
 %             obj.whiteColor = WhiteIndex(obj.screenNumber);
 %             obj.grayColor = obj.whiteColor / 2;
             obj.currentImageIndex = 0;
-            obj.currentOffsetPix = 0;
+%             obj.currentOffsetPix = 0;
             obj.currentOffsetIndex = 1;
             obj.degPerRadian = 57.2958;
 %             screenRectPix = Screen('Resolution', obj.screenNumber);
@@ -54,7 +54,7 @@ classdef RTStimulus < handle
             obj.images = cell(1, 4);
             obj.nextImageIndex = 0;
             obj.spotRadiusPix = 10;
-            obj.stepSizeDeg = 5.0;
+            obj.stepSizeDeg = stepDeg;
             obj.viewDistanceMM = 0;
             windHeightPix = 60;
             marginPix = 10;
@@ -87,39 +87,42 @@ classdef RTStimulus < handle
         end
   
         %%
-        function cleanup(obj)
+        function cleanup(~)
             sca;
         end
         
         %%
-        function clearScreen(obj)
+        function clearScreen(~)
 %             Screen('Flip', obj.window);
         end
         
-%         %% currentOffsetDeg -- offset of the spot from screen center in degrees
-%         function offsetDeg = currentOffsetDeg(obj)
-%             offsetMM = obj.currentOffsetPix / obj.pixPerMM;
-%             offsetDeg = atan2(offsetMM, obj.viewDistanceMM) * 57.2958;
-%         end
-% 
+        %% currentOffsetDeg -- offset of the spot from screen center in degrees
+        function offsetPix = currentOffsetPix(obj)
+            offsetPix = obj.imagePosPix(obj.currentOffsetIndex);
+        end
+
         %%
         function pix = degToPix(obj, deg)
             assert(obj.viewDistanceMM > 0, 'RTStimulus, degToPix: viewDistanceMM has not yet been set');
-            pix = round(tan(deg / obj.degPerRadian) * obj.viewDistanceMM);
+            pix = round(tan(deg / obj.degPerRadian) * obj.viewDistanceMM * obj.pixPerMM);
         end
         
         %%
         function drawCenterStimulus(obj)
             c = RTConstants;
-            obj.currentOffsetPix = ceil(length(obj.imagePosPix) / 2);
+            obj.currentOffsetIndex = ceil(obj.numPos / 2);
             drawImage(obj, c.kLeftStim);
         end
         
         %% drawImage -- draw the dot at the currently specified pixel offset
         function drawImage(obj, imageIndex)
             obj.hAxes.Position(1) = obj.imagePosPix(obj.currentOffsetIndex);
+            fprintf(' hAxes position %d %d %d %d\n', ...
+                round(obj.hAxes.Position(1)), round(obj.hAxes.Position(2)), ...
+                round(obj.hAxes.Position(3)), round(obj.hAxes.Position(4)));
             imshow(obj.images{imageIndex}, [0.5, 0.5, 0.5; 1.0, 1.0, 1.0], 'parent', obj.hAxes);
             drawnow;
+            fprintf('drawing image %d at currentIndex %d, x = %d\n', imageIndex, obj.currentOffsetIndex, obj.imagePosPix(obj.currentOffsetIndex))
             obj.currentImageIndex = imageIndex;
        end
         
@@ -129,7 +132,7 @@ classdef RTStimulus < handle
         end
 
         %% limitDistCM -- return the maximum allowed viewing distance
-        function limitDistCM = maxViewDistanceCM(~, ~)
+        function limitDistCM = maxViewDistanceCM(~)
             limitDistCM = 100;
         end
         
@@ -147,9 +150,11 @@ classdef RTStimulus < handle
             [circleImg, ~] = gray2ind(circlePixels, 2);         % make an image from the circle matrix
             % make the background rectangle
             obj.stepSizePix  = degToPix(obj, obj.stepSizeDeg);
+            obj.hAxes.Position(1) = obj.imagePosPix(obj.currentOffsetIndex);
+
             imageSet = zeros(4, diameterPix, obj.stepSizePix  * 2, 'uint8');   % images will be the height of the circle
-            leftCenterPix = floor(0.5 * obj.stepSizePix );               % image is 2 * stepSizePix  so circles are at 0.5 and 1.5 stepSizePix 
-            rightCenterPix = floor(1.5 * obj.stepSizePix );
+            leftCenterPix = floor(0.5 * obj.stepSizePix);               % image is 2 * stepSizePix  so circles are at 0.5 and 1.5 stepSizePix 
+            rightCenterPix = floor(1.5 * obj.stepSizePix);
             heightCenterPix = floor(diameterPix / 2);
             pRange = circlePix - obj.spotRadiusPix;
             for i = 1:c.kStimTypes                           	% four images, one for each possible mix of dot/no-dot
@@ -162,14 +167,14 @@ classdef RTStimulus < handle
                 obj.images{i} = squeeze(imageSet(i, :, :));     % save the image in a cell array
             end
             % update the image position values
-            obj.numPos = floor(pixToDeg(obj, obj.windRectPix(3)) / obj.stepSizeDeg);
+            obj.numPos = floor(obj.windRectPix(3) / obj.stepSizePix);
             obj.numPos = obj.numPos - (1 - mod(obj.numPos, 2)); % numPos must be odd
             centerIndex = ceil(obj.numPos / 2);
             obj.imagePosPix = zeros(1, obj.numPos);
-            obj.imagePosPix(centerIndex) = obj.windRectPix(3) / 2;
+            obj.imagePosPix(centerIndex) = floor(obj.windRectPix(3) / 2 - 0.5 * obj.stepSizePix);
             for p = 1:floor(obj.numPos / 2)
-                obj.imagePosPix(centerIndex - p) = obj.imagePosPix(centerIndex - p + 1) - obj.stepSizePix ;
-                obj.imagePosPix(centerIndex + p) = obj.imagePosPix(centerIndex + p - 1) + obj.stepSizePix ;
+                obj.imagePosPix(centerIndex - p) = obj.imagePosPix(centerIndex - p + 1) - obj.stepSizePix;
+                obj.imagePosPix(centerIndex + p) = obj.imagePosPix(centerIndex + p - 1) + obj.stepSizePix;
             end
         end    
 
@@ -187,24 +192,23 @@ classdef RTStimulus < handle
             if trialType == c.kCenteringTrial
                 drawImage(obj, obj.currentImageIndex);                  % must draw for trial equivalence
             else
-                fprintf('doing index %d,  %.0f\n', data.offsetIndex, data.offsetsDeg(data.offsetIndex));
                 if stepDirection == c.kLeft                           	% going to step left
                     if obj.currentImageIndex == c.kLeftStim
                         obj.currentOffsetIndex = obj.currentOffsetIndex - 1;    % shift one position leftward
                     end
-                    drawImage(obj, kRightStim);                         % draw same spot with new image
+                    drawImage(obj, c.kRightStim);                         % draw same spot with new image
                     obj.finalStim = c.kLeftStim;
                 else
                     if obj.currentImageIndex == c.kRightStim             % going to step right
                         obj.currentOffsetIndex = obj.currentOffsetIndex + 1; % shift one position leftward
                     end
-                    drawImage(obj, kLeftStim);
+                    drawImage(obj, c.kLeftStim);
                     obj.finalStim = c.kRightStim;
                end
             end
             % set up the gap stimuli 
             switch trialType
-                case c.kCenterTrial
+                case c.kCenteringTrial
                     obj.gapStim = obj.finalStim;
                 case c.kStepTrial
                     obj.gapStim = obj.finalStim;
@@ -222,7 +226,7 @@ classdef RTStimulus < handle
                 makeSpotImages(obj);                                        % make new spot images
                 obj.currentOffsetIndex = ceil(obj.numPos / 2);            	% center position
                 c = RTConstants;
-                drawImage(obj, c.kRightLeft);                               % draw the center spot
+                drawImage(obj, c.kLeftStim);                               % draw the center spot
             end
         end
 

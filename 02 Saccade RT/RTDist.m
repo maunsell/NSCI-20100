@@ -47,7 +47,7 @@ classdef RTDist < handle
             [counts, x] = hist(obj.fHandle, obj.reactTimesMS(1:obj.n));
             bar(obj.fHandle, x, counts, 1.0, 'facecolor', colors(obj.index,:));
             hold(obj.fHandle, 'on');
-            title(obj.fHandle, sprintf('%0.f degree saccades', obj.offsetDeg), 'fontSize',12,'fontWeight','bold');
+            title(obj.fHandle, sprintf('5° saccades'), 'fontSize',12,'fontWeight','bold');
             if (obj.index == 1)                                 % label the topmost plot
                 xlabel(obj.fHandle, 'Reaction Time (ms)', 'fontSize', 14);
             end
