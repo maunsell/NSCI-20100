@@ -309,7 +309,7 @@ function startButton_Callback(hObject, eventdata, handles)
     if strcmp(get(handles.startButton, 'String'), 'Start') % if start button, do the following
         fprintf(1,'\nReaction Time v1.0\n %s\n', datestr(clock));
         viewDistanceCM = str2double(get(handles.viewDistanceText, 'string'));
-        limitDistanceCM = maxViewDistanceCM(handles.visStim);
+        limitDistanceCM = maxViewDistanceCM(handles.visStim, max(handles.data.offsetsDeg));
         if viewDistanceCM > limitDistanceCM
             errordlg(sprintf('Viewing distance must be <= %d cm', floor(limitDistanceCM)));
             return;
@@ -350,7 +350,7 @@ function startButton_Callback(hObject, eventdata, handles)
         set(handles.startButton, 'string', 'Start','backgroundColor', 'green');
         RTControlState(handles, 'on', {handles.startButton})
         drawnow;
-        drawCenterStimulus(handles.visStim);                                	% recenter fixspot
+        drawCenterStimulus(handles.visStim);                                        % recenter fixspot
     end
     guidata(hObject, handles);    
 end

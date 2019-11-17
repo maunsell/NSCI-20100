@@ -1,4 +1,4 @@
-classdef EOGSaccades < handle
+classdef RTSaccades < handle
     % saccades
     %   Support for processing eye traces and detecting saccades
     
@@ -23,9 +23,9 @@ classdef EOGSaccades < handle
             seqLength = 5;
             if data.calTrialsDone < 4                                    % still getting a calibration
                 if (stepSign == 1)
-                    DPV = abs(data.offsetsDeg(data.offsetIndex) / (max(posTrace(:)) - mean(posTrace(1:startIndex)))); 
+                    DPV = abs(data.stepSizeDeg / (max(posTrace(:)) - mean(posTrace(1:startIndex)))); 
                 else
-                    DPV = abs(data.offsetsDeg(data.offsetIndex) / (mean(posTrace(1:startIndex) - min(posTrace(:)))));
+                    DPV = abs(data.stepSizeDeg / (mean(posTrace(1:startIndex) - min(posTrace(:)))));
                 end
                 obj.degPerV = (obj.degPerV * data.calTrialsDone + DPV) / (data.calTrialsDone + 1);
                 obj.degPerSPerV = obj.degPerV * data.sampleRateHz;      % needed for velocity plots
@@ -97,7 +97,7 @@ classdef EOGSaccades < handle
                 samples = length(data.posTrace);
                 data.posTrace = zeros(samples, 1);
                 accel = 0.01;
-                time = floor(sqrt(2.0 * abs(data.offsetsDeg(data.offsetIndex)) / 2.0 / accel));
+                time = floor(sqrt(2.0 * data.stepSizeDeg / 2.0 / accel));
                 positions = zeros(time * 2, 1);
                 accel = accel * data.stepSign;
                 for t = 1:time
@@ -155,26 +155,26 @@ classdef EOGSaccades < handle
                 return;
             end
             % sum into the average pos and vel plot, inverting for negative steps
-            data.posSummed(:, data.offsetIndex) = data.posSummed(:, data.offsetIndex) + ...
+            data.posSummed(:, data.trialType) = data.posSummed(:, data.trialType) + ...
                 data.posTrace(firstIndex:lastIndex);  
-            data.velSummed(:, data.offsetIndex) = data.velSummed(:, data.offsetIndex) + ...
+            data.velSummed(:, data.trialType) = data.velSummed(:, data.trialType) + ...
                 data.velTrace(firstIndex:lastIndex);  
             % tally the sums and compute the averages
-            data.numSummed(data.offsetIndex) = data.numSummed(data.offsetIndex) + 1;
-            data.posAvg(:, data.offsetIndex) = data.posSummed(:, data.offsetIndex) / data.numSummed(data.offsetIndex);
-            data.velAvg(:, data.offsetIndex) = data.velSummed(:, data.offsetIndex) / data.numSummed(data.offsetIndex);
-            data.offsetsDone(data.offsetIndex) = data.offsetsDone(data.offsetIndex) + 1;
-           % now that we've updated all the traces, compute the degrees per volt if we have enough trials
+            data.numSummed(data.trialType) = data.numSummed(data.trialType) + 1;
+            data.posAvg(:, data.trialType) = data.posSummed(:, data.trialType) / data.numSummed(data.trialType);
+            data.velAvg(:, data.trialType) = data.velSummed(:, data.trialType) / data.numSummed(data.trialType);
+            data.trialTypesDone(data.trialType) = data.trialTypesDone(data.trialType) + 1;
+            % now that we've updated all the traces, compute the degrees per volt if we have enough trials
             % take average peaks to get each point
             if sum(data.numSummed) > length(data.numSummed)
-                endPointsV = [max(data.posAvg(:, 1:data.numOffsets / 2)) ...
-                                min(data.posAvg(:, data.numOffsets / 2 + 1:data.numOffsets))];
+                endPointsV = [max(data.posAvg(:, 1:data.numTrialTypes / 2)) ...
+                                min(data.posAvg(:, data.numTrialTypes / 2 + 1:data.numTrialTypes))];
                 obj.degPerV = mean(data.offsetsDeg ./ endPointsV);
                 obj.degPerSPerV = obj.degPerV * data.sampleRateHz;          % needed for velocity plots
             end
             % find the average saccade duration using the average speed trace
-            [sAvgIndex, eAvgIndex] = obj.findSaccade(data, data.posAvg(:, data.offsetIndex), ...
-                        data.velAvg(:, data.offsetIndex), data.stepSign, length(data.posAvg(:, data.offsetIndex)) / 2);
+            [sAvgIndex, eAvgIndex] = obj.findSaccade(data, data.posAvg(:, data.trialType), ...
+                        data.velAvg(:, data.trialType), data.stepSign, length(data.posAvg(:, data.trialType)) / 2);
            if eAvgIndex > sAvgIndex 
                 data.saccadeDurS(data.absStepIndex) = (eAvgIndex - sAvgIndex) / data.sampleRateHz;
             else

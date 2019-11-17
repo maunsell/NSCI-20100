@@ -1,5 +1,5 @@
-classdef EOGAmpDur < handle
-    %EOGAmpDur Handle saccade-duration data for EOG
+classdef RTAmpDur < handle
+    %RTAmpDur Handle saccade-duration data for RT
     %   Accumulates the data and handles the plot
     
     properties
@@ -15,7 +15,7 @@ classdef EOGAmpDur < handle
     
     methods
         
-        function obj = EOGAmpDur(fH, offsetList, sampleRate)
+        function obj = RTAmpDur(fH, offsetList, sampleRate)
 
              %% Pre Initialization %%
              % Any code not using output argument (obj)

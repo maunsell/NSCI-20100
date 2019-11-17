@@ -2,9 +2,7 @@ classdef RTStimulus < handle
     % Contrast threshold stimuli controller
     % This is the first stimulus for which we've cut loose from Psychtoolbox
     properties
-%         currentOffsetPix
-      	finalStim
-        gapStim
+        currentOffsetPix
         tag
     end
     properties (GetAccess = private)
@@ -13,6 +11,8 @@ classdef RTStimulus < handle
         degPerRadian
         frameDurS
         hAxes
+        finalStim
+        gapStim
         grayColor
         pixPerMM
         g
@@ -45,7 +45,7 @@ classdef RTStimulus < handle
 %             obj.whiteColor = WhiteIndex(obj.screenNumber);
 %             obj.grayColor = obj.whiteColor / 2;
             obj.currentImageIndex = 0;
-%             obj.currentOffsetPix = 0;
+            obj.currentOffsetPix = 0;
             obj.currentOffsetIndex = 1;
             obj.degPerRadian = 57.2958;
 %             screenRectPix = Screen('Resolution', obj.screenNumber);
@@ -111,7 +111,7 @@ classdef RTStimulus < handle
         %%
         function drawCenterStimulus(obj)
             c = RTConstants;
-            obj.currentOffsetIndex = ceil(obj.numPos / 2);
+            obj.currentOffsetPix = ceil(length(obj.imagePosPix) / 2);
             drawImage(obj, c.kLeftStim);
         end
         
@@ -129,7 +129,7 @@ classdef RTStimulus < handle
         end
 
         %% limitDistCM -- return the maximum allowed viewing distance
-        function limitDistCM = maxViewDistanceCM(~)
+        function limitDistCM = maxViewDistanceCM(~, ~)
             limitDistCM = 100;
         end
         
@@ -187,7 +187,7 @@ classdef RTStimulus < handle
             if trialType == c.kCenteringTrial
                 drawImage(obj, obj.currentImageIndex);                  % must draw for trial equivalence
             else
-                fprintf('doing %.0f\n', data.stepSizeDeg);
+                fprintf('doing index %d,  %.0f\n', data.offsetIndex, data.offsetsDeg(data.offsetIndex));
                 if stepDirection == c.kLeft                           	% going to step left
                     if obj.currentImageIndex == c.kLeftStim
                         obj.currentOffsetIndex = obj.currentOffsetIndex - 1;    % shift one position leftward
@@ -222,7 +222,7 @@ classdef RTStimulus < handle
                 makeSpotImages(obj);                                        % make new spot images
                 obj.currentOffsetIndex = ceil(obj.numPos / 2);            	% center position
                 c = RTConstants;
-                drawImage(obj, c.kLeftStim);                               % draw the center spot
+                drawImage(obj, c.kRightLeft);                               % draw the center spot
             end
         end
 

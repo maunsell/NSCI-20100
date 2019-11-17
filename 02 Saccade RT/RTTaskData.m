@@ -1,22 +1,18 @@
-classdef EOGTaskData < handle
-    % EOGTaskData
-    %   Support for processing eye traces and detecting saccades in EOG
+classdef RTTaskData < handle
+    % RTTaskData
+    %   Support for processing eye traces and detecting saccades in RT
     
     properties
         absStepIndex
         blocksDone;
         calTrialsDone;
-        centeringTrial;
         dataState;
         doFilter;
         filterLP;
         filter60Hz;
         numChannels;
-        numOffsets;
+        numTrialTypes;
         numSummed;
-        offsetIndex;
-     	offsetsDeg;
-        offsetsDone;
         posAvg;
         posSummed;
         posTrace;
@@ -28,7 +24,8 @@ classdef EOGTaskData < handle
         saccadeSamples;
         saccadeTraceS;
         saccHalfTimeS;
-        stepSign;
+        stepDirection;
+        stepSizeDeg;
         stimStartPixel;
         stimTimeS;
         trialDurS;
@@ -36,6 +33,8 @@ classdef EOGTaskData < handle
         taskState;
         testMode;
         trialStartTimeS;
+        trialType;
+        trialTypesDone;
         velTrace;
         velSummed;
         velAvg;
@@ -43,28 +42,28 @@ classdef EOGTaskData < handle
     end
     
     methods
-        function obj = EOGTaskData(numChannels, sampleRateHz)
+        function obj = RTTaskData(numChannels, sampleRateHz)
 
              %% Object Initialization %%
              obj = obj@handle();                                    % object initialization
 
              %% Post Initialization %%
-            obj.offsetsDeg = [5 10 15 20 -5 -10 -15 -20];
+            c = RTConstants;
             obj.numChannels = numChannels;
-            obj.numOffsets = length(obj.offsetsDeg);
-            obj.offsetIndex = 1;
+            obj.numTrialTypes = c.kTrialTypes;
             obj.absStepIndex = 1;
-            obj.stepSign = 1;
             obj.saccadeTraceS = 0.250;                              % duratoin of saccade trace
             obj.trialDurS = max(1.0, 2 * obj.saccadeTraceS);
             obj.prestimDurS = min(obj.trialDurS / 4, 0.250);
-            obj.taskState = TaskState.taskStarttrial;
-            obj.dataState = DataState.dataIdle;
+            obj.taskState = RTTaskState.taskStarttrial;
+            obj.dataState = RTDataState.dataIdle;
             obj.trialStartTimeS = 0;
             obj.samplesRead = 0;
 %             obj.startStimS = 0;
+            obj.stepDirection = 0;
+            obj.stepSizeDeg = 5.0;
             obj.stimTimeS = 0;
-            obj.testMode = false;                                  % testMode is set in EOG, not here
+            obj.testMode = false;                                  % testMode is set in RT, not here
             obj.voltage = 0;
             obj.doFilter = false;
             setSampleRateHz(obj, sampleRateHz);
@@ -74,16 +73,16 @@ classdef EOGTaskData < handle
         function clearAll(obj)
             obj.blocksDone = 0;
             obj.calTrialsDone = 0;
-            obj.numSummed = zeros(1, obj.numOffsets);
-            obj.offsetsDone = zeros(1, obj.numOffsets);
-            obj.posTrace = zeros(obj.trialSamples, 1);                      % trial EOG position trace
-            obj.posSummed = zeros(obj.saccadeSamples, obj.numOffsets);  % summed position traces
-            obj.posAvg = zeros(obj.saccadeSamples, obj.numOffsets);     % averaged position traces
+            obj.numSummed = zeros(1, obj.numTrialTypes);
+            obj.posTrace = zeros(obj.trialSamples, 1);                      % trial RT position trace
+            obj.posSummed = zeros(obj.saccadeSamples, obj.numTrialTypes);   % summed position traces
+            obj.posAvg = zeros(obj.saccadeSamples, obj.numTrialTypes);      % averaged position traces
             obj.rawData = zeros(obj.trialSamples, obj.numChannels);         % raw data
-            obj.saccadeDurS = zeros(1, obj.numOffsets);                     % average saccade durations
-            obj.velTrace = zeros(obj.trialSamples, 1);                      % trial EOG velocity trace
-            obj.velSummed = zeros(obj.saccadeSamples, obj.numOffsets);  % summed position traces
-            obj.velAvg = zeros(obj.saccadeSamples, obj.numOffsets);     % averaged position traces
+            obj.saccadeDurS = zeros(1, obj.numTrialTypes);                	% average saccade durations
+            obj.trialTypesDone = zeros(1, obj.numTrialTypes);               % table of completed trials in block
+            obj.velTrace = zeros(obj.trialSamples, 1);                      % trial RT velocity trace
+            obj.velSummed = zeros(obj.saccadeSamples, obj.numTrialTypes);	% summed position traces
+            obj.velAvg = zeros(obj.saccadeSamples, obj.numTrialTypes);      % averaged position traces
         end
         
         %% setSampleRate

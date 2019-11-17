@@ -1,4 +1,4 @@
-classdef DataState
+classdef RTDataState
     enumeration
         dataIdle
         dataStart

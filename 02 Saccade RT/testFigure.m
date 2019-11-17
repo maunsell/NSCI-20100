@@ -13,7 +13,7 @@ function testFigure
     stepPix = windowWidthPix / 10 / 2;
     rawSteps = floor(windowWidthPix / stepPix);
     steps = rawSteps - (mod(rawSteps, 2) == 0);                 % force an odd number of steps
-    stepOffsetPix = [-floor(steps / 2):floor(steps / 2)] * stepPix + floor(windowWidthPix / 2 - stepPix / 2);
+    stepOffsetPix = (-floor(steps / 2):floor(steps / 2)) * stepPix + floor(windowWidthPix / 2 - stepPix / 2);
 
     hFig = figure('Renderer', 'painters', 'Position', [offsetPix, offsetPix, windowWidthPix, windowHeightPix]);
     set(hFig, 'menubar', 'none', 'toolbar', 'none', 'NumberTitle', 'off', 'resize', 'off');
@@ -29,54 +29,101 @@ function testFigure
     % create the image and get drawing axes
 %     fpos = get(hFig, 'position');
 %     axOffset = (fpos(3:4) - [size(circleImg, 2) size(circleImg, 1)]) / 2;
-    ha = axes('Parent', hFig, 'units', 'pixels', 'position', [0, 0, stepPix, windowHeightPix], 'visible', 'off');
 %     make some images the same size as the window
-    windowMat = ones(windowHeightPix, stepPix) * 255;
-    [windowImage, ~] = gray2ind(windowMat, 2);
-    [images] = makeSpotImages(windowHeightPix, stepPix, spotRadiusPix, 127, 255);
-    % draw the image
+%      windowMat = ones(windowHeightPix, stepPix) * 255;
+%     [windowImage, ~] = gray2ind(windowMat, 2);
+    images = makeSpotImages(stepPix, spotRadiusPix);
+    % draw the images
+    ha = axes('Parent', hFig, 'units', 'pixels', 'position',...
+                        [0, windowHeightPix / 2 - spotRadiusPix, stepPix * 2, spotRadiusPix * 2], 'visible', 'off');
+    tocVector = zeros(1, steps);
     for pos = 1:steps
-        tic
-        ha.Position(1) = stepOffsetPix(pos);
-        ha.Position(3) = stepPix * 2;
-        theImage = squeeze(images(mod(pos, 4) + 1, :, :));
-        imshow(theImage, [0.5, 0.5, 0.5; 1.0, 1.0, 1.0], 'parent', ha);
-%         imshow(windowImage, [0.5, 0.5, 0.5; 1.0, 0.0, 0.0], 'parent', ha);
-        drawnow;
-        tocVector(pos) = toc;
-%         tic;
-%         imshow(windowImage, [0.5, 0.5, 0.5; 0.0, 0.0, 1.0], 'parent', ha);
-%         drawnow;
-%         tocVector(steps + pos) = toc;
+        tocVector(pos) = showImage(ha, images{mod(pos, 4) + 1}, stepOffsetPix(pos));
     end
 	fprintf('latency mean %f std %f min %f max %f\n', mean(tocVector), std(tocVector), min(tocVector), max(tocVector));
-
+	tocVector = zeros(1, 10000);
+    tCounter = 1;
+    longPauseS = 0.5;
+    shortPauseS = 0.2;
+    for rep = 1:5
+        tocVector(tCounter) = showImage(ha, images{2}, stepOffsetPix(5));
+        tCounter = tCounter + 1;
+        pause(longPauseS);
+        tocVector(tCounter) = showImage(ha, images{3}, stepOffsetPix(5));
+        tCounter = tCounter + 1;
+        pause(longPauseS);
+    end
+	for rep = 1:5
+        tocVector(tCounter) = showImage(ha, images{2}, stepOffsetPix(8));
+     	tCounter = tCounter + 1;
+        pause(longPauseS);
+        tocVector(tCounter) = showImage(ha, images{1}, stepOffsetPix(8));
+     	tCounter = tCounter + 1;
+        pause(shortPauseS);
+        tocVector(tCounter) = showImage(ha, images{3}, stepOffsetPix(8));
+     	tCounter = tCounter + 1;
+        pause(longPauseS);
+        tocVector(tCounter) = showImage(ha, images{1}, stepOffsetPix(8));
+     	tCounter = tCounter + 1;
+        pause(shortPauseS);
+   end
+	for rep = 1:5
+        tocVector(tCounter) = showImage(ha, images{2}, stepOffsetPix(11));
+     	tCounter = tCounter + 1;
+        pause(longPauseS);
+        tocVector(tCounter) = showImage(ha, images{4}, stepOffsetPix(11));
+     	tCounter = tCounter + 1;
+        pause(shortPauseS);
+        tocVector(tCounter) = showImage(ha, images{3}, stepOffsetPix(11));
+     	tCounter = tCounter + 1;
+        pause(longPauseS);
+        tocVector(tCounter) = showImage(ha, images{4}, stepOffsetPix(11));
+     	tCounter = tCounter + 1;
+        pause(shortPauseS);
+    end
+    tocVector = tocVector(1:tCounter - 1);
+	fprintf('latency mean %f std %f min %f max %f\n', mean(tocVector), std(tocVector), min(tocVector), max(tocVector));
 end
 
+%%
+function tocResult = showImage(ha, theImage, xOffset)
+    
+    tic
+    ha.Position(1) = xOffset;
+    imshow(theImage, [0.5, 0.5, 0.5; 1.0, 1.0, 1.0], 'parent', ha);
+    drawnow;
+    tocResult = toc;    
+end
+
+%%
+    
 % Create a logical image of a circle with specified
 % diameter, center, and image size.
 % First create the image.
-function [images] = makeSpotImages(heightPix, stepPix, radiusPix, backColor, foreColor)
-
+function [images] = makeSpotImages(stepPix, radiusPix)
     % make a circleImage
-    circlePix = 1:radiusPix * 2;
+    diameterPix = radiusPix * 2;
+    circlePix = 1:diameterPix;
     [imgCols, imgRows] = meshgrid(circlePix, circlePix);
     circlePixels = (imgRows - radiusPix).^2 + (imgCols - radiusPix).^2 <= radiusPix^2;
-    grayMat = ones(radiusPix * 2, 'uint8') * foreColor;
-    grayMat(circlePixels == 0) = backColor;
-    [circleImg, ~] = gray2ind(circlePixels, 2);
+%     grayMat = ones(diameterPix, 'uint8') * foreColor;   % matrix for circle
+%     grayMat(circlePixels == 0) = backColor;             % load back color
+    [circleImg, ~] = gray2ind(circlePixels, 2);         % make an image from the circle matrix
     % make the background rectangle
-    images = zeros(4, heightPix, stepPix * 2, 'uint8');
-    leftCenterPix = floor(0.5 * stepPix);
+    imageSet = zeros(4, diameterPix, stepPix * 2, 'uint8');   % images will be the height of the circle
+    leftCenterPix = floor(0.5 * stepPix);               % image is 2 * stepPix so circles are at 0.5 and 1.5 stepPix
     rightCenterPix = floor(1.5 * stepPix);
-    heightCenterPix = floor(heightPix / 2);
+    heightCenterPix = floor(diameterPix / 2);
     pRange = circlePix - radiusPix;
-    for i = 1:4
-        if mod(i, 2) == 1                           % needs a right hand dot
-            images(i, heightCenterPix + pRange, rightCenterPix + pRange) = circleImg(circlePix, circlePix);
+    images = cell(1, 4);
+    for i = 1:4                                         % four images, one for each possible mix of dot/no-dot
+        index = i - 1;
+        if mod(index, 2) == 1                         	% needs a right hand dot
+            imageSet(i, heightCenterPix + pRange, rightCenterPix + pRange) = circleImg(circlePix, circlePix);
         end
-        if i >= 2                                   % needs a left hand dot
-            images(i, heightCenterPix + pRange, leftCenterPix + pRange) = circleImg(circlePix, circlePix);
+        if index >= 2                                   % needs a left hand dot
+            imageSet(i, heightCenterPix + pRange, leftCenterPix + pRange) = circleImg(circlePix, circlePix);
         end
+        images{i} = squeeze(imageSet(i, :, :));         % save the image in a cell array
     end
 end

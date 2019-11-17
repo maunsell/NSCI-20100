@@ -1,6 +1,6 @@
-classdef EOGRTDist < handle
-    %EOGAmpDur Handle saccade-duration data for EOG
-    %   Accumulates the data and handles the plot
+classdef RTDist < handle
+    % RTAmpDur -- Handle saccade-duration data for RT
+    %   Accumulates the data and handles plotting RT panels in the GUI
     
     properties
         ampLabel
@@ -13,44 +13,37 @@ classdef EOGRTDist < handle
     end
         
     methods
-        
-        function obj = EOGRTDist(i, offset, axes)
-
-             %% Pre Initialization %%
-             % Any code not using output argument (obj)
-             if nargin == 0
+        %% Initialization
+        function obj = RTDist(i, offset, axes)
+             if nargin == 0                                     % pre initialization
                 offset = 10;
              end
-
-             %% Object Initialization %%
-             obj = obj@handle();
-
-             %% Post Initialization %%
-             obj.index = i;
+             obj = obj@handle();                                % object initiatlization
+             obj.index = i;                                     % post initialization
              obj.fHandle = axes;
              obj.offsetDeg = offset;
              obj.ampLabel = sprintf('%.0f', offset);
-             obj.reactTimesMS = zeros(1, 10000);                  % preallocate a generous buffer
+             obj.reactTimesMS = zeros(1, 10000);             	% preallocate a generous buffer
              obj.n = 0;
              obj.maxRT = 0;
         end
     
-        %% addRT
+        %% addRT -- add a RT value to the distributioin
         function addRT(obj, rtMS)
             obj.n = obj.n + 1;
             obj.reactTimesMS(obj.n) = max(rtMS, 0);
         end
 
-        %% clearAll
+        %% clearAll -- clear all the buffers
         function clearAll(obj)
             obj.n = 0;
             obj.maxRT = 0;
             cla(obj.fHandle);
         end
 
-        %% plot
+        %% plot -- plot all the distributions
         function rescale = plot(obj)
-            cla(obj.fHandle);
+            cla(obj.fHandle);                                    % clear the figures
             if obj.n == 0
                 rescale = 0;
                 return
@@ -59,9 +52,9 @@ classdef EOGRTDist < handle
             [counts, x] = hist(obj.fHandle, obj.reactTimesMS(1:obj.n));
             bar(obj.fHandle, x, counts, 1.0, 'facecolor', colors(obj.index,:));
             hold(obj.fHandle, 'on');
-            title(obj.fHandle, sprintf('%0.f degree saccades', obj.offsetDeg), 'FontSize',12,'FontWeight','Bold');
-            if (obj.index == 1)
-                xlabel(obj.fHandle, 'Reaction Time (ms)', 'FontSize',14);
+            title(obj.fHandle, sprintf('%0.f degree saccades', obj.offsetDeg), 'fontSize',12,'fontWeight','bold');
+            if (obj.index == 1)                                 % label the topmost plot
+                xlabel(obj.fHandle, 'Reaction Time (ms)', 'fontSize', 14);
             end
             a = axis(obj.fHandle);
             a(1) = 0;
@@ -79,7 +72,7 @@ classdef EOGRTDist < handle
             hold(obj.fHandle, 'off');
        end
 
-        %% rescale
+        %% rescale -- rescale the plots
         function rescale(obj, newMaxRT)
             obj.maxRT = newMaxRT;
             hold(obj.fHandle, 'on');
@@ -90,6 +83,5 @@ classdef EOGRTDist < handle
         end    
     
     end
-    
 end
 
