@@ -43,7 +43,7 @@ classdef RTPosVelPlots < handle
             if saccades.degPerV > 0                                     % plot saccade threshold
                 hold(obj.posAxes, 'on');
                 thresholdV = saccades.thresholdDeg / saccades.degPerV * data.stepDirection;
-                fprintf('threshold deg %.1f degPerV %.2f, V = %.3f\n', saccades.thresholdDeg, saccades.degPerV, thresholdV);
+                fprintf('threshold deg %.1f degPerV %.2f, V = %.3f\n', thresholdV);
                 plot(obj.posAxes, [trialTimes(1) trialTimes(end)], [thresholdV, thresholdV], 'b:');
                 hold(obj.posAxes, 'off');
             end

@@ -405,7 +405,6 @@ function taskController(obj, events, daqaxes)
                 else
                     data.fixOffTimeS = data.prestimTimeS + data.gapDurS;
                 end
-                fprintf('trialDurS %f\n', data.trialDurS);
                 data.samplesRead = 0;
                 handles.lbj.verbose = 0;
                 startStream(handles.lbj);
@@ -447,7 +446,6 @@ function taskController(obj, events, daqaxes)
             end
             data.trialStartTimeS = 0;
             data.taskState = RTTaskState.taskStarttrial;
-                         fprintf(' endTrial done\n');
     end
 end
 
