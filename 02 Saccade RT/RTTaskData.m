@@ -10,6 +10,8 @@ classdef RTTaskData < handle
         doFilter;
         filterLP;
         filter60Hz;
+        fixOffTimeS;
+        gapDurS;
         numChannels;
         numTrialTypes;
         numSummed;
@@ -17,6 +19,7 @@ classdef RTTaskData < handle
         posSummed;
         posTrace;
         prestimDurS;
+        prestimTimeS;
         rawData;
         sampleRateHz;
         samplesRead;
@@ -30,6 +33,7 @@ classdef RTTaskData < handle
         stimTimeS;
         trialDurS;
         trialSamples;
+        targetTimeS;
         taskState;
         testMode;
         trialStartTimeS;
@@ -58,10 +62,12 @@ classdef RTTaskData < handle
             obj.taskState = RTTaskState.taskStarttrial;
             obj.dataState = RTDataState.dataIdle;
             obj.trialStartTimeS = 0;
+            obj.targetTimeS = 0;
+            obj.gapDurS = 0.200;
+            obj.fixOffTimeS = 0;
             obj.samplesRead = 0;
-%             obj.startStimS = 0;
             obj.stepDirection = 0;
-            obj.stepSizeDeg = 5.0;
+            obj.stepSizeDeg = 10.0;
             obj.stimTimeS = 0;
             obj.testMode = false;                                  % testMode is set in RT, not here
             obj.voltage = 0;

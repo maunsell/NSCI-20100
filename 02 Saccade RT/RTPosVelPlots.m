@@ -98,7 +98,8 @@ classdef RTPosVelPlots < handle
                 a1(3) + 0.9 * (a1(4) - a1(3)), '1', 'parent', obj.posAxes, 'FontSize', 24, 'FontWeight', 'Bold');
             % Once the y-axis scaling is set, we can draw vertical marks for stimOn and saccades
             hold(obj.posAxes, 'on');
-            plot(obj.posAxes, [data.stimTimeS * 1000.0, data.stimTimeS * 1000.0], [a1(3), a1(4)], 'k-.');
+            plot(obj.posAxes, [data.targetTimeS * 1000, data.targetTimeS * 1000], [a1(3), a1(4)], 'k-.');
+            plot(obj.posAxes, [data.fixOffTimeS * 1000, data.fixOffTimeS * 1000], [a1(3), a1(4)], 'k:');
             if (startIndex > 0)
                 plot(obj.posAxes, [startIndex, startIndex] * timestepMS, [a1(3), a1(4)], 'color', ...
                     colors(data.absStepIndex,:), 'linestyle', ':');
@@ -175,7 +176,7 @@ classdef RTPosVelPlots < handle
             end
             a1 = axis(obj.velAxes);
             text(trialTimes(1) + 0.05 * (trialTimes(end) - trialTimes(1)), ...
-                a1(3) + 0.9 * (a1(4) - a1(3)), '3', 'parent', obj.velAxes, 'FontSize', 24, 'FontWeight', 'Bold');
+                a1(3) + 0.9 * (a1(4) - a1(3)), '2', 'parent', obj.velAxes, 'FontSize', 24, 'FontWeight', 'Bold');
             % Once the y-axis scaling is set, we can draw vertical marks for stimOn and saccades
             hold(obj.velAxes, 'on');
             plot(obj.velAxes, [data.stimTimeS * 1000.0, data.stimTimeS * 1000.0], [a1(3), a1(4)], 'k-.');

@@ -93,7 +93,7 @@ classdef RTSaccades < handle
             % remove the DC offset
            if ~data.testMode
                 data.posTrace = data.rawData - mean(data.rawData(1:floor(data.sampleRateHz * data.prestimDurS)));
-            else
+           else
                 samples = length(data.posTrace);
                 data.posTrace = zeros(samples, 1);
                 accel = 0.01;
@@ -106,7 +106,7 @@ classdef RTSaccades < handle
                 for t = 1:time
                     positions(time + t) = positions(time) + accel * time * t - 0.5 * accel * t^2;
                 end
-                preStimSamples = floor((data.stimTimeS + 0.1) * data.sampleRateHz);
+                preStimSamples = floor((data.targetTimeS + 0.1) * data.sampleRateHz);
                 data.posTrace(preStimSamples + 1:preStimSamples + length(positions)) = positions;
                 for i = preStimSamples + length(positions) + 1:length(data.posTrace)
                     data.posTrace(i) = positions(time * 2);
@@ -141,19 +141,23 @@ classdef RTSaccades < handle
                 data.velTrace = filter(data.filterLP, data.velTrace);
             end
             % find a saccade and make sure we have enough samples before and after its start
-%             sIndex = floor(data.stimTimeS * data.sampleRateHz);         % no saccades before stimon
-            sIndex = floor(data.prestimDurS * data.sampleRateHz);
+            sIndex = floor(data.targetTimeS * data.sampleRateHz);         % no saccades before stimon
+                fprintf('point 11 sIndex %d\n', sIndex);
             [startIndex, endIndex] = obj.findSaccade(data, data.posTrace, data.velTrace, data.stepDirection, sIndex);
-            saccadeOffset = floor(data.saccadeSamples / 2);
+                 fprintf('point 12\n');
+           saccadeOffset = floor(data.saccadeSamples / 2);
+                fprintf('point 3\n');
             firstIndex = startIndex - saccadeOffset;
             lastIndex = startIndex + saccadeOffset;
-            if mod(data.saccadeSamples, 2) == 0                     % make sure the samples are divisible by 2
+                 fprintf('point 4\n');
+           if mod(data.saccadeSamples, 2) == 0                     % make sure the samples are divisible by 2
                 lastIndex = lastIndex - 1;
             end
            if (firstIndex < 1 || lastIndex > data.trialSamples)    % not enough samples around saccade to process
                 startIndex = 0;
                 return;
             end
+                fprintf('point 1\n');
             % sum into the average pos and vel plot, inverting for negative steps
             data.posSummed(:, data.trialType) = data.posSummed(:, data.trialType) + ...
                 data.posTrace(firstIndex:lastIndex);  
@@ -166,6 +170,7 @@ classdef RTSaccades < handle
             data.trialTypesDone(data.trialType) = data.trialTypesDone(data.trialType) + 1;
             % now that we've updated all the traces, compute the degrees per volt if we have enough trials
             % take average peaks to get each point
+                fprintf('point 2\n');
             if sum(data.numSummed) > length(data.numSummed)
                 endPointsV = [max(data.posAvg(:, 1:data.numTrialTypes)) ...
                                 min(data.posAvg(:, data.numTrialTypes + 1:data.numTrialTypes))];

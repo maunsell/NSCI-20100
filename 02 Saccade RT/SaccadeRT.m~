@@ -5,7 +5,6 @@ function varargout = SaccadeRT(varargin)
 % for debugging with synthetic eye movements.
 %
 % Initialization code
-    clc;                                % Clear the command window.
     gui_Singleton = 1;
     gui_State = struct('gui_Name',       mfilename, ...
                        'gui_Singleton',  gui_Singleton, ...
@@ -60,9 +59,7 @@ function closeRT(hObject, eventdata, handles)
     set(0, 'DefaultUIControlFontSize', originalSize);
     switch selection
     case 'Yes'
-        cleanup(handles.visStim);
-        delete(handles.visStim);
-%         try delete(handles.ampDur); catch, end
+        try delete(handles.visStim); catch, end
         try stop(timerfind); catch, end
         try delete(timerfind); catch, end
         try clear('handles.lbj'); catch, end
@@ -129,7 +126,6 @@ function loadDataButton_Callback(hObject, ~, handles) %#ok<*DEFNU>
         load([filePath fileName]);
         handles.data = d;
         handles.data.testMode = testMode;                               % keep testMode across data loads
-%         handles.ampDur = a;
         handles.saccades = s;
         set(handles.calibrationText, 'string', sprintf('Calibration %.1f deg/V', handles.saccades.degPerV));
         handles.rtDists{1} = r1;
@@ -242,12 +238,11 @@ function saveDataButton_Callback(hObject, eventdata, handles)
     [fileName, filePath] = uiputfile('*.mat', 'Save Matlab Data Workspace', '~/Desktop/RTData.mat');
     if fileName ~= 0
         d = handles.data;
-%         a = handles.ampDur;
         s = handles.saccades;
         r1 = handles.rtDists{1};
         r2 = handles.rtDists{2};
         r3 = handles.rtDists{3};
-       save([filePath fileName], 'd', 'a', 's');
+       save([filePath fileName], 'd', 's');
     end
     RTControlState(handles, 'on', {})
 end
@@ -320,7 +315,7 @@ function startButton_Callback(hObject, eventdata, handles)
         taskRateHz = 25;
         handles.taskTimer = timer('Name', 'TaskTimer', 'ExecutionMode', 'fixedRate',...
             'Period', 1.0/taskRateHz, 'UserData', handles, 'ErrorFcn', {@taskError, handles}, 'TimerFcn',...
-            {@taskController, [handles.axes1 handles.axes2 handles.axes3 handles.axes4]});
+            {@taskController, [handles.axes1 handles.axes3]});
 
         % create timer to get data from LabJack
         handles.data.taskState = RTTaskState.taskStarttrial;
@@ -385,14 +380,13 @@ function taskController(obj, events, daqaxes)
                 end
             end
             if rand() > 0.5
-                stepDirection = c.kLeft;
+                data.stepDirection = c.kLeft;
             else
-                stepDireciton = c.kRight;
+                data.stepDirection = c.kRight;
             end
             prepareImages(visStim, data.trialType, data.stepDirection);
             if data.testMode 
-                data.voltage = min(5.0, visStim.currentOffsetPix / 00.0);  % debugging - DACO0 should go to AIN0
-                fprintf('voltageOut: %f\n', 2.5 + data.voltage);
+                data.voltage = min(5.0, visStim.currentOffsetPix / 1000.0);  % debugging - DACO0 should go to AIN0
                 analogOut(lbj, 0, 2.5 + data.voltage);
             end
             data.trialStartTimeS = clock;
@@ -400,7 +394,11 @@ function taskController(obj, events, daqaxes)
        case RTTaskState.taskSettle
             if etime(clock, data.trialStartTimeS) > 0.015               % data settled for one taskTimer cycle
                 data.trialStartTimeS = clock;                         	% reset the trial clock
-                data.stimTimeS = data.prestimDurS + rand() * 0.125;   	% jitter the stimon time a bit
+                data.preStimTimeS = data.prestimDurS + rand() * 0.125;	% jitter the stimon time a bit
+                if data.trialType ~= c.kGapStim
+                    data.targetTimeS = data.preStimTimeS;              	% targetOn Time
+                else
+                    
                 data.samplesRead = 0;
                 handles.lbj.verbose = 0;
                 startStream(handles.lbj);

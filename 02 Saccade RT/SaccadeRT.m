@@ -59,9 +59,7 @@ function closeRT(hObject, eventdata, handles)
     set(0, 'DefaultUIControlFontSize', originalSize);
     switch selection
     case 'Yes'
-        cleanup(handles.visStim);
-        delete(handles.visStim);
-%         try delete(handles.ampDur); catch, end
+        try delete(handles.visStim); catch, end
         try stop(timerfind); catch, end
         try delete(timerfind); catch, end
         try clear('handles.lbj'); catch, end
@@ -128,7 +126,6 @@ function loadDataButton_Callback(hObject, ~, handles) %#ok<*DEFNU>
         load([filePath fileName]);
         handles.data = d;
         handles.data.testMode = testMode;                               % keep testMode across data loads
-%         handles.ampDur = a;
         handles.saccades = s;
         set(handles.calibrationText, 'string', sprintf('Calibration %.1f deg/V', handles.saccades.degPerV));
         handles.rtDists{1} = r1;
@@ -241,12 +238,11 @@ function saveDataButton_Callback(hObject, eventdata, handles)
     [fileName, filePath] = uiputfile('*.mat', 'Save Matlab Data Workspace', '~/Desktop/RTData.mat');
     if fileName ~= 0
         d = handles.data;
-%         a = handles.ampDur;
         s = handles.saccades;
         r1 = handles.rtDists{1};
         r2 = handles.rtDists{2};
         r3 = handles.rtDists{3};
-       save([filePath fileName], 'd', 'a', 's');
+       save([filePath fileName], 'd', 's');
     end
     RTControlState(handles, 'on', {})
 end
@@ -319,7 +315,7 @@ function startButton_Callback(hObject, eventdata, handles)
         taskRateHz = 25;
         handles.taskTimer = timer('Name', 'TaskTimer', 'ExecutionMode', 'fixedRate',...
             'Period', 1.0/taskRateHz, 'UserData', handles, 'ErrorFcn', {@taskError, handles}, 'TimerFcn',...
-            {@taskController, [handles.axes1 handles.axes2 handles.axes3 handles.axes4]});
+            {@taskController, [handles.axes1 handles.axes3]});
 
         % create timer to get data from LabJack
         handles.data.taskState = RTTaskState.taskStarttrial;
@@ -385,10 +381,8 @@ function taskController(obj, events, daqaxes)
             end
             if rand() > 0.5
                 data.stepDirection = c.kLeft;
-                fprintf('stepping left');
             else
                 data.stepDirection = c.kRight;
-                fprintf('stepping right');
             end
             prepareImages(visStim, data.trialType, data.stepDirection);
             if data.testMode 
@@ -400,7 +394,18 @@ function taskController(obj, events, daqaxes)
        case RTTaskState.taskSettle
             if etime(clock, data.trialStartTimeS) > 0.015               % data settled for one taskTimer cycle
                 data.trialStartTimeS = clock;                         	% reset the trial clock
-                data.stimTimeS = data.prestimDurS + rand() * 0.125;   	% jitter the stimon time a bit
+                data.prestimTimeS = data.prestimDurS + rand() * 0.125;	% jitter the stimon time a bit
+                if data.trialType ~= c.kGapTrial
+                    data.targetTimeS = data.prestimTimeS;              	% targetOn Time
+                else
+                    data.targetTimeS = data.prestimTimeS + data.gapDurS;
+                end
+                if data.trialType ~= c.kOverlapTrial
+                    data.fixOffTimeS = data.prestimTimeS;
+                else
+                    data.fixOffTimeS = data.prestimTimeS + data.gapDurS;
+                end
+                fprintf('trialDurS %f\n', data.trialDurS);
                 data.samplesRead = 0;
                 handles.lbj.verbose = 0;
                 startStream(handles.lbj);
@@ -418,7 +423,7 @@ function taskController(obj, events, daqaxes)
                	data.taskState = RTTaskState.taskGapstim;
             end
         case RTTaskState.taskGapstim
-           if etime(clock, data.trialStartTimeS) > data.stimTimeS + 0.200 % gap time up?
+           if etime(clock, data.trialStartTimeS) > data.stimTimeS + data.gapDurS % gap time up?
                 drawImage(visStim, visStim.finalStim);
                	data.taskState = RTTaskState.taskPoststim;
             end
@@ -440,8 +445,9 @@ function taskController(obj, events, daqaxes)
                 end   
                 set(handles.calibrationText, 'string', sprintf('Calibration %.1f deg/V', saccades.degPerV));
             end
-           data.trialStartTimeS = 0;
+            data.trialStartTimeS = 0;
             data.taskState = RTTaskState.taskStarttrial;
+                         fprintf(' endTrial done\n');
     end
 end
 

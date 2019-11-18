@@ -13,6 +13,7 @@ classdef RTStimulus < handle
         degPerRadian
         frameDurS
         hAxes
+        hFig
         grayColor
         pixPerMM
         g
@@ -62,12 +63,12 @@ classdef RTStimulus < handle
             obj.windRectPix = [marginPix, marginPix, windWidthPix, windHeightPix];
 %             obj.windRectPix = [obj.marginPix, screenRectPix.height - 200, ...
 %                                             screenRectPix.width - obj.marginPix, screenRectPix.height - 100];
-            hFig = figure('Renderer', 'painters', 'Position', [marginPix, marginPix, windWidthPix, windHeightPix]);
-            set(hFig, 'menubar', 'none', 'toolbar', 'none', 'NumberTitle', 'off', 'resize', 'off');
-            set(hFig, 'color', [0.5, 0.5, 0.5]);
-            set(hFig, 'Name', 'NSCI 20100 Saccadic Reaction Time', 'NumberTitle', 'Off');
+            obj.hFig = figure('Renderer', 'painters', 'Position', [marginPix, marginPix, windWidthPix, windHeightPix]);
+            set(obj.hFig, 'menubar', 'none', 'toolbar', 'none', 'NumberTitle', 'off', 'resize', 'off');
+            set(obj.hFig, 'color', [0.5, 0.5, 0.5]);
+            set(obj.hFig, 'Name', 'NSCI 20100 Saccadic Reaction Time', 'NumberTitle', 'Off');
             axis off;
-            obj.hAxes = axes('Parent', hFig, 'units', 'pixels', 'visible', 'off');
+            obj.hAxes = axes('Parent', obj.hFig, 'units', 'pixels', 'visible', 'off');
 
 %             [widthMM, ~] = Screen('DisplaySize', obj.screenNumber);
 %             obj.pixPerMM = obj.windRectPix(3) / widthMM;
@@ -86,16 +87,6 @@ classdef RTStimulus < handle
             atLimit = obj.currentOffsetIndex == 1 || obj.currentOffsetIndex == length(obj.imagePosPix);
         end
   
-        %%
-        function cleanup(~)
-            sca;
-        end
-        
-        %%
-        function clearScreen(~)
-%             Screen('Flip', obj.window);
-        end
-        
         %% currentOffsetDeg -- offset of the spot from screen center in degrees
         function offsetPix = currentOffsetPix(obj)
             offsetPix = obj.imagePosPix(obj.currentOffsetIndex);
@@ -108,6 +99,11 @@ classdef RTStimulus < handle
         end
         
         %%
+        function delete(obj)
+            close(obj.hFig);
+        end
+        
+        %%
         function drawCenterStimulus(obj)
             c = RTConstants;
             obj.currentOffsetIndex = ceil(obj.numPos / 2);
@@ -117,12 +113,8 @@ classdef RTStimulus < handle
         %% drawImage -- draw the dot at the currently specified pixel offset
         function drawImage(obj, imageIndex)
             obj.hAxes.Position(1) = obj.imagePosPix(obj.currentOffsetIndex);
-            fprintf(' hAxes position %d %d %d %d\n', ...
-                round(obj.hAxes.Position(1)), round(obj.hAxes.Position(2)), ...
-                round(obj.hAxes.Position(3)), round(obj.hAxes.Position(4)));
             imshow(obj.images{imageIndex}, [0.5, 0.5, 0.5; 1.0, 1.0, 1.0], 'parent', obj.hAxes);
             drawnow;
-            fprintf('drawing image %d at currentIndex %d, x = %d\n', imageIndex, obj.currentOffsetIndex, obj.imagePosPix(obj.currentOffsetIndex))
             obj.currentImageIndex = imageIndex;
        end
         
