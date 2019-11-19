@@ -37,7 +37,7 @@ function clearButton_Callback(hObject, eventdata, handles)
             clearAll(handles.rtDists{i});
         end
         clearAll(handles.data);
-        plot(handles.posVelPlots, handles, 0, 0, true);
+        plot(handles.posVelPlots, handles, 0, 0);
         set(handles.calibrationText, 'string', '');
         guidata(hObject, handles);
     end
@@ -54,7 +54,7 @@ function closeRT(hObject, eventdata, handles)
     end
     originalSize = get(0, 'DefaultUIControlFontSize');
     set(0, 'DefaultUIControlFontSize', 14);
-    selection = questdlg('Really exit RT? Unsaved data will be lost.',...
+    selection = questdlg('Really exit? Unsaved data will be lost.',...
         'Exit Request', 'Yes', 'No', 'Yes');      
     set(0, 'DefaultUIControlFontSize', originalSize);
     switch selection
@@ -142,7 +142,7 @@ function loadDataButton_Callback(hObject, ~, handles) %#ok<*DEFNU>
         guidata(hObject, handles);                                      % save the selections
         
         [startIndex, endIndex] = processSignals(handles.saccades, d);
-        plot(handles.posVelPlots, handles, startIndex, endIndex, true);
+        plot(handles.posVelPlots, handles, startIndex, endIndex);
 %         handles.ampDur.lastN = 0;                                       % force ampDur to plot
 %         plotAmpDur(handles.ampDur);
         for i = 1:handles.data.numTrialTypes
@@ -429,7 +429,7 @@ function taskController(obj, events, daqaxes)
         case RTTaskState.taskEndtrial
             if data.trialType ~= c.kCenteringTrial                          % no updates needed on centering trials
                 [startIndex, endIndex] = processSignals(saccades, data);
-                plot(handles.posVelPlots, handles, startIndex, endIndex, false);
+                plot(handles.posVelPlots, handles, startIndex, endIndex);
                 if startIndex > 0
                     addRT(rtDists{data.trialType}, (startIndex / data.sampleRateHz  - data.stimTimeS) * 1000.0);
                 end
