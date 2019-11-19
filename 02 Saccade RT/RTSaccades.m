@@ -31,7 +31,7 @@ classdef RTSaccades < handle
             for t = 1:time
                 positions(time + t) = positions(time) + accel * time * t - 0.5 * accel * t^2;
             end
-            preStimSamples = floor((data.targetTimeS + 0.1) * data.sampleRateHz);
+            preStimSamples = floor((data.targetTimeS + 0.075 + 0.015 * data.trialType) * data.sampleRateHz);
             posTrace(preStimSamples + 1:preStimSamples + length(positions)) = positions;
             for i = preStimSamples + length(positions) + 1:length(posTrace)
                 posTrace(i) = positions(time * 2);
@@ -67,7 +67,6 @@ classdef RTSaccades < handle
                     DPV = abs(data.stepSizeDeg / (mean(posTrace(1:startIndex) - min(posTrace(:)))));
                     range = (mean(posTrace(1:startIndex) - min(posTrace(:))));
                 end
-                fprintf('stepDeg %.1f rangeV: %.1f DPV %.1f\n', data.stepSizeDeg, range, DPV);
                 obj.degPerV = (obj.degPerV * data.calTrialsDone + DPV) / (data.calTrialsDone + 1);
                 obj.degPerSPerV = obj.degPerV * data.sampleRateHz;	% needed for velocity plots
                 data.calTrialsDone = data.calTrialsDone + 1;
@@ -128,7 +127,6 @@ classdef RTSaccades < handle
                 sIndex = sIndex - offset;
                 eIndex = eIndex - offset;
             end
-            fprintf('startIndex %f endIndex %f\n', sIndex, eIndex);
         end
 
         %% processSignals: function to process data from one trial
@@ -176,7 +174,6 @@ classdef RTSaccades < handle
             if data.trialType ~= c.kCenteringTrial && sum(data.numSummed) > c.kTrialTypes
                 rangeV = max(data.posAvg) - min(data.posAvg);
                 obj.degPerV = mean(data.stepSizeDeg ./ rangeV);
-                fprintf('avg: max %.1f min %.1f degPerV %.1f\n', max(data.posAvg), min(data.posAvg), obj.degPerV);
                 obj.degPerSPerV = obj.degPerV * data.sampleRateHz;          % needed for velocity plots
             end
         end

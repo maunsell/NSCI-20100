@@ -1,8 +1,8 @@
  classdef RTConstants
     properties(Constant = true)         % force readonly
         kCenteringTrial = 0             % trial types
-        kStepTrial = 1
-        kGapTrial = 2
+        kGapTrial = 1
+        kStepTrial = 2
         kOverlapTrial = 3
         kTrialTypes = 3
         

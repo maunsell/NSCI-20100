@@ -30,7 +30,6 @@ classdef RTTaskData < handle
         stepDirection;
         stepSizeDeg;
         stimStartPixel;
-        stimTimeS;
         trialDurS;
         trialSamples;
         targetTimeS;
@@ -68,7 +67,6 @@ classdef RTTaskData < handle
             obj.samplesRead = 0;
             obj.stepDirection = 0;
             obj.stepSizeDeg = 10.0;
-            obj.stimTimeS = 0;
             obj.testMode = false;                                  % testMode is set in RT, not here
             obj.voltage = 0;
             obj.doFilter = false;

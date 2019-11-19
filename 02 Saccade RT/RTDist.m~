@@ -53,21 +53,19 @@ classdef RTDist < handle
             if (obj.index == 3)                                 % label the bottom plot
                 xlabel(obj.fHandle, 'Reaction Time (ms)', 'fontSize', 14);
             end
-            a = axis(obj.fHandle);                              % set scale, flag whether we're rescaling
+            a = axis(obj.fHandle);                              % se
             a(1) = 0;
-            if a(2) > obj.maxRT                                 % new x limit, rescale
+            if a(2) > obj.maxRT
                 rescale = a(2);
             else
-                a(2) = obj.maxRT;                               % no new x limit, plot on the current limit
+                a(2) = obj.maxRT;
                 rescale = 0;
             end
-            a(4) = 1.2 * a(4);                                  % leave some headroom about the histogram
+            a(4) = 1.2 * a(4);
             axis(obj.fHandle, a);
-            meanRT = mean(obj.reactTimesMS(1:obj.n));           % display the mean
+            meanRT = mean(obj.reactTimesMS(1:obj.n));
             plot(obj.fHandle, [meanRT meanRT], [a(3) a(4)], ':');
-            text(a(1) + 0.05 * (a(2) - a(1)), 0.9 * a(4), sprintf('%.0f', obj.index + 2), 'parent', obj.fHandle, ...
-                'fontSize', 24, 'fontWeight', 'bold');
-            text(0.05 * a(2), 0.8 * a(4), sprintf('Mean %.0f ms', meanRT), 'parent', obj.fHandle);
+            text(0.05 * a(2), 0.925 * a(4), sprintf('Mean %.0f ms', meanRT), 'parent', obj.fHandle);
             hold(obj.fHandle, 'off');
        end
 

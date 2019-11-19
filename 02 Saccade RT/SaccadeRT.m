@@ -211,21 +211,21 @@ function addPsychtoolboxPaths
 end
 
 %%sampleRateText_Callback
-function sampleRateText_Callback(hObject, eventdata, handles)
-    requestedRateHz = str2double(get(handles.sampleRateText, 'string'));
-    clippedRateHz = min([requestedRateHz, 1000, max(100, requestedRateHz)]);
-    if (clippedRateHz ~= requestedRateHz)
-        set(handles.sampleRateText, 'String', clippedRateHz);
-    end
-    if clippedRateHz ~= handles.data.sampleRateHz
-        setSampleRateHz(handles.data, clippedRateHz);
-        handles.lbj.SampleRateHz = clippedRateHz;
-        errorCode = streamConfigure(handles.lbj);
-        if errorCode > 0
-            fprintf(1,'RT: Unable to configure LabJack to new rate. Error %d.\n', errorCode);
-        end
-    end
-end
+% function sampleRateText_Callback(hObject, eventdata, handles)
+%     requestedRateHz = str2double(get(handles.sampleRateText, 'string'));
+%     clippedRateHz = min([requestedRateHz, 1000, max(100, requestedRateHz)]);
+%     if (clippedRateHz ~= requestedRateHz)
+%         set(handles.sampleRateText, 'String', clippedRateHz);
+%     end
+%     if clippedRateHz ~= handles.data.sampleRateHz
+%         setSampleRateHz(handles.data, clippedRateHz);
+%         handles.lbj.SampleRateHz = clippedRateHz;
+%         errorCode = streamConfigure(handles.lbj);
+%         if errorCode > 0
+%             fprintf(1,'RT: Unable to configure LabJack to new rate. Error %d.\n', errorCode);
+%         end
+%     end
+% end
 
 %% saveDataButton_Callback
 function saveDataButton_Callback(hObject, eventdata, handles)
@@ -278,7 +278,7 @@ function lbj = setupLabJack()
             'No LabJack Device Found', 'OK', 'OK');
         set(0, 'DefaultUIControlFontSize', originalSize);
     else
-        fprintf(1,'RT: LabJack Ready.\n\n');
+        fprintf(1,'Reaction Time: LabJack Ready.\n\n');
     end
     % create input channel list
     removeChannel(lbj, -1);                     % remove all input channels
@@ -290,7 +290,7 @@ function lbj = setupLabJack()
 
     errorCode = streamConfigure(lbj);
     if errorCode > 0
-        fprintf(1,'RT: Unable to configure LabJack. Error %d.\n',errorCode);
+        fprintf(1,'Reaction Time: Unable to configure LabJack. Error %d.\n',errorCode);
         return
     end
 end
@@ -390,20 +390,20 @@ function taskController(obj, events, daqaxes)
                 analogOut(lbj, 0, 2.5 + data.voltage);
             end
             data.trialStartTimeS = clock;
-            data.taskState = RTTaskState.taskSettle;                      % go to settle state
+            data.taskState = RTTaskState.taskSettle;                  	% go to settle state
        case RTTaskState.taskSettle
             if etime(clock, data.trialStartTimeS) > 0.015               % data settled for one taskTimer cycle
                 data.trialStartTimeS = clock;                         	% reset the trial clock
                 data.prestimTimeS = data.prestimDurS + rand() * 0.125;	% jitter the stimon time a bit
-                if data.trialType ~= c.kGapTrial
-                    data.targetTimeS = data.prestimTimeS;              	% targetOn Time
+                if data.trialType == c.kGapTrial                        % gap trials have target after the gap
+                 	data.targetTimeS = data.prestimTimeS + data.gapDurS;
                 else
-                    data.targetTimeS = data.prestimTimeS + data.gapDurS;
+                    data.targetTimeS = data.prestimTimeS;              	% all others have target before the gap
                 end
-                if data.trialType ~= c.kOverlapTrial
-                    data.fixOffTimeS = data.prestimTimeS;
-                else
+                if data.trialType == c.kOverlapTrial                    % overlap trials have fixOff after the gap
                     data.fixOffTimeS = data.prestimTimeS + data.gapDurS;
+                else                                                    % all others have fixOff before the gap
+                   data.fixOffTimeS = data.prestimTimeS;                
                 end
                 data.samplesRead = 0;
                 handles.lbj.verbose = 0;
@@ -413,27 +413,27 @@ function taskController(obj, events, daqaxes)
                 data.taskState = RTTaskState.taskPrestim;              	% go to prestim state
             end
         case RTTaskState.taskPrestim
-           if etime(clock, data.trialStartTimeS) > data.stimTimeS       % preStim time up?
+           if etime(clock, data.trialStartTimeS) > data.prestimTimeS	% preStim time up?
                 if data.trialType == c.kCenteringTrial
                 	drawCenterStimulus(visStim);
                 else
                 	drawImage(visStim, visStim.gapStim);
                 end
-               	data.taskState = RTTaskState.taskGapstim;
+               	data.taskState = RTTaskState.taskGapstim;               % go to gap state
             end
         case RTTaskState.taskGapstim
-           if etime(clock, data.trialStartTimeS) > data.stimTimeS + data.gapDurS % gap time up?
-                drawImage(visStim, visStim.finalStim);
+           if etime(clock, data.trialStartTimeS) > data.prestimTimeS + data.gapDurS
+                drawImage(visStim, visStim.finalStim);                   % gap time up, draw postgap stim
                	data.taskState = RTTaskState.taskPoststim;
             end
         case RTTaskState.taskEndtrial
-            if data.trialType ~= c.kCenteringTrial                          % no updates needed on centering trials
+            if data.trialType ~= c.kCenteringTrial                  	% no updates needed on centering trials
                 [startIndex, endIndex] = processSignals(saccades, data);
                 plot(handles.posVelPlots, handles, startIndex, endIndex);
                 if startIndex > 0
-                    addRT(rtDists{data.trialType}, (startIndex / data.sampleRateHz  - data.stimTimeS) * 1000.0);
+                    addRT(rtDists{data.trialType}, (startIndex / data.sampleRateHz  - data.targetTimeS) * 1000.0);
                 end
-                if (mod(sum(data.numSummed), data.numTrialTypes) == 0)         % finished a block
+                if (mod(sum(data.numSummed), data.numTrialTypes) == 0)	% finished a block
                     needsRescale = plot(rtDists{data.trialType});
                     if needsRescale > 0
                       	for i = 1:data.numTrialTypes

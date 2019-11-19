@@ -86,9 +86,7 @@ classdef RTPosVelPlots < handle
             saccades = handles.saccades;
             timestepMS = 1000.0 / data.sampleRateHz;                       	% time interval of samples
             xLimit = (size(data.posTrace, 1) - 1) * timestepMS;
-%             trialTimes = (0:1:size(data.posTrace, 1) - 1) * timestepMS; 	% make array of trial time points
             trialTimes = 0:timestepMS:xLimit;                               % make array of trial time points
-            colors = get(obj.velAxes, 'ColorOrder');
             % plot the trial velocity trace
             cla(obj.velAxes);
             plot(obj.velAxes, [0, xLimit], [0, 0], 'k', trialTimes, data.velTrace, 'b');
@@ -114,11 +112,9 @@ classdef RTPosVelPlots < handle
                 plot(obj.velAxes, [data.fixOffTimeS, data.fixOffTimeS] * 1000, [a1(3), a1(4)], 'r:');
             end
             if (startIndex > 0)                                         % plot the saccade start and end
-                plot(obj.velAxes, [startIndex, startIndex] * timestepMS, [a1(3), a1(4)], 'color', ...
-                    colors(data.absStepIndex,:), 'linestyle', ':');
+                plot(obj.velAxes, [startIndex, startIndex] * timestepMS, [a1(3), a1(4)], 'b:');
                 if (endIndex > 0)
-                    plot(obj.velAxes, [endIndex, endIndex] * timestepMS, [a1(3), a1(4)], 'color', ...
-                    colors(data.absStepIndex,:), 'linestyle', ':');
+                    plot(obj.velAxes, [endIndex, endIndex] * timestepMS, [a1(3), a1(4)], 'b:');
                 end
             end
             hold(obj.velAxes, 'off');
