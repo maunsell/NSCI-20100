@@ -18,7 +18,7 @@ classdef RTSaccades < handle
         end
 
         %% fakeDataTrace
-        function posTrace = fakeDataTrace(obj, data)
+        function posTrace = fakeDataTrace(~, data)
             samples = length(data.posTrace);
             posTrace = zeros(samples, 1);
             accel = 0.01;
@@ -59,13 +59,15 @@ classdef RTSaccades < handle
         %% findSaccade: extract the saccade timing using speed threshold
         function [sIndex, eIndex] = findSaccade(obj, data, posTrace, velTrace, stepSign, startIndex)
 %            calSamples = floor(data.prestimDurS * data.sampleRateHz);    % use preStim for calibration
-            seqLength = 5;                                          % number seq. samples used for saccade detection
             if data.calTrialsDone < 4                              	% still getting a calibration
                 if (stepSign == 1)
                     DPV = abs(data.stepSizeDeg / (max(posTrace(:)) - mean(posTrace(1:startIndex)))); 
+                    range = (max(posTrace(:)) - mean(posTrace(1:startIndex)));
                 else
                     DPV = abs(data.stepSizeDeg / (mean(posTrace(1:startIndex) - min(posTrace(:)))));
+                    range = (mean(posTrace(1:startIndex) - min(posTrace(:))));
                 end
+                fprintf('stepDeg %.1f rangeV: %.1f DPV %.1f\n', data.stepSizeDeg, range, DPV);
                 obj.degPerV = (obj.degPerV * data.calTrialsDone + DPV) / (data.calTrialsDone + 1);
                 obj.degPerSPerV = obj.degPerV * data.sampleRateHz;	% needed for velocity plots
                 data.calTrialsDone = data.calTrialsDone + 1;
@@ -74,6 +76,7 @@ classdef RTSaccades < handle
             end
             sIndex = startIndex;
             seq = 0;
+            seqLength = 5;                                          % number seq. samples used for saccade detection
             thresholdV = mean(posTrace(1:startIndex)) + obj.thresholdDeg / obj.degPerV;
             while (seq < seqLength && sIndex < length(posTrace))	% find the first sequence of seqLength > than threshold
                if posTrace(sIndex) * stepSign < thresholdV
@@ -130,6 +133,7 @@ classdef RTSaccades < handle
 
         %% processSignals: function to process data from one trial
         function [startIndex, endIndex] = processSignals(obj, data)
+            c = RTConstants;
             % remove the DC offset
             if ~data.testMode
                 data.posTrace = data.rawData - mean(data.rawData(1:floor(data.sampleRateHz * data.prestimDurS)));
@@ -160,21 +164,19 @@ classdef RTSaccades < handle
                 return;
             end
             % sum into the average pos and vel plot, inverting for negative steps
-            data.posSummed(:, data.trialType) = data.posSummed(:, data.trialType) + ...
-                data.posTrace(firstIndex:lastIndex);  
-            data.velSummed(:, data.trialType) = data.velSummed(:, data.trialType) + ...
-                data.velTrace(firstIndex:lastIndex);  
+            data.posSummed = data.posSummed + data.posTrace(firstIndex:lastIndex);  
+            data.velSummed = data.velSummed + data.velTrace(firstIndex:lastIndex);  
             % tally the sums and compute the averages
-            data.numSummed(data.trialType) = data.numSummed(data.trialType) + 1;
-            data.posAvg(:, data.trialType) = data.posSummed(:, data.trialType) / data.numSummed(data.trialType);
-            data.velAvg(:, data.trialType) = data.velSummed(:, data.trialType) / data.numSummed(data.trialType);
+            data.numSummed = data.numSummed + 1;
+            data.posAvg = data.posSummed / data.numSummed;
+            data.velAvg = data.velSummed / data.numSummed;
             data.trialTypesDone(data.trialType) = data.trialTypesDone(data.trialType) + 1;
             % now that we've updated all the traces, compute the degrees per volt if we have enough trials
             % take average peaks to get each point
-            if sum(data.numSummed) > length(data.numSummed)
-                endPointsV = [max(data.posAvg(:, 1:data.numTrialTypes)) ...
-                                min(data.posAvg(:, data.numTrialTypes + 1:data.numTrialTypes))];
-                obj.degPerV = mean(data.stepSizeDeg ./ endPointsV);
+            if data.trialType ~= c.kCenteringTrial && sum(data.numSummed) > c.kTrialTypes
+                rangeV = max(data.posAvg) - min(data.posAvg);
+                obj.degPerV = mean(data.stepSizeDeg ./ rangeV);
+                fprintf('avg: max %.1f min %.1f degPerV %.1f\n', max(data.posAvg), min(data.posAvg), obj.degPerV);
                 obj.degPerSPerV = obj.degPerV * data.sampleRateHz;          % needed for velocity plots
             end
             % find the average saccade duration using the average speed trace
