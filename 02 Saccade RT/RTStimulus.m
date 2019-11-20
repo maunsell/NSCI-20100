@@ -31,25 +31,18 @@ classdef RTStimulus < handle
         yCenterPix
     end
     properties (Constant)
-%         marginPix = 50;
+        marginPix = 10;
 %         pixelDepth = 32;
     end
     methods (Static)
     end
     methods
         function obj = RTStimulus(stepDeg)
-            %Screen('CloseAll');
             imtool close all;                               % close imtool figures from Image Processing Toolbox
-%             PsychDefaultSetup(2);
             screenRectPix = get(0, 'MonitorPositions');        % get the size of the primary screen
-%             obj.screenNumber = max(Screen('Screens'));
-%             obj.whiteColor = WhiteIndex(obj.screenNumber);
-%             obj.grayColor = obj.whiteColor / 2;
             obj.currentImageIndex = 0;
-%             obj.currentOffsetPix = 0;
             obj.currentOffsetIndex = 1;
             obj.degPerRadian = 57.2958;
-%             screenRectPix = Screen('Resolution', obj.screenNumber);
             obj.finalStim = 0;
             obj.gapStim = 0;
             obj.images = cell(1, 4);
@@ -58,28 +51,15 @@ classdef RTStimulus < handle
             obj.stepSizeDeg = stepDeg;
             obj.viewDistanceMM = 0;
             windHeightPix = 60;
-            marginPix = 10;
-            windWidthPix = screenRectPix(3) - 2 * marginPix;
-            obj.windRectPix = [marginPix, marginPix, windWidthPix, windHeightPix];
-%             obj.windRectPix = [obj.marginPix, screenRectPix.height - 200, ...
-%                                             screenRectPix.width - obj.marginPix, screenRectPix.height - 100];
-            obj.hFig = figure('Renderer', 'painters', 'Position', [marginPix, marginPix, windWidthPix, windHeightPix]);
+            windWidthPix = screenRectPix(3) - 2 * obj.marginPix;
+            obj.windRectPix = [obj.marginPix, obj.marginPix, windWidthPix, windHeightPix];
+            obj.hFig = figure('Renderer', 'painters', 'Position', [obj.marginPix, obj.marginPix, windWidthPix, windHeightPix]);
             set(obj.hFig, 'menubar', 'none', 'toolbar', 'none', 'NumberTitle', 'off', 'resize', 'off');
             set(obj.hFig, 'color', [0.5, 0.5, 0.5]);
             set(obj.hFig, 'Name', 'NSCI 20100 Saccadic Reaction Time', 'NumberTitle', 'Off');
             axis off;
             obj.hAxes = axes('Parent', obj.hFig, 'units', 'pixels', 'visible', 'off');
-
-%             [widthMM, ~] = Screen('DisplaySize', obj.screenNumber);
-%             obj.pixPerMM = obj.windRectPix(3) / widthMM;
-            mmPerInch = 25.40;
-            obj.pixPerMM = java.awt.Toolkit.getDefaultToolkit().getScreenResolution() / mmPerInch;
-%             [obj.window, obj.windRectPix] = PsychImaging('OpenWindow', obj.screenNumber, obj.grayColor, ...
-%                 obj.windRectPix, obj.pixelDepth, 2, [], [], kPsychNeed32BPCFloat);
-%             obj.topPriorityLevel = MaxPriority(obj.window);
-%             [obj.xCenterPix, obj.yCenterPix] = RectCenter(obj.windRectPix);
-%             obj.frameDurS = Screen('GetFlipInterval', obj.window);
-%             drawDot(obj);
+            obj.pixPerMM = java.awt.Toolkit.getDefaultToolkit().getScreenResolution() / RTConstants.mmPerInch;
         end
         
        	%% atStepRangeLimit -- Report whether a step is beyond the usable range       
@@ -105,9 +85,8 @@ classdef RTStimulus < handle
         
         %%
         function drawCenterStimulus(obj)
-            c = RTConstants;
             obj.currentOffsetIndex = ceil(obj.numPos / 2);
-            drawImage(obj, c.kLeftStim);
+            drawImage(obj, RTConstants.kLeftStim);
         end
         
         %% drawImage -- draw the dot at the currently specified pixel offset
@@ -134,8 +113,7 @@ classdef RTStimulus < handle
 
         function makeSpotImages(obj)
             % make a circleImage
-            c = RTConstants;
-            diameterPix = floor(obj.spotRadiusPix) * 2;
+                 diameterPix = floor(obj.spotRadiusPix) * 2;
             circlePix = 1:diameterPix;
             [imgCols, imgRows] = meshgrid(circlePix, circlePix);
             circlePixels = (imgRows - obj.spotRadiusPix).^2 + (imgCols - obj.spotRadiusPix).^2 <= obj.spotRadiusPix^2;
@@ -151,11 +129,11 @@ classdef RTStimulus < handle
             rightCenterPix = floor(1.5 * obj.stepSizePix);
             heightCenterPix = floor(diameterPix / 2);
             pRange = circlePix - obj.spotRadiusPix;
-            for i = 1:c.kStimTypes                           	% four images, one for each possible mix of dot/no-dot
-                if i == c.kRightStim || i == c.kBothStim       	% needs a right hand dot
+            for i = 1:RTConstants.kStimTypes                           	% four images, one for each possible mix of dot/no-dot
+                if i == RTConstants.kRightStim || i == RTConstants.kBothStim       	% needs a right hand dot
                     imageSet(i, heightCenterPix + pRange, rightCenterPix + pRange) = circleImg(circlePix, circlePix);
                 end
-                if i == c.kLeftStim || i == c.kBothStim        	% needs a left hand dot
+                if i == RTConstants.kLeftStim || i == RTConstants.kBothStim        	% needs a left hand dot
                     imageSet(i, heightCenterPix + pRange, leftCenterPix + pRange) = circleImg(circlePix, circlePix);
                 end
                 obj.images{i} = squeeze(imageSet(i, :, :));     % save the image in a cell array
@@ -178,38 +156,45 @@ classdef RTStimulus < handle
             degrees = atan2(pix / obj.pixPerMM, obj.viewDistanceMM) * obj.degPerRadian;
         end
         
+        %% positionWindow -- put the window back to where it belongs if it has been moved
+        function positionWindow(obj)
+            t = get(obj.hFig, 'Position');
+            if t(1) ~= obj.marginPix || t(2) ~= obj.marginPix
+                set(obj.hFig, 'Position', obj.windRectPix);
+            end
+        end
+
         %% 
         function prepareImages(obj, trialType, stepDirection)
-            c = RTConstants;
             % first offset the image position if the current position won't accommodate the left or right step. 
             % we don't really need to do anything for a centering trial
-            if trialType == c.kCenteringTrial
+            if trialType == RTConstants.kCenteringTrial
                 drawImage(obj, obj.currentImageIndex);                  % must draw for trial equivalence
             else
-                if stepDirection == c.kLeft                           	% going to step left
-                    if obj.currentImageIndex == c.kLeftStim
+                if stepDirection == RTConstants.kLeft                           	% going to step left
+                    if obj.currentImageIndex == RTConstants.kLeftStim
                         obj.currentOffsetIndex = obj.currentOffsetIndex - 1;    % shift one position leftward
                     end
-                    drawImage(obj, c.kRightStim);                         % draw same spot with new image
-                    obj.finalStim = c.kLeftStim;
+                    drawImage(obj, RTConstants.kRightStim);                         % draw same spot with new image
+                    obj.finalStim = RTConstants.kLeftStim;
                 else
-                    if obj.currentImageIndex == c.kRightStim             % going to step right
+                    if obj.currentImageIndex == RTConstants.kRightStim             % going to step right
                         obj.currentOffsetIndex = obj.currentOffsetIndex + 1; % shift one position leftward
                     end
-                    drawImage(obj, c.kLeftStim);
-                    obj.finalStim = c.kRightStim;
+                    drawImage(obj, RTConstants.kLeftStim);
+                    obj.finalStim = RTConstants.kRightStim;
                end
             end
             % set up the gap stimuli 
             switch trialType
-                case c.kCenteringTrial
+                case RTConstants.kCenteringTrial
                     obj.gapStim = obj.finalStim;
-                case c.kStepTrial
+                case RTConstants.kStepTrial
                     obj.gapStim = obj.finalStim;
-                case c.kGapTrial
-                    obj.gapStim = c.kBlankStim;
-                case c.kOverlapTrial
-                    obj.gapStim = c.kBothStim;
+                case RTConstants.kGapTrial
+                    obj.gapStim = RTConstants.kBlankStim;
+                case RTConstants.kOverlapTrial
+                    obj.gapStim = RTConstants.kBothStim;
             end
         end
         
@@ -219,23 +204,9 @@ classdef RTStimulus < handle
                 obj.viewDistanceMM = newValueCM * 10.0;
                 makeSpotImages(obj);                                        % make new spot images
                 obj.currentOffsetIndex = ceil(obj.numPos / 2);            	% center position
-                c = RTConstants;
-                drawImage(obj, c.kLeftStim);                               % draw the center spot
+                drawImage(obj, RTConstants.kLeftStim);                               % draw the center spot
             end
         end
-
-        %% stepStimulus -- Step the stimulus
-%         function stepSign = stepStimulus(obj, offsetDeg)
-%     %             stepSign = -sign(obj.currentOffsetPix);
-%     %             if stepSign == 0
-%     %                 stepSign = sign(rand - 0.5);
-%     %             end
-%     %             newOffsetDeg = currentOffsetDeg + stepSign  * offsetDeg;
-%             newOffsetDeg = currentOffsetDeg(obj) + offsetDeg;
-%             newOffsetMM = obj.viewDistanceMM * tan(newOffsetDeg / 57.2958);
-%             obj.currentOffsetPix = newOffsetMM * obj.pixPerMM;
-%             drawDot(obj);
-%         end
     end        
 end
             

@@ -118,7 +118,6 @@ end
 % --- Executes on button press in loadDataButton.
 function loadDataButton_Callback(hObject, ~, handles) %#ok<*DEFNU>
 %
-    c = RTConstants;
     RTControlState(handles, 'off', {})
     [fileName, filePath] = uigetfile('*.mat', 'Load Matlab Data Workspace', '~/Desktop');
     if fileName ~= 0
@@ -337,7 +336,7 @@ function startButton_Callback(hObject, eventdata, handles)
 
     %% Stop -- we're already running, so it's a the stop button    
     else % stop
-        stop(timerfind);                                                        % stop/delete timers; pause data stream
+        stop(timerfind);                                               	% stop/delete timers; pause data stream
         delete(timerfind);      
         handles.dataTimer = 0;
         handles.taskTimer = 0;
@@ -345,7 +344,7 @@ function startButton_Callback(hObject, eventdata, handles)
         set(handles.startButton, 'string', 'Start','backgroundColor', 'green');
         RTControlState(handles, 'on', {handles.startButton})
         drawnow;
-        drawCenterStimulus(handles.visStim);                                	% recenter fixspot
+        drawCenterStimulus(handles.visStim);                           	% recenter fixspot
     end
     guidata(hObject, handles);    
 end
@@ -353,7 +352,6 @@ end
 %% taskController: function to collect data from LabJack
 function taskController(obj, events, daqaxes)
     
-    c = RTConstants;
     handles = obj.UserData;
     data = handles.data;
     lbj = handles.lbj;                                              	% get handle to LabJack
@@ -362,12 +360,13 @@ function taskController(obj, events, daqaxes)
     rtDists = handles.rtDists;
     switch data.taskState
         case RTTaskState.taskStarttrial
+            positionWindow(visStim);
             if sum(data.trialTypesDone) >= data.numTrialTypes          	% finished another block
                 data.trialTypesDone = zeros(1, data.numTrialTypes);    	% clear counters
                 data.blocksDone = data.blocksDone + 1;                  % increment block counter
             end
             if atStepRangeLimit(visStim)
-                data.trialType = c.kCenteringTrial;
+                data.trialType = RTConstants.kCenteringTrial;
             else
                 data.trialType = ceil(rand() * data.numTrialTypes);     % randomly selected saccade step
                 startIndex = data.trialType;                            % mark the index where search starts
@@ -380,9 +379,9 @@ function taskController(obj, events, daqaxes)
                 end
             end
             if rand() > 0.5
-                data.stepDirection = c.kLeft;
+                data.stepDirection = RTConstants.kLeft;
             else
-                data.stepDirection = c.kRight;
+                data.stepDirection = RTConstants.kRight;
             end
             prepareImages(visStim, data.trialType, data.stepDirection);
             if data.testMode 
@@ -395,12 +394,12 @@ function taskController(obj, events, daqaxes)
             if etime(clock, data.trialStartTimeS) > 0.015               % data settled for one taskTimer cycle
                 data.trialStartTimeS = clock;                         	% reset the trial clock
                 data.prestimTimeS = data.prestimDurS + rand() * 0.125;	% jitter the stimon time a bit
-                if data.trialType == c.kGapTrial                        % gap trials have target after the gap
+                if data.trialType == RTConstants.kGapTrial                        % gap trials have target after the gap
                  	data.targetTimeS = data.prestimTimeS + data.gapDurS;
                 else
                     data.targetTimeS = data.prestimTimeS;              	% all others have target before the gap
                 end
-                if data.trialType == c.kOverlapTrial                    % overlap trials have fixOff after the gap
+                if data.trialType == RTConstants.kOverlapTrial        	% overlap trials have fixOff after the gap
                     data.fixOffTimeS = data.prestimTimeS + data.gapDurS;
                 else                                                    % all others have fixOff before the gap
                    data.fixOffTimeS = data.prestimTimeS;                
@@ -414,7 +413,7 @@ function taskController(obj, events, daqaxes)
             end
         case RTTaskState.taskPrestim
            if etime(clock, data.trialStartTimeS) > data.prestimTimeS	% preStim time up?
-                if data.trialType == c.kCenteringTrial
+                if data.trialType == RTConstants.kCenteringTrial
                 	drawCenterStimulus(visStim);
                 else
                 	drawImage(visStim, visStim.gapStim);
@@ -423,11 +422,11 @@ function taskController(obj, events, daqaxes)
             end
         case RTTaskState.taskGapstim
            if etime(clock, data.trialStartTimeS) > data.prestimTimeS + data.gapDurS
-                drawImage(visStim, visStim.finalStim);                   % gap time up, draw postgap stim
+                drawImage(visStim, visStim.finalStim);                 	% gap time up, draw postgap stim
                	data.taskState = RTTaskState.taskPoststim;
             end
         case RTTaskState.taskEndtrial
-            if data.trialType ~= c.kCenteringTrial                  	% no updates needed on centering trials
+            if data.trialType ~= RTConstants.kCenteringTrial          	% no updates needed on centering trials
                 [startIndex, endIndex] = processSignals(saccades, data);
                 plot(handles.posVelPlots, handles, startIndex, endIndex);
                 if startIndex > 0

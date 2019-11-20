@@ -31,7 +31,7 @@ classdef RTSaccades < handle
             for t = 1:time
                 positions(time + t) = positions(time) + accel * time * t - 0.5 * accel * t^2;
             end
-            preStimSamples = floor((data.targetTimeS + 0.075 + 0.015 * data.trialType) * data.sampleRateHz);
+            preStimSamples = floor((data.targetTimeS + 0.095 + 0.005 * data.trialType) * data.sampleRateHz);
             posTrace(preStimSamples + 1:preStimSamples + length(positions)) = positions;
             for i = preStimSamples + length(positions) + 1:length(posTrace)
                 posTrace(i) = positions(time * 2);
@@ -171,7 +171,7 @@ classdef RTSaccades < handle
             data.trialTypesDone(data.trialType) = data.trialTypesDone(data.trialType) + 1;
             % now that we've updated all the traces, compute the degrees per volt if we have enough trials
             % take average peaks to get each point
-            if data.trialType ~= c.kCenteringTrial && sum(data.numSummed) > c.kTrialTypes
+            if data.trialType ~= RTConstants.kCenteringTrial && sum(data.numSummed) > RTConstants.kTrialTypes
                 rangeV = max(data.posAvg) - min(data.posAvg);
                 obj.degPerV = mean(data.stepSizeDeg ./ rangeV);
                 obj.degPerSPerV = obj.degPerV * data.sampleRateHz;          % needed for velocity plots

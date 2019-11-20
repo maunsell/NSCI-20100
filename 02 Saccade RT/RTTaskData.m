@@ -51,9 +51,8 @@ classdef RTTaskData < handle
              obj = obj@handle();                                    % object initialization
 
              %% Post Initialization %%
-            c = RTConstants;
             obj.numChannels = numChannels;
-            obj.numTrialTypes = c.kTrialTypes;
+            obj.numTrialTypes = RTConstants.kTrialTypes;
             obj.absStepIndex = 1;
             obj.saccadeTraceS = 0.250;                              % duratoin of saccade trace
             obj.trialDurS = max(1.0, 2 * obj.saccadeTraceS);

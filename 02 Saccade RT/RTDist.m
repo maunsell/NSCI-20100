@@ -10,6 +10,9 @@ classdef RTDist < handle
         n
         reactTimesMS
     end
+    properties (Constant)
+        titles = {'Gap', 'Step', 'Overlap'};
+    end
         
     methods
         %% Initialization
@@ -38,18 +41,16 @@ classdef RTDist < handle
 
         %% plot -- plot all the distributions
         function rescale = plot(obj)
-            
-            titles = {'Gap', 'Step', 'Overlap'};
             cla(obj.fHandle);                                   % clear the figures
             if obj.n == 0                                       % nothing to plot
                 rescale = 0;
                 return
             end
-            colors = get(obj.fHandle, 'ColorOrder');            % get the colors for the different plots
+            colors = get(obj.fHandle, 'colorOrder');            % get the colors for the different plots
             [counts, x] = hist(obj.fHandle, obj.reactTimesMS(1:obj.n));
             bar(obj.fHandle, x, counts, 1.0, 'facecolor', colors(obj.index,:));
             hold(obj.fHandle, 'on');
-            title(obj.fHandle, sprintf('%s Condition', titles{obj.index}), 'fontSize', 12, 'fontWeight', 'bold');
+            title(obj.fHandle, sprintf('%s Condition', obj.titles{obj.index}), 'fontSize', 12, 'fontWeight', 'bold');
             if (obj.index == 3)                                 % label the bottom plot
                 xlabel(obj.fHandle, 'Reaction Time (ms)', 'fontSize', 14);
             end
@@ -63,11 +64,27 @@ classdef RTDist < handle
             end
             a(4) = 1.2 * a(4);                                  % leave some headroom about the histogram
             axis(obj.fHandle, a);
-            meanRT = mean(obj.reactTimesMS(1:obj.n));           % display the mean
+            meanRT = mean(obj.reactTimesMS(1:obj.n));           % mean RT
+            stdRT = std(obj.reactTimesMS(1:obj.n));             % std for RT
             plot(obj.fHandle, [meanRT meanRT], [a(3) a(4)], ':');
             text(a(1) + 0.05 * (a(2) - a(1)), 0.9 * a(4), sprintf('%.0f', obj.index + 2), 'parent', obj.fHandle, ...
                 'fontSize', 24, 'fontWeight', 'bold');
-            text(0.05 * a(2), 0.8 * a(4), sprintf('Mean %.0f ms', meanRT), 'parent', obj.fHandle);
+            displayText = {sprintf('n = %.0f', obj.n), sprintf('Mean = %.0f', meanRT)};
+            if obj.n > 10
+                sem = stdRT / sqrt(obj.n);
+                ci = sem * 1.96;
+                plot(obj.fHandle, [-ci, ci] + meanRT, [1, 1] * 0.92 * a(4), 'color', colors(obj.index,:), ...
+                    'lineWidth', 3);
+                plot(obj.fHandle, [-sem, sem] + meanRT, [1, 1] * 0.95 * a(4), 'color', colors(obj.index,:), ...
+                    'lineWidth', 3);
+                semPrecision = sem < 2.0;
+                displayText{length(displayText) + 1} = sprintf('SEM %.*f-%.*f ms', semPrecision, meanRT - sem, ...
+                    semPrecision, meanRT + sem);
+                ciPrecision = ci < 2.0;
+                displayText{length(displayText) + 1} = sprintf('95%% CI %.*f-%.*f ms', ciPrecision, meanRT - ci, ...
+                    ciPrecision, meanRT + ci);
+            end
+            text(0.05 * a(2), 0.80 * a(4), displayText, 'verticalAlignment', 'top', 'parent', obj.fHandle);
             hold(obj.fHandle, 'off');
        end
 
