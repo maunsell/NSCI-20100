@@ -32,11 +32,12 @@ function clearButton_Callback(hObject, eventdata, handles)
     switch selection
         case 'Yes'
         clearAll(handles.saccades);
-%         clearAll(handles.ampDur);
         for i = 1:handles.data.numTrialTypes
             clearAll(handles.rtDists{i});
         end
         clearAll(handles.data);
+        handles.data.fixOffTimeS = 0;                       % stop plots from showing stale trial times
+        handles.data.targetTimeS = 0;
         plot(handles.posVelPlots, handles, 0, 0);
         set(handles.calibrationText, 'string', '');
         guidata(hObject, handles);
@@ -111,7 +112,6 @@ function varargout = initRT(hObject, eventdata, handles)               %#ok<*INU
 % handles    structure with handles and user data (see GUIDATA)
     varargout{1} = handles.output;
     set(handles.startButton, 'String', 'Start','BackgroundColor', 'green');
-%     addPsychtoolboxPaths;
 end
 
 %% loadDataButton_Callback
@@ -133,8 +133,6 @@ function loadDataButton_Callback(hObject, ~, handles) %#ok<*DEFNU>
         
         % saved axes handles generally aren't valid if we are in a new run.
         % Load the handles with the current axes handles.
-        
-%         handles.ampDur.fHandle = handles.axes5;                         % loaded axes handle might be invalid
         handles.rtDists{1}.fHandle = handles.axes6;
         handles.rtDists{2}.fHandle = handles.axes7;
         handles.rtDists{3}.fHandle = handles.axes8;
@@ -142,9 +140,7 @@ function loadDataButton_Callback(hObject, ~, handles) %#ok<*DEFNU>
         
         [startIndex, endIndex] = processSignals(handles.saccades, d);
         plot(handles.posVelPlots, handles, startIndex, endIndex);
-%         handles.ampDur.lastN = 0;                                       % force ampDur to plot
-%         plotAmpDur(handles.ampDur);
-        for i = 1:handles.data.numTrialTypes
+        for i = RTConstants.kGapTrial:RTConstants.kOverlapTrial
             plot(handles.rtDists{i});
         end
     end
@@ -195,37 +191,6 @@ function openRT(hObject, eventdata, handles, varargin)
     guidata(hObject, handles);                                              % save the selection
 end
 
-%% PsychotoolboxPaths
-function addPsychtoolboxPaths
-    if ~exist('/Applications/Psychtoolbox/PsychAlpha','dir')
-        printf('adding Psychtoolbox paths');
-        list = genpath('/Applications/Psychtoolbox');
-        folders = strsplit(list, pathsep);
-        folders(contains(folders, '.svn')) = [];
-        newlist = sprintf('%s:', folders{:});
-        addpath(newlist);
-    else
-        printf('Psychtoolbox paths already set');
-    end
-end
-
-%%sampleRateText_Callback
-% function sampleRateText_Callback(hObject, eventdata, handles)
-%     requestedRateHz = str2double(get(handles.sampleRateText, 'string'));
-%     clippedRateHz = min([requestedRateHz, 1000, max(100, requestedRateHz)]);
-%     if (clippedRateHz ~= requestedRateHz)
-%         set(handles.sampleRateText, 'String', clippedRateHz);
-%     end
-%     if clippedRateHz ~= handles.data.sampleRateHz
-%         setSampleRateHz(handles.data, clippedRateHz);
-%         handles.lbj.SampleRateHz = clippedRateHz;
-%         errorCode = streamConfigure(handles.lbj);
-%         if errorCode > 0
-%             fprintf(1,'RT: Unable to configure LabJack to new rate. Error %d.\n', errorCode);
-%         end
-%     end
-% end
-
 %% saveDataButton_Callback
 function saveDataButton_Callback(hObject, eventdata, handles)
 % Saving the workspace for a GUI isn't simple.  What we have accessible in this
@@ -241,7 +206,7 @@ function saveDataButton_Callback(hObject, eventdata, handles)
         r1 = handles.rtDists{1};
         r2 = handles.rtDists{2};
         r3 = handles.rtDists{3};
-       save([filePath fileName], 'd', 's');
+        save([filePath fileName], 'd', 's', 'r1', 'r2', 'r3');
     end
     RTControlState(handles, 'on', {})
 end
