@@ -32,6 +32,7 @@ classdef RTStimulus < handle
     end
     properties (Constant)
         marginPix = 10;
+%         pixelDepth = 32;
     end
     methods (Static)
     end
@@ -64,7 +65,10 @@ classdef RTStimulus < handle
        	%% atStepRangeLimit -- Report whether a step is beyond the usable range       
         function atLimit = atStepRangeLimit(obj)
             atLimit = (obj.currentOffsetIndex == 1 && obj.currentImageIndex == RTConstants.kLeftStim) || ...
-                (obj.currentOffsetIndex == obj.numPos - 1 && obj.currentImageIndex == RTConstants.kRightStim);
+                (obj.currentOffsetIndex == length(obj.imagePosPix) && obj.currentImageIndex == RTConstants.kRightStim);
+            obj.windRectPix(3)
+            obj.imagePosPix
+            obj.currentOffsetIndex
         end
   
         %% currentOffsetDeg -- offset of the spot from screen center in degrees
@@ -102,6 +106,11 @@ classdef RTStimulus < handle
             limitDeg = pixToDeg(obj, obj.viewDistanceMM);
         end
 
+%         %% limitDistCM -- return the maximum allowed viewing distance
+%         function limitDistCM = maxViewDistanceCM(~)
+%             limitDistCM = 100;
+%         end
+        
         %% makeSpotImages.  Each image has the height of a spot and the width of stepSizeDeg*2.  The spots, if they appear
         % are centered at 0.5 and 1.5 stepSizeDeg horizontally.  A set of four images is created, one for each possible
         % occupancy of the two spot locations
@@ -133,8 +142,9 @@ classdef RTStimulus < handle
                 end
                 obj.images{i} = squeeze(imageSet(i, :, :));     % save the image in a cell array
             end
-            % update the image position values.  
-            obj.numPos = floor(obj.windRectPix(3) / obj.stepSizePix);
+            % update the image position values.  We round up because the steps are divisions between segments, 
+            % so we get an extra one for free
+            obj.numPos = ceil((obj.windRectPix(3) - diameterPix) / obj.stepSizePix);
             obj.numPos = obj.numPos - (1 - mod(obj.numPos, 2)); % numPos must be odd
             centerIndex = ceil(obj.numPos / 2);
             obj.imagePosPix = zeros(1, obj.numPos);

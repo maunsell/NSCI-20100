@@ -1,6 +1,7 @@
  classdef RTConstants
     properties(Constant)
         
+        maxViewDistCM = 100;
         mmPerInch = 25.40;
         
         kCenteringTrial = 0;             % trial types

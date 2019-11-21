@@ -268,9 +268,8 @@ function startButton_Callback(hObject, eventdata, handles)
     if strcmp(get(handles.startButton, 'String'), 'Start') % if start button, do the following
         fprintf(1,'\nReaction Time v1.0\n %s\n', datestr(clock));
         viewDistanceCM = str2double(get(handles.viewDistanceText, 'string'));
-        limitDistanceCM = maxViewDistanceCM(handles.visStim);
-        if viewDistanceCM > limitDistanceCM
-            errordlg(sprintf('Viewing distance must be <= %d cm', floor(limitDistanceCM)));
+        if viewDistanceCM > RTConstants.maxViewDistCM
+            errordlg(sprintf('Viewing distance must be <= %d cm', floor(RTConstants.maxViewDistCM)));
             return;
         end
         setViewDistanceCM(handles.visStim, str2double(get(handles.viewDistanceText, 'string')));

@@ -1,7 +1,6 @@
 classdef RTTaskData < handle
     % RTTaskData
     %   Support for processing eye traces and detecting saccades in RT
-    
     properties
         absStepIndex
         blocksDone;
