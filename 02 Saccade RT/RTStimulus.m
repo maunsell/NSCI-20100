@@ -2,50 +2,42 @@ classdef RTStimulus < handle
     % Contrast threshold stimuli controller
     % This is the first stimulus for which we've cut loose from Psychtoolbox
     properties
-%         currentOffsetPix
       	finalStim
         gapStim
-        tag
+    end
+    properties (Constant)
+        marginPix = 10;
     end
     properties (GetAccess = private)
         currentOffsetIndex              % offset of for displayed image count (left edges of images, effectively)
         currentImageIndex
-        degPerRadian
-        frameDurS
         hAxes
         hFig
-        grayColor
         pixPerMM
         g
         images
         imagePosPix                     % locations for putting the images in the window
-        nextImageIndex
         numPos
         spotRadiusPix
         stepSizeDeg
         stepSizePix
         viewDistanceMM
-        whiteColor
         windRectPix
-        xCenterPix
-        yCenterPix
-    end
-    properties (Constant)
-        marginPix = 10;
     end
     methods (Static)
     end
     methods
         function obj = RTStimulus(stepDeg)
             imtool close all;                               % close imtool figures from Image Processing Toolbox
-            screenRectPix = get(0, 'MonitorPositions');        % get the size of the primary screen
+            screenRectPix = get(0, 'MonitorPositions');   	% get the size of the primary screen
+            if size(screenRectPix, 1) > 1
+                screenRectPix = screenRectPix(1, :);
+            end
             obj.currentImageIndex = 0;
             obj.currentOffsetIndex = 1;
-            obj.degPerRadian = 57.2958;
             obj.finalStim = 0;
             obj.gapStim = 0;
             obj.images = cell(1, 4);
-            obj.nextImageIndex = 0;
             obj.spotRadiusPix = 10;
             obj.stepSizeDeg = stepDeg;
             obj.viewDistanceMM = 0;
@@ -75,7 +67,7 @@ classdef RTStimulus < handle
         %%
         function pix = degToPix(obj, deg)
             assert(obj.viewDistanceMM > 0, 'RTStimulus, degToPix: viewDistanceMM has not yet been set');
-            pix = round(tan(deg / obj.degPerRadian) * obj.viewDistanceMM * obj.pixPerMM);
+            pix = round(tan(deg / RTConstants.degPerRadian) * obj.viewDistanceMM * obj.pixPerMM);
         end
         
         %%
@@ -102,11 +94,11 @@ classdef RTStimulus < handle
             limitDeg = pixToDeg(obj, obj.viewDistanceMM);
         end
 
-        %% makeSpotImages.  Each image has the height of a spot and the width of stepSizeDeg*2.  The spots, if they appear
+        %% makeImages.  Each image has the height of a spot and the width of stepSizeDeg*2.  The spots, if they appear
         % are centered at 0.5 and 1.5 stepSizeDeg horizontally.  A set of four images is created, one for each possible
         % occupancy of the two spot locations
 
-        function makeSpotImages(obj)
+        function makeImages(obj)
             % make a circleImage
            	diameterPix = floor(obj.spotRadiusPix) * 2;
             circlePix = 1:diameterPix;
@@ -124,7 +116,7 @@ classdef RTStimulus < handle
             rightCenterPix = floor(1.5 * obj.stepSizePix);
             heightCenterPix = floor(diameterPix / 2);
             pRange = circlePix - obj.spotRadiusPix;
-            for i = 1:RTConstants.kStimTypes                           	% four images, one for each possible mix of dot/no-dot
+            for i = RTConstants.kBlankStim:RTConstants.kBothStim                           	% four images, one for each possible mix of dot/no-dot
                 if i == RTConstants.kRightStim || i == RTConstants.kBothStim       	% needs a right hand dot
                     imageSet(i, heightCenterPix + pRange, rightCenterPix + pRange) = circleImg(circlePix, circlePix);
                 end
@@ -133,6 +125,7 @@ classdef RTStimulus < handle
                 end
                 obj.images{i} = squeeze(imageSet(i, :, :));     % save the image in a cell array
             end
+            obj.images{RTConstants.kTestStim} = ones(obj.windRectPix(4), obj.stepSizePix, 'uint8'); % test image (white rect)
             % update the image position values.  
             obj.numPos = floor(obj.windRectPix(3) / obj.stepSizePix);
             obj.numPos = obj.numPos - (1 - mod(obj.numPos, 2)); % numPos must be odd
@@ -148,17 +141,9 @@ classdef RTStimulus < handle
         %%
         function degrees = pixToDeg(obj, pix)
             assert(obj.viewDistanceMM > 0, 'RTStimulus, pixToDeg: viewDistanceMM has not yet been set');
-            degrees = atan2(pix / obj.pixPerMM, obj.viewDistanceMM) * obj.degPerRadian;
+            degrees = atan2(pix / obj.pixPerMM, obj.viewDistanceMM) * RTConstants.degPerRadian;
         end
         
-        %% positionWindow -- put the window back to where it belongs if it has been moved
-        function positionWindow(obj)
-            t = get(obj.hFig, 'Position');
-            if t(1) ~= obj.marginPix || t(2) ~= obj.marginPix
-                set(obj.hFig, 'Position', obj.windRectPix);
-            end
-        end
-
         %% prepareImages -- set up the images that will be needed for the upcoming trial
         function prepareImages(obj, trialType, stepDirection)
             % first offset the image position if the current position won't accommodate the left or right step. 
@@ -193,13 +178,35 @@ classdef RTStimulus < handle
             end
         end
         
+     	%% prepareTimingImages -- set up the images that will are used for timing tests
+        function prepareTimingImages(obj, trialType)
+            obj.currentOffsetIndex = ceil(obj.numPos / 2);                      % always at center location
+            drawImage(obj, RTConstants.kBlankStim);                             % blank anything there
+            if trialType == RTConstants.kGapTrial
+                obj.gapStim = RTConstants.kBlankStim;
+            else
+                obj.gapStim = RTConstants.kTestStim;
+            end
+            obj.finalStim = RTConstants.kTestStim;
+            obj.hAxes.Position(2) = 0;
+            obj.hAxes.Position(4) = obj.windRectPix(4);
+        end
+        
+        %% positionWindow -- put the window back to where it belongs if it has been moved
+        function positionWindow(obj)
+            t = get(obj.hFig, 'Position');
+            if t(1) ~= obj.marginPix || t(2) ~= obj.marginPix
+                set(obj.hFig, 'Position', obj.windRectPix);
+            end
+        end
+
         %% setViewDistanceCM -- set the viewing distance, build the visual stimuli
         function setViewDistanceCM(obj, newValueCM)
             if obj.viewDistanceMM ~= newValueCM
                 obj.viewDistanceMM = newValueCM * 10.0;
-                makeSpotImages(obj);                                        % make new spot images
+                makeImages(obj);                                            % make new spot images
                 obj.currentOffsetIndex = ceil(obj.numPos / 2);            	% center position
-                drawImage(obj, RTConstants.kLeftStim);                               % draw the center spot
+                drawImage(obj, RTConstants.kLeftStim);                     	% draw the center spot
             end
         end
     end        

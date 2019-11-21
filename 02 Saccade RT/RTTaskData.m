@@ -2,7 +2,6 @@ classdef RTTaskData < handle
     % RTTaskData
     %   Support for processing eye traces and detecting saccades in RT
     properties
-        absStepIndex
         blocksDone;
         calTrialsDone;
         dataState;
@@ -25,15 +24,13 @@ classdef RTTaskData < handle
         saccadeDurS;
         saccadeSamples;
         saccadeTraceS;
-        saccHalfTimeS;
         stepDirection;
         stepSizeDeg;
-        stimStartPixel;
         trialDurS;
         trialSamples;
         targetTimeS;
+        taskMode;
         taskState;
-        testMode;
         trialStartTimeS;
         trialType;
         trialTypesDone;
@@ -52,7 +49,6 @@ classdef RTTaskData < handle
              %% Post Initialization %%
             obj.numChannels = numChannels;
             obj.numTrialTypes = RTConstants.kTrialTypes;
-            obj.absStepIndex = 1;
             obj.saccadeTraceS = 0.250;                              % duratoin of saccade trace
             obj.trialDurS = max(1.0, 2 * obj.saccadeTraceS);
             obj.prestimDurS = min(obj.trialDurS / 4, 0.250);
@@ -65,7 +61,7 @@ classdef RTTaskData < handle
             obj.samplesRead = 0;
             obj.stepDirection = 0;
             obj.stepSizeDeg = 10.0;
-            obj.testMode = false;                                  % testMode is set in RT, not here
+            obj.taskMode = RTConstants.kNormal;                     % taskMode is overridden in RT, not here
             obj.voltage = 0;
             obj.doFilter = false;
             setSampleRateHz(obj, sampleRateHz);

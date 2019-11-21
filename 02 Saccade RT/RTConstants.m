@@ -1,8 +1,13 @@
  classdef RTConstants
     properties(Constant)
         
+        degPerRadian = 57.2958;
         maxViewDistCM = 100;
         mmPerInch = 25.40;
+        
+        kNormal = 0;                    % task modes
+        kDebug = 1;
+        kTiming = 2;
         
         kCenteringTrial = 0;             % trial types
         kGapTrial = 1;
@@ -14,7 +19,7 @@
         kLeftStim = 2;
         kRightStim = 3;
         kBothStim = 4;
-        kStimTypes = 4;
+        kTestStim = 5;
         
         kLeft = -1;
         kRight = 1;

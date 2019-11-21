@@ -121,10 +121,10 @@ function loadDataButton_Callback(hObject, ~, handles) %#ok<*DEFNU>
     RTControlState(handles, 'off', {})
     [fileName, filePath] = uigetfile('*.mat', 'Load Matlab Data Workspace', '~/Desktop');
     if fileName ~= 0
-        testMode = handles.data.testMode;                               % keep testMode across data loads
+        taskMode = handles.data.taskMode;                               % keep taskMode across data loads
         load([filePath fileName]);
         handles.data = d;
-        handles.data.testMode = testMode;                               % keep testMode across data loads
+        handles.data.taskMode = taskMode;                               % keep taskMode across data loads
         handles.saccades = s;
         set(handles.calibrationText, 'string', sprintf('Calibration %.1f deg/V', handles.saccades.degPerV));
         handles.rtDists{1} = r1;
@@ -158,15 +158,21 @@ function openRT(hObject, eventdata, handles, varargin)
 
     % test mode requires connecting DAC0 to AIN0 and DAC1 to AIN1 on the LabJack
     if ~isempty(varargin)
-        testMode = strcmp(varargin{1}, 'debug') || strcmp(varargin{1}, 'test');
+        if strcmp(varargin{1}, 'debug') || strcmp(varargin{1}, 'test')
+            taskMode = RTConstants.kDebug;
+        end
     else
-        testMode = false;
+        taskMode = RTConstants.kNormal;
     end
     
-    testMode = true;
+    taskMode = RTConstants.kDebug;
     
-    if testMode
-        set(handles.warnText, 'string', 'Test Mode');
+    switch taskMode
+        case RTConstants.kDebug
+            set(handles.warnText, 'string', 'Debug Mode');
+        case RTConstants.kTiming
+            set(handles.warnText, 'string', 'Timing Test');
+        otherwise
     end   
     handles.output = hObject;                                               % select default command line output
     handles.saccades = RTSaccades;
@@ -183,10 +189,10 @@ function openRT(hObject, eventdata, handles, varargin)
     end
     
     % set up test mode
-    handles.data.testMode = testMode;
-    if (handles.data.testMode)
-        analogOut(handles.lbj, 0, 2.5);                                     % For debugging (AOuts to AIns)
-    end
+    handles.data.taskMode = taskMode;
+%     if (handles.data.taskMode == RTConstants.kDebug)
+%         analogOut(handles.lbj, 0, 2.5);                                     % For debugging (AOuts to AIns)
+%     end
     movegui(hObject, 'northeast');
     guidata(hObject, handles);                                              % save the selection
 end
@@ -341,14 +347,18 @@ function taskController(obj, events, daqaxes)
                     data.trialType = mod(data.trialType, data.numTrialTypes) + 1; % try the next one
                     assert(data.trialType ~= startIndex, 'SaccadeRT taskController: failed to find unused trial type');                     % no types available (shouldn't happen)
                 end
+                if rand() > 0.5
+                    data.stepDirection = RTConstants.kLeft;
+                else
+                    data.stepDirection = RTConstants.kRight;
+                end
             end
-            if rand() > 0.5
-                data.stepDirection = RTConstants.kLeft;
+            if data.taskMode == RTConstants.kTiming
+                prepareTimingImages(visStim, data.trialType);
             else
-                data.stepDirection = RTConstants.kRight;
+                prepareImages(visStim, data.trialType, data.stepDirection);
             end
-            prepareImages(visStim, data.trialType, data.stepDirection);
-            if data.testMode 
+            if data.taskMode == RTConstants.kDebug 
                 data.voltage = min(5.0, visStim.currentOffsetPix / 1000.0);  % debugging - DACO0 should go to AIN0
                 analogOut(lbj, 0, 2.5 + data.voltage);
             end

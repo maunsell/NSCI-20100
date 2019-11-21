@@ -133,7 +133,7 @@ classdef RTSaccades < handle
         function [startIndex, endIndex] = processSignals(obj, data)
             c = RTConstants;
             % remove the DC offset
-            if ~data.testMode
+            if data.taskMode == RTConstants.kNormal
                 data.posTrace = data.rawData - mean(data.rawData(1:floor(data.sampleRateHz * data.prestimDurS)));
             else
                 data.posTrace = fakeDataTrace(obj, data);
