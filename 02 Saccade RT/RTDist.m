@@ -76,7 +76,7 @@ classdef RTDist < handle
             stdRT = std(obj.reactTimesMS(1:obj.n));             % std for RT
             text(a(1) + 0.05 * (a(2) - a(1)), 0.9 * a(4), sprintf('%.0f', obj.index + 2), 'parent', obj.fHandle, ...
                 'fontSize', 24, 'fontWeight', 'bold');
-            displayText = {sprintf('n = %.0f', obj.n), sprintf('Mean = %.0f', meanRT)};
+            displayText = {sprintf('n = %.0f', obj.n), sprintf('Mean = %.0f', meanRT), sprintf('SD = %.0f', stdRT)};
             if obj.n > 10
                 sem = stdRT / sqrt(obj.n);
                 ci = sem * 1.96;

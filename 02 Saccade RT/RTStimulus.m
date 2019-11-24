@@ -44,7 +44,10 @@ classdef RTStimulus < handle
             windHeightPix = 60;
             windWidthPix = screenRectPix(3) - 2 * obj.marginPix;
             obj.windRectPix = [obj.marginPix, obj.marginPix, windWidthPix, windHeightPix];
-            obj.hFig = figure('Renderer', 'painters', 'Position', [obj.marginPix, obj.marginPix, windWidthPix, windHeightPix]);
+            obj.hFig = figure('Renderer', 'painters', 'Position', [obj.marginPix, obj.marginPix, ...
+                windWidthPix, windHeightPix]);
+%             obj.hFig = figure('Renderer', 'OpenGL', 'Position', [obj.marginPix, obj.marginPix, ...
+%                 windWidthPix, windHeightPix]);
             set(obj.hFig, 'menubar', 'none', 'toolbar', 'none', 'NumberTitle', 'off', 'resize', 'off');
             set(obj.hFig, 'color', [0.5, 0.5, 0.5]);
             set(obj.hFig, 'Name', 'NSCI 20100 Saccadic Reaction Time', 'NumberTitle', 'Off');

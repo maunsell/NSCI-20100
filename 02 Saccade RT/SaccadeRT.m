@@ -122,7 +122,7 @@ function loadDataButton_Callback(hObject, ~, handles) %#ok<*DEFNU>
     [fileName, filePath] = uigetfile('*.mat', 'Load Matlab Data Workspace', '~/Desktop');
     if fileName ~= 0
         taskMode = handles.data.taskMode;                               % keep taskMode across data loads
-        load([filePath fileName]);
+        load([filePath fileName], 'd', 's', 'r1', 'r2', 'r3');
         handles.data = d;
         handles.data.taskMode = taskMode;                               % keep taskMode across data loads
         handles.saccades = s;
@@ -165,7 +165,7 @@ function openRT(hObject, eventdata, handles, varargin)
         taskMode = RTConstants.kNormal;
     end
     
-    taskMode = RTConstants.kDebug;
+    taskMode = RTConstants.kTiming;
     
     switch taskMode
         case RTConstants.kDebug
@@ -288,7 +288,7 @@ function startButton_Callback(hObject, eventdata, handles)
 
         % create timer to get data from LabJack
         handles.data.taskState = RTTaskState.taskStarttrial;
-        handles.data.trialStartTimeS = 0;
+        handles.data.trialStartTimeVec = [];
         handles.data.dataState = RTDataState.dataIdle;
         dataCollectRateHz = 25;                       % Fast enough to prevent overflow w/o blocking other activity
         handles.dataTimer = timer('Name', 'LabJackData', 'ExecutionMode', 'fixedRate',...
@@ -324,7 +324,6 @@ function taskController(obj, events, daqaxes)
     
     handles = obj.UserData;
     data = handles.data;
-    lbj = handles.lbj;                                              	% get handle to LabJack
     visStim = handles.visStim;
     saccades = handles.saccades;
     rtDists = handles.rtDists;
@@ -360,15 +359,14 @@ function taskController(obj, events, daqaxes)
             end
             if data.taskMode == RTConstants.kDebug 
                 data.voltage = min(5.0, visStim.currentOffsetPix / 1000.0);  % debugging - DACO0 should go to AIN0
-                analogOut(lbj, 0, 2.5 + data.voltage);
+                analogOut(handles.lbj, 0, 2.5 + data.voltage);
             end
-            data.trialStartTimeS = clock;
+            data.trialStartTimeVec = clock;                          	% get a valid start for settle time
             data.taskState = RTTaskState.taskSettle;                  	% go to settle state
        case RTTaskState.taskSettle
-            if etime(clock, data.trialStartTimeS) > 0.015               % data settled for one taskTimer cycle
-                data.trialStartTimeS = clock;                         	% reset the trial clock
-                data.prestimTimeS = data.prestimDurS + rand() * 0.125;	% jitter the stimon time a bit
-                if data.trialType == RTConstants.kGapTrial                        % gap trials have target after the gap
+            if etime(clock, data.trialStartTimeVec) > 0.015               % data settled for one taskTimer cycle
+               data.prestimTimeS = data.prestimDurS + rand() * 0.125;	% jitter the stimon time a bit
+                if data.trialType == RTConstants.kGapTrial             	% gap trials have target after the gap
                  	data.targetTimeS = data.prestimTimeS + data.gapDurS;
                 else
                     data.targetTimeS = data.prestimTimeS;              	% all others have target before the gap
@@ -381,33 +379,48 @@ function taskController(obj, events, daqaxes)
                 data.samplesRead = 0;
                 handles.lbj.verbose = 0;
                 startStream(handles.lbj);
+                data.trialStartTimeVec = clock;                      	% reset the trial clock to data collection
                 handles.lbj.verbose = 1;
                 data.dataState = RTDataState.dataCollect;
                 data.taskState = RTTaskState.taskPrestim;              	% go to prestim state
             end
         case RTTaskState.taskPrestim
-           if etime(clock, data.trialStartTimeS) > data.prestimTimeS	% preStim time up?
+           trialTimeS = etime(clock, data.trialStartTimeVec);
+           if trialTimeS > data.prestimTimeS	% preStim time up?
                 if data.trialType == RTConstants.kCenteringTrial
                 	drawCenterStimulus(visStim);
                 else
                 	drawImage(visStim, visStim.gapStim);
                 end
+                if data.trialType ~= RTConstants.kGapTrial           	% gap trials have target after the gap
+                 	data.targetTimeS = trialTimeS;
+                end
+                if data.trialType ~= RTConstants.kOverlapTrial       	% overlap trials have fixoff after the gap
+                 	data.fixOffTimeS = trialTimeS;
+                end
                	data.taskState = RTTaskState.taskGapstim;               % go to gap state
             end
         case RTTaskState.taskGapstim
-           if etime(clock, data.trialStartTimeS) > data.prestimTimeS + data.gapDurS
+            trialTimeS = etime(clock, data.trialStartTimeVec);
+            if trialTimeS > data.prestimTimeS + data.gapDurS
                 drawImage(visStim, visStim.finalStim);                 	% gap time up, draw postgap stim
+                if data.trialType == RTConstants.kGapTrial              % gap trials have target after the gap
+                 	data.targetTimeS = trialTimeS;
+                end
+               	if data.trialType == RTConstants.kOverlapTrial       	% overlap trials have fixoff after the gap
+                 	data.fixOffTimeS = trialTimeS;
+                end
                	data.taskState = RTTaskState.taskPoststim;
             end
         case RTTaskState.taskEndtrial
             if data.trialType ~= RTConstants.kCenteringTrial          	% no updates needed on centering trials
-                [startIndex, endIndex] = processSignals(saccades, data);
-                plot(handles.posVelPlots, handles, startIndex, endIndex);
+               [startIndex, endIndex] = processSignals(saccades, data);
+               plot(handles.posVelPlots, handles, startIndex, endIndex);
                 if startIndex > 0
                     addRT(rtDists{data.trialType}, (startIndex / data.sampleRateHz  - data.targetTimeS) * 1000.0);
                 end
                 if (mod(sum(data.numSummed), data.numTrialTypes) == 0)	% finished a block
-                    needsRescale = plot(rtDists{data.trialType});
+                   needsRescale = plot(rtDists{data.trialType});
                     if needsRescale > 0
                       	for i = 1:data.numTrialTypes
                              rescale(rtDists{i}, needsRescale);
@@ -417,7 +430,7 @@ function taskController(obj, events, daqaxes)
                 end   
                 set(handles.calibrationText, 'string', sprintf('Calibration %.1f deg/V', saccades.degPerV));
             end
-            data.trialStartTimeS = 0;
+            data.trialStartTimeVec = [];                                % why do we need to clear this?
             data.taskState = RTTaskState.taskStarttrial;
     end
 end

@@ -58,14 +58,16 @@ classdef RTSaccades < handle
         
         %% findSaccade: extract the saccade timing using speed threshold
         function [sIndex, eIndex] = findSaccade(obj, data, posTrace, velTrace, stepSign, startIndex)
-%            calSamples = floor(data.prestimDurS * data.sampleRateHz);    % use preStim for calibration
+            if data.taskMode == RTConstants.kTiming
+                stepSign = -1;                                      % photodiode always driven negative
+            end
             if data.calTrialsDone < 4                              	% still getting a calibration
                 if (stepSign == 1)
-                    DPV = abs(data.stepSizeDeg / (max(posTrace(:)) - mean(posTrace(1:startIndex)))); 
-                    range = (max(posTrace(:)) - mean(posTrace(1:startIndex)));
+                   DPV = abs(data.stepSizeDeg / (max(posTrace(:)) - mean(posTrace(1:startIndex)))); 
+%                     range = (max(posTrace(:)) - mean(posTrace(1:startIndex)));
                 else
                     DPV = abs(data.stepSizeDeg / (mean(posTrace(1:startIndex) - min(posTrace(:)))));
-                    range = (mean(posTrace(1:startIndex) - min(posTrace(:))));
+%                     range = (mean(posTrace(1:startIndex) - min(posTrace(:))));
                 end
                 obj.degPerV = (obj.degPerV * data.calTrialsDone + DPV) / (data.calTrialsDone + 1);
                 obj.degPerSPerV = obj.degPerV * data.sampleRateHz;	% needed for velocity plots
@@ -127,13 +129,12 @@ classdef RTSaccades < handle
                 sIndex = sIndex - offset;
                 eIndex = eIndex - offset;
             end
-        end
+       end
 
         %% processSignals: function to process data from one trial
         function [startIndex, endIndex] = processSignals(obj, data)
-            c = RTConstants;
             % remove the DC offset
-            if data.taskMode == RTConstants.kNormal
+            if data.taskMode == RTConstants.kNormal || data.taskMode == RTConstants.kTiming
                 data.posTrace = data.rawData - mean(data.rawData(1:floor(data.sampleRateHz * data.prestimDurS)));
             else
                 data.posTrace = fakeDataTrace(obj, data);
@@ -159,7 +160,7 @@ classdef RTSaccades < handle
             end
             if (firstIndex < 1 || lastIndex > data.trialSamples)    % not enough samples around saccade to process
                 startIndex = 0;
-                return;
+                return
             end
             % sum into the average pos and vel plot, inverting for negative steps
             data.posSummed = data.posSummed + data.posTrace(firstIndex:lastIndex) * data.stepDirection;  

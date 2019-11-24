@@ -31,7 +31,8 @@ classdef RTTaskData < handle
         targetTimeS;
         taskMode;
         taskState;
-        trialStartTimeS;
+        trialStartTimeVec;
+        trialStartTic;
         trialType;
         trialTypesDone;
         velTrace;
@@ -54,7 +55,7 @@ classdef RTTaskData < handle
             obj.prestimDurS = min(obj.trialDurS / 4, 0.250);
             obj.taskState = RTTaskState.taskStarttrial;
             obj.dataState = RTDataState.dataIdle;
-            obj.trialStartTimeS = 0;
+            obj.trialStartTimeVec = [];
             obj.targetTimeS = 0;
             obj.gapDurS = 0.200;
             obj.fixOffTimeS = 0;
