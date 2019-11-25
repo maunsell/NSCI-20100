@@ -14,8 +14,10 @@ classdef RTPosVelPlots < handle
              %% Post Initialization %%
             obj.posAxes = handles.axes1;
             obj.velAxes = handles.axes3;
-            setupPlot(obj, obj.posAxes, 'position', '1');
-            setupPlot(obj, obj.velAxes, 'velocity', '2');
+            cla(obj.posAxes);
+            cla(obj.velAxes);
+            title(obj.posAxes, 'Most recent position trace', 'fontSize', 12, 'fontWeight', 'bold')
+            title(obj.velAxes, 'Most recent velocity trace', 'fontSize', 12, 'fontWeight', 'bold')
         end
         
         %%
@@ -42,15 +44,6 @@ classdef RTPosVelPlots < handle
             velPlots(obj, handles, startIndex, endIndex);
         end
 
-        %%
-        function setupPlot(~, axes, label, digitStr)
-            cla(axes);
-            title(axes, sprintf('Most recent %s trace', label), 'fontSize', 12, 'fontWeight', 'bold')
-            a = axis(axes);                             % put a number on the plot
-            text(a(1) + 0.05 * (a(2) - a(1)), a(3) + 0.9 * (a(4) - a(3)), digitStr, 'parent', axes,...
-                'fontSize', 24, 'fontWeight', 'bold');
-
-        end
         %% posPlots: do the trial and average position plots
         function posPlots(obj, handles, startIndex, endIndex)
             data = handles.data;
@@ -59,7 +52,7 @@ classdef RTPosVelPlots < handle
             xLimit = (size(data.posTrace, 1) - 1) * timestepMS;
             trialTimes = 0:timestepMS:xLimit;                           % make array of trial time points
             % current trial position trace
-            setupPlot(obj, obj.posAxes, 'position', '1');
+
 %             cla(obj.posAxes);
 %             title(obj.posAxes, 'Most recent position trace', 'FontSize',12,'FontWeight','Bold')
 %             a1 = axis(obj.posAxes);                             % label the pos plot "1"
@@ -79,6 +72,7 @@ classdef RTPosVelPlots < handle
                 ylabel(obj.posAxes,'Analog Input (V)','FontSize',14);
             end
             hold(obj.posAxes, 'on');                            % mark fixOff and targetOn
+            title(obj.posAxes, 'Most recent position trace', 'fontSize', 12, 'fontWeight', 'bold')
             a1 = axis(obj.posAxes);
             plot(obj.posAxes, [data.targetTimeS, data.targetTimeS] * 1000, [a1(3), a1(4)], 'k-.');
             if (data.fixOffTimeS ~= data.targetTimeS)
@@ -101,7 +95,6 @@ classdef RTPosVelPlots < handle
             xLimit = (size(data.posTrace, 1) - 1) * timestepMS;
             trialTimes = 0:timestepMS:xLimit;                               % make array of trial time points
             % plot the trial velocity trace
-            setupPlot(obj, obj.velAxes, 'velocity', '2');
 %             cla(obj.velAxes);
 %             title(obj.velAxes, 'Most recent velocity trace', 'FontSize',12,'FontWeight','Bold');
 %             text(trialTimes(1) + 0.05 * (trialTimes(end) - trialTimes(1)), ...
@@ -121,6 +114,7 @@ classdef RTPosVelPlots < handle
             a1 = axis(obj.velAxes);
             % Once the y-axis scaling is set, we can draw vertical marks for stimOn and saccades
             hold(obj.velAxes, 'on');
+            title(obj.velAxes, 'Most recent velocity trace', 'fontSize', 12, 'fontWeight', 'bold')
             plot(obj.velAxes, [data.targetTimeS, data.targetTimeS] * 1000, [a1(3), a1(4)], 'k-.');
             if (data.fixOffTimeS ~= data.targetTimeS)
                 plot(obj.velAxes, [data.fixOffTimeS, data.fixOffTimeS] * 1000, [a1(3), a1(4)], 'r-.');

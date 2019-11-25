@@ -35,6 +35,7 @@ classdef RTDist < handle
         function clearAll(obj)
             obj.n = 0;
             obj.maxRT = 0;
+            cla(obj.fHandle);                                   % clear the figures
             setupPlot(obj);
         end
         
@@ -53,7 +54,6 @@ classdef RTDist < handle
        
         %% plot -- plot all the distributions
         function rescale = plot(obj)
-            setupPlot(obj);
             if obj.n == 0                                       % nothing to plot
                 rescale = 0;
                 return
@@ -62,6 +62,7 @@ classdef RTDist < handle
             [counts, x] = hist(obj.fHandle, obj.reactTimesMS(1:obj.n));
             bar(obj.fHandle, x, counts, 1.0, 'facecolor', colors(obj.index,:));
             hold(obj.fHandle, 'on');
+          	setupPlot(obj);
             a = axis(obj.fHandle);                              % set scale, flag whether we're rescaling
             a(1) = 0;
             if a(2) > obj.maxRT                                 % new x limit, rescale
@@ -74,8 +75,8 @@ classdef RTDist < handle
             axis(obj.fHandle, a);
             meanRT = mean(obj.reactTimesMS(1:obj.n));           % mean RT
             stdRT = std(obj.reactTimesMS(1:obj.n));             % std for RT
-            text(a(1) + 0.05 * (a(2) - a(1)), 0.9 * a(4), sprintf('%.0f', obj.index + 2), 'parent', obj.fHandle, ...
-                'fontSize', 24, 'fontWeight', 'bold');
+%             text(a(1) + 0.05 * (a(2) - a(1)), 0.9 * a(4), sprintf('%.0f', obj.index + 2), 'parent', obj.fHandle, ...
+%                 'fontSize', 24, 'fontWeight', 'bold');
             displayText = {sprintf('n = %.0f', obj.n), sprintf('Mean = %.0f', meanRT), sprintf('SD = %.0f', stdRT)};
             if obj.n > 10
                 sem = stdRT / sqrt(obj.n);
@@ -86,7 +87,7 @@ classdef RTDist < handle
                 [displayText, ~] = doOneInterval(obj, meanRT, ci, '95% CI:', displayText, plotY);
             end
             plot(obj.fHandle, [meanRT meanRT], [a(3) a(4)], 'k:');
-            text(0.05 * a(2), 0.80 * a(4), displayText, 'verticalAlignment', 'top', 'parent', obj.fHandle);
+            text(0.05 * a(2), 0.95 * a(4), displayText, 'verticalAlignment', 'top', 'parent', obj.fHandle);
             hold(obj.fHandle, 'off');
         end
 
@@ -102,16 +103,12 @@ classdef RTDist < handle
         
         %% setupPlot -- prepare a blank plot
         function setupPlot(obj)
-        cla(obj.fHandle);                                   % clear the figures
-        title(obj.fHandle, sprintf('%s Condition', obj.titles{obj.index}), 'fontSize', 12, 'fontWeight', 'bold');
-        if (obj.index == 3)                                 % label the bottom plot
-            xlabel(obj.fHandle, 'Reaction Time (ms)', 'fontSize', 14);
+            title(obj.fHandle, sprintf('%s Condition', obj.titles{obj.index}), 'fontSize', 12, 'fontWeight', 'bold');
+            if (obj.index == 3)                                 % label the bottom plot
+                xlabel(obj.fHandle, 'Reaction Time (ms)', 'fontSize', 14);
+            end
+            a = axis(obj.fHandle);                              % set scale, flag whether we're rescaling
         end
-        a = axis(obj.fHandle);                              % set scale, flag whether we're rescaling
-        text(a(1) + 0.05 * (a(2) - a(1)), 0.9 * a(4), sprintf('%.0f', obj.index + 2), 'parent', obj.fHandle, ...
-            'fontSize', 24, 'fontWeight', 'bold');
-        end
-   
     end
 end
 
