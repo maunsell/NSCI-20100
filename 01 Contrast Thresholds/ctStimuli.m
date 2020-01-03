@@ -48,6 +48,9 @@ classdef ctStimuli
             obj.grayColor = obj.whiteColor / 2;
             screenRectPix = Screen('Resolution', obj.screenNumber);
 %             obj.windowRectPix = [screenRectPix.width - 500, 50, screenRectPix.width - 50, 550];
+            if screenRectPix.width > 3000                  % Retina display
+                screenRectPix.width = screenRectPix.width / 2.0;
+            end 
             obj.windowRectPix = [screenRectPix.width - 1250, 50, screenRectPix.width - 50, 980];
             
             [obj.window, obj.windowRectPix] = PsychImaging('OpenWindow', obj.screenNumber, obj.grayColor, ...

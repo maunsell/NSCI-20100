@@ -25,8 +25,10 @@ function ctTaskController(obj, ~)
             elseif (etime(clock, data.trialStartTimeS) > data.stimParams.intertrialDurS) || ~data.doStim
                % Draw dark gray fixspot
                sound(data.tones(3, :), data.sampFreqHz);
-                if data.doStim
-                    doFixSpot(handles.stimuli, 0.65);
+                if data.doStimDisplay && data.doStim
+                    if data.doStimDisplay
+                        doFixSpot(handles.stimuli, 0.65);
+                    end
                     ctDrawStatusText(handles, 'wait');
                 end
                 if ~data.testMode
@@ -42,7 +44,7 @@ function ctTaskController(obj, ~)
                 baseIndex = get(handles.baseContrastMenu, 'value');
                 baseContrast = data.baseContrasts(baseIndex);
                 data.stimStartTimeS = clock;
-                if data.doStim                              % Draw the base stimuli with a white fixspot
+                if data.doStimDisplay && data.doStim                        % Draw the base stimuli with a white fixspot
                     ctDrawStatusText(handles, 'run')
                     data.stimParams.leftContrast = baseContrast;
                     data.stimParams.rightContrast = baseContrast;
@@ -62,7 +64,7 @@ function ctTaskController(obj, ~)
                     data.stimParams.leftContrast = baseContrast;
                     data.stimParams.rightContrast = data.testContrasts(baseIndex, data.testIndex);
                 end
-                if data.doStim
+                if data.doStimDisplay && data.doStim
                     doStimulus(handles.stimuli, data.stimParams);           % display the increment stimulus
                     doFixSpot(handles.stimuli, 0.0);
                     ctDrawStatusText(handles, 'response');
@@ -80,7 +82,6 @@ function ctTaskController(obj, ~)
             if data.testMode
                 prob = 0.5 + 0.5 / (1.0 + exp(-10.0 * (data.testContrasts(baseIndex, data.testIndex) - ...
                     data.testContrasts(baseIndex, 3)) / data.baseContrasts(baseIndex)));
-%                 prob = 0.5 + 0.5 / (1.0 + exp(-10.0 * (data.multipliers(data.testIndex) - data.multipliers(3))));
                 hit = rand(1,1) < prob;
             else
                 if strcmp(data.theKey, 'left')
@@ -99,7 +100,7 @@ function ctTaskController(obj, ~)
             data.trialStartTimeS = 0;
             data.stimStartTimeS = 0;
             data.taskState = ctTaskState.taskStartTrial;
-            if data.doStim
+            if data.doStimDisplay && data.doStim
                 clearScreen(handles.stimuli);
             end
             handles = ctDrawHitRates(handles, false);            
@@ -119,7 +120,7 @@ function ctTaskController(obj, ~)
                 end
             end     
         case ctTaskState.taskStopRunning
-            if data.doStim
+            if data.doStimDisplay && data.doStim
                 clearScreen(handles.stimuli);
             end
             ctDrawStatusText(handles, 'idle');

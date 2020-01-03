@@ -5,6 +5,7 @@ classdef ctTaskData < handle
         blocksFit;
         curveFits;
         doStim;
+        doStimDisplay;
         hits;
         numBases;
         numIncrements;
@@ -28,11 +29,12 @@ classdef ctTaskData < handle
         function obj = ctTaskData(baseContrastMenu)
 
             %% Object Initialization %%
-            obj = obj@handle();                                            % object initialization
+            obj = obj@handle();                                             % object initialization
             %% Post Initialization %%
             
             obj.testMode = false;
-            obj.doStim = true;
+            obj.doStimDisplay = true;                                       % for PsychToolbox not working
+            obj.doStim = true;                                              % for faster debugging
            
             tones = [];
             audioFiles = {'Tone0250.wav', 'Tone2000.wav', 'Tone4000.wav'};

@@ -104,7 +104,9 @@ end
 
 % --- Executes on button press in loadDataButton.
 function loadDataButton_Callback(hObject, ~, handles)
-    cleanup(handles.stimuli);                       % remove stimulus display
+    if handles.data.doStimDisplay
+        cleanup(handles.stimuli);
+    end
     ctControlState(handles, 'off', {handles.loadDataButton});
     [fileName, filePath] = uigetfile('*.mat', 'Load Matlab Data Workspace', '~/Desktop/');
     if fileName ~= 0
@@ -120,7 +122,9 @@ function loadDataButton_Callback(hObject, ~, handles)
         start(taskTimer);
         start(keyTimer);
     end
-    handles.stimuli = ctStimuli();                  % restore stimulus display
+    if handles.data.doStimDisplay
+        handles.stimuli = ctStimuli();                  % restore stimulus display
+    end
     set(handles.runButton, 'backgroundColor', 'green');
     ctControlState(handles, 'on', {handles.loadDataButton});
     guidata(hObject, handles);                                      % save the selections
@@ -131,13 +135,23 @@ function openContrastThresholds(hObject, ~, handles, varargin)
     rng('shuffle');
     handles.data = ctTaskData(handles.baseContrastMenu);
     handles.output = hObject;                                                   % select default command line output
-    handles.stimuli = ctStimuli;
+    if handles.data.doStimDisplay
+        handles.stimuli = ctStimuli();                  % restore stimulus display
+    end
     
 %     testStimuli(handles.stimuli, handles);                  % check the screen for contrasts available
     
     ctDrawStatusText(handles, 'idle');
     movegui(handles.figure1, 'northwest');
     set(handles.figure1, 'visible', 'on');
+    if handles.data.testMode
+        set(handles.testWarning, 'string', 'Test Mode');
+    end
+    if ~handles.data.doStimDisplay
+        set(handles.stimWarning, 'string', 'No Display');
+    elseif ~handles.data.doStim
+        set(handles.stimWarning, 'string', 'No Stimuli');
+    end
     guidata(hObject, handles);                                                   % save the selection
     
     KbName('UnifyKeyNames');
@@ -172,21 +186,27 @@ end
 %% saveDataButton_Callback responds to save button
 % --- Executes on button press in saveDataButton.
 function saveDataButton_Callback(hObject, ~, handles)
-    cleanup(handles.stimuli);
+    if handles.data.doStimDisplay
+        cleanup(handles.stimuli);
+    end
     ctControlState(handles, 'off', {handles.saveDataButton});
     [fileName, filePath] = uiputfile('*.mat', 'Save Matlab Data Workspace', '~/Desktop/ContrastData.mat');
     if fileName ~= 0
         d = handles.data;
         save([filePath fileName], 'd');
     end
-    handles.stimuli = ctStimuli();    
+    if handles.data.doStimDisplay
+        handles.stimuli = ctStimuli();
+    end
     set(handles.runButton, 'backgroundColor', 'green');
     ctControlState(handles, 'on', {handles.saveDataButton});
 end
 
 %% --- Respond to button press in savePlotsButton.
 function savePlotsButton_Callback(hObject, ~, handles)
-    cleanup(handles.stimuli);
+    if handles.data.doStimDisplay
+        cleanup(handles.stimuli);
+    end
     ctControlState(handles, 'off', {handles.savePlotsButton});
     [fileName, filePath] = uiputfile('*.pdf', 'Save Window Image as PDF', '~/Desktop/ContrastThresholds.pdf');
     if fileName ~= 0
@@ -199,7 +219,9 @@ function savePlotsButton_Callback(hObject, ~, handles)
         set(handles.figure1, 'InvertHardcopy', 'off');
         print(handles.figure1, [filePath fileName],'-dpdf', '-r600');
     end
-    handles.stimuli = ctStimuli();
+    if handles.data.doStimDisplay
+        handles.stimuli = ctStimuli();
+    end
     set(handles.runButton, 'backgroundColor', 'green');
     ctControlState(handles, 'on', {handles.savePlotsButton});
 end
@@ -207,12 +229,16 @@ end
 %% respond to the showHideButton
 function showHideButton_Callback(hObject, ~, handles)      
     if strcmp(get(hObject, 'String'), 'Hide Display')
-        cleanup(handles.stimuli);
+        if handles.data.doStimDisplay
+            cleanup(handles.stimuli);
+        end
         set(hObject, 'string', 'Show Display','backgroundColor', 'red');
         set(handles.runButton, 'string', 'Run','backgroundColor', [0.9412 0.9412 0.9412]);
         state = 'off';
     elseif strcmp(get(hObject, 'String'), 'Show Display')
-        handles.stimuli = ctStimuli();
+        if handles.data.doStimDisplay
+            handles.stimuli = ctStimuli();                  % restore stimulus display
+        end
         set(hObject, 'string', 'Hide Display','backgroundColor', [0.9412 0.9412 0.9412]);
         set(handles.runButton, 'string', 'Run','backgroundColor', 'green');
         state = 'on';
@@ -243,7 +269,9 @@ function windowCloseRequest(hObject, ~, handles)
         stop(timerfind);
         delete(timerfind);
         handles = guidata(hObject);
-        cleanup(handles.stimuli);
+        if handles.data.doStimDisplay
+            cleanup(handles.stimuli);
+        end
         delete(hObject);
     case 'No'
         return

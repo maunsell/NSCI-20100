@@ -12,8 +12,8 @@ function handles = ctDrawHitRates(handles, doAllBaseContrasts)
             blocksDone = floor(mean(handles.data.trialsDone(i, :)));
             tableData = get(handles.resultsTable, 'Data');      % update table, regardless
             tableData{1, i} = sprintf('%.0f', blocksDone);
-% If we've just finished a block, and we have enough blocks, fit a logistic function.
-% We force 0.5 performance at the base contrast.
+            % If we've just finished a block, and we have enough blocks, fit a logistic function.
+            % We force 0.5 performance at the base contrast.
             if (doAllBaseContrasts || (blocksDone > handles.data.blocksFit(i))) && blocksDone > 3 
                 fun = @(params, xData) 0.5 + 0.5 ./ (1.0 + exp(-params(2) * (xData - params(1))));
                 xData = [handles.data.baseContrasts(i) handles.data.testContrasts(i, :)];
@@ -25,9 +25,9 @@ function handles = ctDrawHitRates(handles, doAllBaseContrasts)
 %                 handles.data.curveFits(i, :) = 0.5 + 0.5 ./ (1.0 + exp(-params(2) * (xData(2:end) - params(1))));
                 handles.data.curveFits(i, :) = 0.5 + 0.5 ./ (1.0 + exp(-params(2) * (xData(1:end) - params(1))));
                 handles.data.blocksFit(i) = blocksDone;         % update block count and table
-                tableData{2, i} = sprintf('%.1f%%', params(1) * 100.0);
-                tableData{3, i} = sprintf('%.1f%%', (params(1) - handles.data.baseContrasts(i)) * 100.0);
-                tableData{4, i} = sprintf('%.2f', params(1) / handles.data.baseContrasts(i) - 1);
+                tableData{2, i} = sprintf('%.1f%%', params(1) * 100.0); % threshold contrast
+%                 tableData{3, i} = sprintf('%.1f%%', (params(1) - handles.data.baseContrasts(i)) * 100.0); % difference
+%                 tableData{4, i} = sprintf('%.2f', params(1) / handles.data.baseContrasts(i) - 1); % Weber fraction
             end
             set(handles.resultsTable, 'Data', tableData); 
         end
