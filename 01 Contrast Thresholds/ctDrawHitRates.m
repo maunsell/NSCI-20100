@@ -22,12 +22,13 @@ function handles = ctDrawHitRates(handles, doAllBaseContrasts)
                 OLS = @(params) sum((fun(params, xData) - yData).^2);
                 opts = optimset('Display', 'off', 'MaxFunEvals', 10000, 'MaxIter', 5000);
                 params = fminsearch(OLS, x0, opts);
-%                 handles.data.curveFits(i, :) = 0.5 + 0.5 ./ (1.0 + exp(-params(2) * (xData(2:end) - params(1))));
                 handles.data.curveFits(i, :) = 0.5 + 0.5 ./ (1.0 + exp(-params(2) * (xData(1:end) - params(1))));
                 handles.data.blocksFit(i) = blocksDone;         % update block count and table
                 tableData{2, i} = sprintf('%.1f%%', params(1) * 100.0); % threshold contrast
 %                 tableData{3, i} = sprintf('%.1f%%', (params(1) - handles.data.baseContrasts(i)) * 100.0); % difference
 %                 tableData{4, i} = sprintf('%.2f', params(1) / handles.data.baseContrasts(i) - 1); % Weber fraction
+            elseif blocksDone == 0
+                tableData{2, i} = '';
             end
             set(handles.resultsTable, 'Data', tableData); 
         end
@@ -36,8 +37,7 @@ function handles = ctDrawHitRates(handles, doAllBaseContrasts)
     vStr = version('-release');
     post2015 = str2double(vStr(1:4)) >= 2014;
     x = handles.data.testContrasts';                             % test values for all base contrasts
-    errorbar(handles.axes1, x, hitRate', errNeg', errPos', 'o', 'markerfacecolor', [0.5, 0.5, 0.5],...
-        'markersize', 8);
+    errorbar(handles.axes1, x, hitRate', errNeg', errPos', 'o', 'markerfacecolor', [0.5, 0.5, 0.5], 'markersize', 8);
     hold(handles.axes1, 'on');
     if (post2015)
         set(handles.axes1, 'ColorOrderIndex', 1)                % reset the color order post 2014 version
@@ -53,12 +53,12 @@ function handles = ctDrawHitRates(handles, doAllBaseContrasts)
 %                             repmat([0; 1], 1, size(handles.data.baseContrasts, 2)));
 %   Set up the axis scaling and labeling
     axis(handles.axes1, [0.02, 1.0, 0.0 1.0]);
-    set (handles.axes1, 'xGrid', 'on', 'yGrid', 'off');
+    set(handles.axes1, 'xGrid', 'on', 'yGrid', 'off');
     set(handles.axes1, 'yTick', [0.0; 0.2; 0.4; 0.6; 0.8; 1.0]);
     set(handles.axes1, 'yTickLabel', [0; 20; 40; 60; 80; 100]);
     set(handles.axes1, 'xTick', [0.02; 0.03; 0.04; 0.05; 0.06; 0.07; 0.08; 0.09; 0.1; 0.2; 0.3; 0.4; 0.5; 0.6; 0.8; 1.0]);
     set(handles.axes1, 'xTickLabel', [2; 3; 4; 5; 6; 7; 8; 9; 10; 20; 30; 40; 50; 60; 80; 100]);
-    set(handles.axes1,'xscale','log');
+    set(handles.axes1, 'xscale','log');
     xlabel(handles.axes1, 'stimulus contrast (%)', 'fontSize', 14);
     ylabel(handles.axes1, 'correct (%)', 'fontSize', 14);
     hold(handles.axes1, 'off');

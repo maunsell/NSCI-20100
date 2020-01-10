@@ -32,8 +32,8 @@ classdef ctTaskData < handle
             obj = obj@handle();                                             % object initialization
             %% Post Initialization %%
             
-            obj.testMode = false;
-            obj.doStimDisplay = true;                                       % for PsychToolbox not working
+            obj.testMode = true;
+            obj.doStimDisplay = false;                                       % for PsychToolbox not working
             obj.doStim = true;                                              % for faster debugging
            
             tones = [];
