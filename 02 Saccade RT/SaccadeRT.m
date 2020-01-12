@@ -166,7 +166,7 @@ function openRT(hObject, eventdata, handles, varargin)
     end
     
 %     taskMode = RTConstants.kTiming;
-    taskMode = RTConstants.kDebug;
+%     taskMode = RTConstants.kDebug;
     
     switch taskMode
         case RTConstants.kDebug

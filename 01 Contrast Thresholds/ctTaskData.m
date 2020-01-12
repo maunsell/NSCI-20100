@@ -32,8 +32,8 @@ classdef ctTaskData < handle
             obj = obj@handle();                                             % object initialization
             %% Post Initialization %%
             
-            obj.testMode = true;
-            obj.doStimDisplay = false;                                       % for PsychToolbox not working
+            obj.testMode = false;
+            obj.doStimDisplay = true;                                       % for PsychToolbox not working
             obj.doStim = true;                                              % for faster debugging
            
             tones = [];
@@ -56,7 +56,6 @@ classdef ctTaskData < handle
             contrastStrings = cell(1, obj.numBases);
             for i = 1:obj.numBases
                 contrastStrings{i} = sprintf('%.0f%%', obj.baseContrasts(i) * 100.0);
-%                 obj.baseContrasts(i) = sscanf(contrastStrings{i}, '%f') / 100.0;
             end
             set(baseContrastMenu, 'string', contrastStrings);
             obj.testIndex = 0;

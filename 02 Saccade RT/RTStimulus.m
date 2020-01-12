@@ -42,8 +42,9 @@ classdef RTStimulus < handle
             obj.stepSizeDeg = stepDeg;
             obj.viewDistanceMM = 0;
             windHeightPix = 60;
+            dockPix = 75;
             windWidthPix = screenRectPix(3) - 2 * obj.marginPix;
-            obj.windRectPix = [obj.marginPix, obj.marginPix, windWidthPix, windHeightPix];
+            obj.windRectPix = [obj.marginPix, obj.marginPix + dockPix, windWidthPix, windHeightPix];
             obj.hFig = figure('Renderer', 'painters', 'Position', [obj.marginPix, obj.marginPix, ...
                 windWidthPix, windHeightPix]);
 %             obj.hFig = figure('Renderer', 'OpenGL', 'Position', [obj.marginPix, obj.marginPix, ...
