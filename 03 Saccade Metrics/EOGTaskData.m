@@ -9,6 +9,7 @@ classdef EOGTaskData < handle
         centeringTrial;
         dataState;
         doFilter;
+        doStimDisplay;
         filterLP;
         filter60Hz;
         numChannels;

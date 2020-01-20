@@ -59,8 +59,8 @@ function closeEOG(hObject, eventdata, handles)
     set(0, 'DefaultUIControlFontSize', originalSize);
     switch selection
     case 'Yes'
-        cleanup(handles.visStim);
-        delete(handles.visStim);
+        try cleanup(handles.visStim); catch, end
+        try delete(handles.visStim); catch, end
         try delete(handles.ampDur); catch, end
         try stop(timerfind); catch, end
         try delete(timerfind); catch, end
@@ -167,54 +167,47 @@ function openEOG(hObject, eventdata, handles, varargin)
     % test mode requires connecting DAC0 to AIN0 and DAC1 to AIN1 on the LabJack
     if ~isempty(varargin)
         testMode = strcmp(varargin{1}, 'debug') || strcmp(varargin{1}, 'test');
+        doStimDisplay = true;
     else
         testMode = false;
+        doStimDisplay = true;
     end
-    
-    testMode = false;
-    
-    if testMode
+    if testMode || ~doStimDisplay
         set(handles.warnText, 'string', 'Test Mode');
     end   
     handles.output = hObject;                                               % select default command line output
-    handles.visStim = EOGStimulus;
     handles.saccades = EOGSaccades;
     set(hObject, 'CloseRequestFcn', {@closeEOG, handles});                  % close function will close LabJack
     handles.lbj = setupLabJack();
     handles.posVelPlots = EOGPosVelPlots(handles);
     handles.data = EOGTaskData(handles.lbj.numChannels, handles.lbj.SampleRateHz);
-    handles.ampDur = EOGAmpDur(handles.axes5, handles.data.offsetsDeg, handles.lbj.SampleRateHz);
-%     axes = [handles.axes6 handles.axes7 handles.axes8 handles.axes9];
-%     handles.RTDist = cell(1, handles.data.numOffsets);
-%     for i = 1:length(axes)
-%         handles.rtDists{i} = EOGRTDist(i, handles.data.offsetsDeg(i), axes(i));
-%     end
-    
-    % set up test mode
     handles.data.testMode = testMode;
+    handles.data.doStimDisplay = doStimDisplay;
+	handles.visStim = EOGStimulus(handles.data);         	% needs data set up first for doStimDisplay
     if (handles.data.testMode)
-        analogOut(handles.lbj, 0, 2.5);                                     % For debugging (AOuts to AIns)
+        analogOut(handles.lbj, 0, 2.5);                     % For debugging (AOuts to AIns)
     end
+    handles.ampDur = EOGAmpDur(handles.axes5, handles.data.offsetsDeg, handles.lbj.SampleRateHz);
     movegui(hObject, 'northeast');
     guidata(hObject, handles);                                              % save the selection
 end
 
-%%sampleRateText_Callback
-function sampleRateText_Callback(hObject, eventdata, handles)
-    requestedRateHz = str2double(get(handles.sampleRateText, 'string'));
-    clippedRateHz = min([requestedRateHz, 1000, max(100, requestedRateHz)]);
-    if (clippedRateHz ~= requestedRateHz)
-        set(handles.sampleRateText, 'String', clippedRateHz);
-    end
-    if clippedRateHz ~= handles.data.sampleRateHz
-        setSampleRateHz(handles.data, clippedRateHz);
-        handles.lbj.SampleRateHz = clippedRateHz;
-        errorCode = streamConfigure(handles.lbj);
-        if errorCode > 0
-            fprintf(1,'EOG: Unable to configure LabJack to new rate. Error %d.\n', errorCode);
-        end
-    end
-end
+% %%sampleRateText_Callback
+% function sampleRateText_Callback(hObject, eventdata, handles)
+%     requestedRateHz = str2double(get(handles.sampleRateText, 'string'));
+%     clippedRateHz = min([requestedRateHz, 1000, max(100, requestedRateHz)]);
+%     if (clippedRateHz ~= requestedRateHz)
+%         set(handles.sampleRateText, 'String', clippedRateHz);
+%     end
+%     if clippedRateHz ~= handles.data.sampleRateHz
+%         setSampleRateHz(handles.data, clippedRateHz);
+%         handles.lbj.SampleRateHz = clippedRateHz;
+%         errorCode = streamConfigure(handles.lbj);
+%         if errorCode > 0
+%             fprintf(1,'EOG: Unable to configure LabJack to new rate. Error %d.\n', errorCode);
+%         end
+%     end
+% end
 
 %% saveDataButton_Callback
 function saveDataButton_Callback(hObject, eventdata, handles)
@@ -361,29 +354,30 @@ function taskController(obj, events, daqaxes)
             data.centeringTrial = false;
             while true                                                  % find an unused, doable step
                 if data.offsetsDone(data.offsetIndex) == 0 && ...       % unused and doable
-                        ~stepOutOfRange(handles.visStim, data.offsetsDeg(data.offsetIndex))
+                        ~stepOutOfRange(visStim, data.offsetsDeg(data.offsetIndex))
                     break;
                 end
                 data.offsetIndex = mod(data.offsetIndex, data.numOffsets) + 1; % try the next one
                 if data.offsetIndex == startIndex                       % no steps doable from current position
                     data.centeringTrial = true;                         % center the stimulus and try again
-                    fprintf('centering the stimulus: at %.0f step asked %.0f max %.0f',...
+                    fprintf('centering the stimulus: at %.0f step asked %.0f max %.0f\n',...
                         currentOffsetDeg(visStim), data.offsetsDeg(data.offsetIndex), maxDeg(visStim));
                     break;
                 end
             end
 %             fprintf('Currently at %.0f; step asked %.0f; max doable %.0f\n',...
 %                         currentOffsetDeg(visStim), data.offsetsDeg(data.offsetIndex), maxDeg(visStim));
-           data.absStepIndex = mod(data.offsetIndex - 1, data.numOffsets / 2) + 1;
+            data.absStepIndex = mod(data.offsetIndex - 1, data.numOffsets / 2) + 1;
             data.stepSign = sign(data.offsetsDeg(data.offsetIndex));
 %             if data.centeringTrial
 %                 fprintf('centering the stimulus');
 %             else
 %                 fprintf('doing index %d,  %.0f\n', data.offsetIndex, data.offsetsDeg(data.offsetIndex));
 %             end
-            if data.testMode 
-                data.voltage = min(5.0, visStim.currentOffsetPix / 500.0);  % debugging- connect DACO0 to AIN0
+            if data.testMode                                         	% debugging- connect DACO0 to AIN0
+              	data.voltage = min(5.0, visStim.currentOffsetPix / 500.0);
                 analogOut(lbj, 0, 2.5 + data.voltage);
+%                 fprintf(' A0: %.3f V\n', 2.5 + data.voltage);
             end
             data.trialStartTimeS = clock;
             data.taskState = TaskState.taskSettle;                      % go to settle state
