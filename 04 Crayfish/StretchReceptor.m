@@ -86,7 +86,7 @@ function collectData(obj, event)                                            %#ok
     if (data.samplesRead >= data.contSamples)
         data.samplesRead = 0;
         data.lastSpikeIndex = data.lastSpikeIndex - data.contSamples;
-        if data.singleTrace                                         % if singleTrace, stop data collection
+        if data.stopAtTraceEnd                                         % if stopAtTraceEnd, stop data collection
             handles.plots.samplesPlotted = 0;
             startButton_Callback(handles.startButton, event, handles);
         end
@@ -131,7 +131,7 @@ function collectData(obj, event)                                            %#ok
         data.samplesRead = data.samplesRead + numNew;
         plot(handles.plots, handles);
         if numNew < length(dRaw)                                    % more data read from LabJack?
-            if data.singleTrace                                     % if singleTrace, stop data collection
+            if data.stopAtTraceEnd                                     % if stopAtTraceEnd, stop data collection
                 handles.plots.samplesPlotted = 0;
                 data.samplesRead = 0;
                 startButton_Callback(handles.startButton, event, handles);
@@ -308,7 +308,7 @@ function openSR(hObject, eventdata, handles, varargin)
     if ~isempty(varargin)
         testMode = strcmp(varargin{1}, 'debug') || strcmp(varargin{1}, 'test');
     else
-        testMode = false;
+        testMode = true;
     end
     if testMode
         set(handles.warnText, 'string', 'Test Mode');
@@ -389,14 +389,13 @@ function singleSpikeCheckbox_Callback(hObject, eventdata, handles)
 	guidata(hObject, handles);                                  % save change
 end   % singleSpikeCheckbox_Callback()
 
-%% button press in singleTraceCheckbox.
-function singleTraceCheckbox_Callback(hObject, eventdata, handles)
-    handles.data.singleTrace = get(hObject, 'value');
-	guidata(hObject, handles);                                  % save change
-end
+% %% button press in stopAtTraceEndCheckbox.
+% function stopAtTraceEndCheckbox_Callback(hObject, eventdata, handles)
+%     handles.data.stopAtTraceEnd = get(hObject, 'value');
+% 	guidata(hObject, handles);                                  % save change
+% end
 
 %% respond to start/stop button presses
-
 function startButton_Callback(hObject, eventdata, handles)                  
 % hObject    handle to startButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -404,50 +403,20 @@ function startButton_Callback(hObject, eventdata, handles)
 
     if strcmp(get(handles.startButton, 'String'), 'Start') % if start button, do the following
         fprintf(1,'\nStretchReceptor v1.0\n %s\n', datestr(clock));
-%         handles.data.dataState = DataState.dataIdle;            % set data state to idle
-%         dataCollectRateHz = 25;                                 % prevent overflow w/o blocking other activity
-%         handles.dataTimer = timer('Name', 'CollectData', 'ExecutionMode', 'fixedRate',...
-%             'Period', 1.0 / dataCollectRateHz, 'UserData', handles, 'ErrorFcn', {@collectError, handles},...
-%             'TimerFcn', {@collectData}, 'StartDelay', 0.050);   % startDelay allows rest of the gui to execute
-% 
-%         % create timer to make fake spikes for LabJack
-%         if handles.data.testMode
-%             fakeSpikeRateHz = 4;
-%             handles.fakeSpikeTimer = timer('Name', 'FakeSpikes', 'ExecutionMode', 'fixedRate',...
-%                 'Period', 1.0 / fakeSpikeRateHz, 'UserData', handles, 'ErrorFcn', {@fakeSpikeError, handles},...
-%                 'TimerFcn', {@fakeSpike}, 'StartDelay', 0.050);
-%         end
-%         
-%         % set the gui button to "running" state
-%         % clear the plots
-%         if handles.plots.singleSpike
-%             clearContPlot(handles.plots, handles);
-%         else
-%            	clearAll(handles.plots, handles);
-%             handles.data.lastSpikeIndex = 2 * handles.data.maxContSamples;      % flag start of ISI sequence
-%         end
-        
+        handles.data.stopAtTraceEnd = false;                   % clear any requests to stop at end of next trace
         set(handles.startButton, 'String', 'Stop', 'BackgroundColor', 'red');
         SRControlState(handles, 'off', {handles.startButton, handles.clearButton})
-%         startStream(handles.lbj);
-% 
-%         % Start plots, data pickup, and data acquisition 
-%         start(handles.dataTimer);
-%         if handles.data.testMode
-%             start(handles.fakeSpikeTimer);
-%         end
-%         profile on;
         doStart(handles);
 
     % Stop -- we're already running, so it's a the stop button    
-    else % stop
+    elseif strcmp(get(handles.startButton, 'String'), 'Stop') % if start button, do the following
+        handles.data.stopAtTraceEnd = true;                        % flag a stop at the end of this trace
+        set(handles.startButton, 'string', 'Stopping','backgroundColor', 'yellow');
+        SRControlState(handles, 'on', {handles.startButton, handles.clearButton})
+        drawnow;
+%         profile viewer
+   else % already stopping, so we've been asked to stop immediately
         doStop(handles);
-%         stop(timerfind);                                        % stop/delete timers; pause data stream
-%         delete(timerfind);      
-%         handles.dataTimer = 0;
-%         handles.fakeSpikeTimer = 0;
-%         stopStream(handles.lbj);
-%         clearAll(handles.signals);                              % stop audio processing
         set(handles.startButton, 'string', 'Start','backgroundColor', 'green');
         SRControlState(handles, 'on', {handles.startButton, handles.clearButton})
         drawnow;

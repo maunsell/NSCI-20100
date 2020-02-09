@@ -113,7 +113,7 @@ classdef SRISIPlot < handle
         function plotISI(obj)
             histogram(obj.isiAxes, 'binedges', 0:obj.isiBins, 'bincounts', obj.isiHist, 'facecolor', 'blue');
             if obj.isiMedianIsiMS > 0 && obj.isiMeanRate > 0
-                if obj.isiSDIsiMS < 10
+                if obj.isiSDIsiMS < 30
                     precisionSD = 1;
                 else
                     precisionSD = 0;

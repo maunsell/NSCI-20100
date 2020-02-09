@@ -18,8 +18,8 @@ classdef SRData < handle
         rawTrace;                   % raw version of samples
         sampleRateHz;               % sampling rate
         samplesRead;                % number of samples read in the continuous trace
-        singleTrace;                % flag for displaying a single continous trace
         spikeIndices;               % indices for unplotted spikes in continuous trace
+        stopAtTraceEnd;                % flag for displaying a single continous trace
         thresholdV;                 % used by signals and plots
         testMode;                   % flag for testing mode
         vDivs;                      % number of voltage (y) divisions
@@ -55,7 +55,7 @@ classdef SRData < handle
                 obj.filters{f} = filter;
             end
             selectFilter(obj);
-            obj.singleTrace = false;
+            obj.stopAtTraceEnd = false;
             obj.inSpike = false;
             obj.testMode = false;                                           % testMode is set in SR, not here
             obj.thresholdV = 1.0;
