@@ -18,7 +18,7 @@ classdef OData < handle
         rawTrace;                   % raw version of samples
         sampleRateHz;               % sampling rate
         samplesRead;                % number of samples read in the continuous trace
-        singleTrace;                % flag for displaying a single continous trace
+        stopAtTraceEnd;            	% flag for displaying a single continous trace
         spikeIndices;               % indices for unplotted spikes in continuous trace
         thresholdV;                 % used by signals and plots
         testMode;                   % flag for testing mode
@@ -55,7 +55,7 @@ classdef OData < handle
                 obj.filters{f} = filter;
             end
             selectFilter(obj);
-            obj.singleTrace = false;
+            obj.stopAtTraceEnd = false;
             obj.inTrigger = false;
             obj.testMode = false;                                           % testMode is set in O, not here
             obj.thresholdV = 1.0;

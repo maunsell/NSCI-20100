@@ -46,7 +46,7 @@
 %   Resets the device. RESETTYPE can be 'hard' or 'soft'. Default 'soft'.
 %
 %  ADDCHANNEL
-%       addChannel(obj,channels,gains,polar)
+%       addChannel(obj,channels,gains,polarity)
 %   Adds analog channels to the channel list for data streaming.
 %     CHANNELS is a vector of LJ channel numbers. Example:  [0 1 2]
 %     GAINS is a matching vector of channel gains. You can use gain level
@@ -422,10 +422,10 @@ classdef labJackU6 < handle
         
         %% addChannel
         % adds a channel to the list of active channels
-        function addChannel(obj,channels,gains,polar)
+        function addChannel(obj,channels,gains,polarity)
             channels=channels(:)'; % make sure channels is a row vector
-            if nargin < 4, polar=zeros(1,length(channels)); end
-            polar=polar(:)'; % make sure channels is a row vector
+            if nargin < 4, polarity=zeros(1,length(channels)); end
+            polarity=polarity(:)'; % make sure channels is a row vector
             if nargin < 3, gains=zeros(1,length(channels)); end
             gains=gains(:)'; % make sure channels is a row vector
             
@@ -461,19 +461,19 @@ classdef labJackU6 < handle
             if obj.verbose >= 3, fprintf(1,'LJU6:/addChannel: inputRange:     %s\n',num2str(obj.inputRange)); end
             
             % format polarity vector
-            if length(polar)<2
-                polar(1:length(channels))=polar;
+            if length(polarity)<2
+                polarity(1:length(channels))=polarity;
             end
-            bipolar=zeros(length(polar),1);
-            for k=1:length(polar)
-                switch polar(k)
+            bipolar=zeros(length(polarity),1);
+            for k=1:length(polarity)
+                switch polarity(k)
                     case {0,'single','S','s','single-ended'}
                         bipolar(k)=0;
                     case {1,'diff','D','d','differential'}
                         bipolar(k)=1;
                     otherwise
                         bipolar(k)=0;
-                        fprintf(1,'LJU6/addchannel: WARNING: polarity value not understood ("%s")\n',num2str(polar(k)));
+                        fprintf(1,'LJU6/addchannel: WARNING: polarity value not understood ("%s")\n',num2str(polarity(k)));
                 end
             end
             % add the polarity value in the same place
@@ -857,7 +857,7 @@ classdef labJackU6 < handle
                     bipolar=1;
                 otherwise
                     bipolar=0;
-                    fprintf(1,'LJU6/analogIn: WARNING: polarity value not understood ("%s")\n',num2str(polar(k)));
+                    fprintf(1,'LJU6/analogIn: WARNING: polarity value not understood ("%s")\n',num2str(polarity(k)));
             end
             % format gain vector
             gain(gain==10)=0;
