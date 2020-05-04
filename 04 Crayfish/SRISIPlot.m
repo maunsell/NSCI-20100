@@ -63,7 +63,7 @@ classdef SRISIPlot < handle
                     makeHistogram(obj);
                 end
             end
-            if etime(clock, obj.isiLastPlotTime) > 1.0                      % refresh once a second
+            if etime(clock, obj.isiLastPlotTime) > 2.0                      % refresh once a second
                 obj.isiMeanIsiMS = mean(obj.isiMS(1:obj.isiNum));
                 obj.isiMedianIsiMS = median(obj.isiMS(1:obj.isiNum));
                 obj.isiSDIsiMS = std(obj.isiMS(1:obj.isiNum));

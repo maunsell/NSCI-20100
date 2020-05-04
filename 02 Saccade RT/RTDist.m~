@@ -59,23 +59,27 @@ classdef RTDist < handle
         return
       end
       colors = get(obj.fHandle, 'colorOrder');            % get the colors for the different plots
-      hold(obj.fHandle, 'off');
-      h = histogram(obj.fHandle, obj.reactTimesMS(1:obj.n), 'facecolor', colors(obj.index,:));
-      hold(obj.fHandle, 'on');
+      histogram(obj.fHandle, obj.reactTimesMS(1:obj.n), 'facecolor', colors(obj.index,:));
+      fprintf('RTDist plot 1.1\n');
       %             bar(obj.fHandle, h.BinEdges, h.Values, 1.0, 'facecolor', colors(obj.index,:));
+      fprintf('RTDist plot 2\n');
+      hold(obj.fHandle, 'on');
       setupPlot(obj);
       a = axis(obj.fHandle);                              % set scale, flag whether we're rescaling
+      fprintf('RTDist plot 3\n');
       a(1) = 0;
       if a(2) > obj.maxRT                                 % new x limit, rescale
         rescale = a(2) * 1.2;
       else
-        a(2) = obj.maxRT;                                 % no new x limit, plot on the current limit
+        a(2) = obj.maxRT;                               % no new x limit, plot on the current limit
         rescale = 0;
       end
-      a(4) = 1.2 * max(h.Values);                       	% leave some headroom about the histogram
+      a(4) = 1.2 * a(4);                                  % leave some headroom about the histogram
+      fprintf('RTDist plot 4\n');
       axis(obj.fHandle, a);
       meanRT = mean(obj.reactTimesMS(1:obj.n));           % mean RT
       stdRT = std(obj.reactTimesMS(1:obj.n));             % std for RT
+      fprintf('RTDist plot 5\n');
       %             text(a(1) + 0.05 * (a(2) - a(1)), 0.9 * a(4), sprintf('%.0f', obj.index + 2), 'parent', obj.fHandle, ...
       %                 'fontSize', 24, 'fontWeight', 'bold');
       displayText = {sprintf('n = %.0f', obj.n), sprintf('Mean = %.0f', meanRT), sprintf('SD = %.0f', stdRT)};
@@ -95,13 +99,13 @@ classdef RTDist < handle
     %% rescale -- rescale the plots
     function rescale(obj, newMaxRT)
       obj.maxRT = newMaxRT;
-%       hold(obj.fHandle, 'on');
+      hold(obj.fHandle, 'on');
       a = axis(obj.fHandle);
       fprintf(' rescale max %f; %f %f %f %f\n', newMaxRT, a(1), a(2), a(3), a(4));
       a(2) = obj.maxRT;
       fprintf(' rescale max %f; %f %f %f %f\n', newMaxRT, a(1), a(2), a(3), a(4));
       axis(obj.fHandle, a);
-%       hold(obj.fHandle, 'off');
+      hold(obj.fHandle, 'off');
     end
       
     %% setupPlot -- prepare a blank plot
