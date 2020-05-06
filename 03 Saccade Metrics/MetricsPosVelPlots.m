@@ -1,4 +1,4 @@
-classdef EOGPosVelPlots < handle
+classdef MetricsPosVelPlots < handle
     % saccades
     %   Support for processing eye traces and detecting saccades
     
@@ -10,15 +10,15 @@ classdef EOGPosVelPlots < handle
     end
     
     methods
-        function obj = EOGPosVelPlots(handles)
+        function obj = MetricsPosVelPlots(app)
              %% Object Initialization %%
              obj = obj@handle();                                            % object initialization
 
              %% Post Initialization %%
-            obj.posAvgAxes = handles.axes2;
-            obj.posAxes = handles.axes1;
-            obj.velAvgAxes = handles.axes4;
-            obj.velAxes = handles.axes3;            
+            obj.posAvgAxes = app.avgPosAxes;
+            obj.posAxes = app.posAxes;
+            obj.velAvgAxes = app.avgVelAxes;
+            obj.velAxes = app.velAxes;            
         end
             
         function plot(obj, handles, startIndex, endIndex, mustPlot)
@@ -84,7 +84,7 @@ classdef EOGPosVelPlots < handle
                         end
                         set(obj.posAvgAxes, 'YTick', yTicks);
                         set(obj.posAvgAxes, 'YTickLabel', yLabels);
-                        ylabel(obj.posAvgAxes,'Average Eye Position (absolute deg.)','FontSize',14);
+                        ylabel(obj.posAvgAxes,'Avg Eye Position (deg)','FontSize',14);
                     end
                 end
             end
@@ -166,11 +166,11 @@ classdef EOGPosVelPlots < handle
                 end
                 set(obj.velAxes, 'YTick', yTicks);
                 set(obj.velAxes, 'YTickLabel', yLabels);
-                ylabel(obj.velAxes,'Average Eye Speed (degrees/s)','FontSize',14);
+                ylabel(obj.velAxes,'Avg Eye Speed (deg/s)','FontSize',14);
                 if mustPlot
                     set(obj.velAvgAxes, 'YTick', yTicks);
                     set(obj.velAvgAxes, 'YTickLabel', yLabels);
-                    ylabel(obj.velAvgAxes, 'Average Eye Speed (degrees/s)', 'FontSize', 14);
+                    ylabel(obj.velAvgAxes, 'Avg Eye Speed (deg/s)', 'FontSize', 14);
                 end
             end
             a1 = axis(obj.velAxes);

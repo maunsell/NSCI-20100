@@ -1,6 +1,6 @@
 function backupFile(filePath, oldPathStr, newPathStr)
 
   repFilePath = strrep(filePath, oldPathStr, newPathStr);
-  sysCommand = sprintf('cp %s %s', filePath, repFilePath');
-  system(sysCommand);
+  system(sprintf('mkdir -p $(dirname %s)', repFilePath));
+  system(sprintf('cp %s %s', filePath, repFilePath'));
 end

@@ -1,4 +1,4 @@
-classdef EOGSaccades < handle
+classdef MetricsSaccades < handle
     % saccades
     %   Support for processing eye traces and detecting saccades
     

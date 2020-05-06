@@ -74,7 +74,7 @@ classdef RTTaskData < handle
             obj.calTrialsDone = 0;
             obj.numSummed = 0;
             obj.posTrace = zeros(obj.trialSamples, 1);                      % trial RT position trace
-            obj.posSummed = zeros(obj.saccadeSamples, 1);                    % summed position traces
+            obj.posSummed = zeros(obj.saccadeSamples, 1);                   % summed position traces
             obj.posAvg = zeros(obj.saccadeSamples, 1);                      % averaged position traces
             obj.rawData = zeros(obj.trialSamples, obj.numChannels);         % raw data
             obj.saccadeDurS = zeros(1, obj.numTrialTypes);                	% average saccade durations

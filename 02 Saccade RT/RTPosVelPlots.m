@@ -12,8 +12,8 @@ classdef RTPosVelPlots < handle
              obj = obj@handle();                                            % object initialization
 
              %% Post Initialization %%
-            obj.posAxes = handles.axes1;
-            obj.velAxes = handles.axes3;
+            obj.posAxes = handles.posAxes;
+            obj.velAxes = handles.velAxes;
             cla(obj.posAxes);
             cla(obj.velAxes);
             title(obj.posAxes, 'Most recent position trace', 'fontSize', 12, 'fontWeight', 'bold')

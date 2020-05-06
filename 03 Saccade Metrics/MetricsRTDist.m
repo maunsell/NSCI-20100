@@ -1,4 +1,4 @@
-classdef EOGRTDist < handle
+classdef MetricsRTDist < handle
     %EOGAmpDur Handle saccade-duration data for EOG
     %   Accumulates the data and handles the plot
     
@@ -14,7 +14,7 @@ classdef EOGRTDist < handle
         
     methods
         
-        function obj = EOGRTDist(i, offset, axes)
+        function obj = MetricsRTDist(i, offset, axes)
 
              %% Pre Initialization %%
              % Any code not using output argument (obj)

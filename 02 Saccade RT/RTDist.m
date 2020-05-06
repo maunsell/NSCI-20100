@@ -54,30 +54,29 @@ classdef RTDist < handle
 
     %% plot -- plot all the distributions
     function rescale = plot(obj)
+      rescale = 0;
       if obj.n == 0                                       % nothing to plot
-        rescale = 0;
         return
       end
       colors = get(obj.fHandle, 'colorOrder');            % get the colors for the different plots
-      hold(obj.fHandle, 'off');
+%       hold(obj.fHandle, 'off');
+      cla(obj.fHandle, 'reset');
       h = histogram(obj.fHandle, obj.reactTimesMS(1:obj.n), 'facecolor', colors(obj.index,:));
+      set(obj.fHandle, 'tickDir', 'out');
       hold(obj.fHandle, 'on');
-      %             bar(obj.fHandle, h.BinEdges, h.Values, 1.0, 'facecolor', colors(obj.index,:));
       setupPlot(obj);
       a = axis(obj.fHandle);                              % set scale, flag whether we're rescaling
       a(1) = 0;
-      if a(2) > obj.maxRT                                 % new x limit, rescale
-        rescale = a(2) * 1.2;
-      else
-        a(2) = obj.maxRT;                                 % no new x limit, plot on the current limit
-        rescale = 0;
+      if a(2) > obj.maxRT                                 % new x limit, announce new limit
+        obj.maxRT = a(2);
+        rescale = a(2);
+      else                                                % otherwise, force plot to current maxRT
+        a(2) = obj.maxRT;
       end
       a(4) = 1.2 * max(h.Values);                       	% leave some headroom about the histogram
       axis(obj.fHandle, a);
       meanRT = mean(obj.reactTimesMS(1:obj.n));           % mean RT
       stdRT = std(obj.reactTimesMS(1:obj.n));             % std for RT
-      %             text(a(1) + 0.05 * (a(2) - a(1)), 0.9 * a(4), sprintf('%.0f', obj.index + 2), 'parent', obj.fHandle, ...
-      %                 'fontSize', 24, 'fontWeight', 'bold');
       displayText = {sprintf('n = %.0f', obj.n), sprintf('Mean = %.0f', meanRT), sprintf('SD = %.0f', stdRT)};
       if obj.n > 10
         sem = stdRT / sqrt(obj.n);
@@ -94,14 +93,16 @@ classdef RTDist < handle
 
     %% rescale -- rescale the plots
     function rescale(obj, newMaxRT)
-      obj.maxRT = newMaxRT;
-%       hold(obj.fHandle, 'on');
       a = axis(obj.fHandle);
-      fprintf(' rescale max %f; %f %f %f %f\n', newMaxRT, a(1), a(2), a(3), a(4));
-      a(2) = obj.maxRT;
-      fprintf(' rescale max %f; %f %f %f %f\n', newMaxRT, a(1), a(2), a(3), a(4));
-      axis(obj.fHandle, a);
-%       hold(obj.fHandle, 'off');
+      if a(2) ~= newMaxRT                                 % new x limit, announce new limit
+        obj.maxRT = newMaxRT;
+        hold(obj.fHandle, 'on');
+        fprintf(' rescale max %f; %f %f %f %f\n', newMaxRT, a(1), a(2), a(3), a(4));
+        a(2) = newMaxRT;
+        fprintf(' rescale max %f; %f %f %f %f\n', newMaxRT, a(1), a(2), a(3), a(4));
+        axis(obj.fHandle, a);
+        hold(obj.fHandle, 'off');
+      end
     end
       
     %% setupPlot -- prepare a blank plot
@@ -110,7 +111,6 @@ classdef RTDist < handle
       if (obj.index == 3)                                 % label the bottom plot
         xlabel(obj.fHandle, 'Reaction Time (ms)', 'fontSize', 14);
       end
-%       a = axis(obj.fHandle);                              % set scale, flag whether we're rescaling
     end
   end
 end

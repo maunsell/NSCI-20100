@@ -1,5 +1,5 @@
-classdef EOGTaskData < handle
-    % EOGTaskData
+classdef MetricsTaskData < handle
+    % MetricsTaskData
     %   Support for processing eye traces and detecting saccades in EOG
     
     properties
@@ -16,7 +16,7 @@ classdef EOGTaskData < handle
         numOffsets;
         numSummed;
         offsetIndex;
-     	offsetsDeg;
+        offsetsDeg;
         offsetsDone;
         posAvg;
         posSummed;
@@ -44,7 +44,7 @@ classdef EOGTaskData < handle
     end
     
     methods
-        function obj = EOGTaskData(numChannels, sampleRateHz)
+        function obj = MetricsTaskData(numChannels, sampleRateHz)
 
              %% Object Initialization %%
              obj = obj@handle();                                    % object initialization
@@ -59,11 +59,10 @@ classdef EOGTaskData < handle
             obj.saccadeTraceS = 0.250;                              % duratoin of saccade trace
             obj.trialDurS = max(1.0, 2 * obj.saccadeTraceS);
             obj.prestimDurS = min(obj.trialDurS / 4, 0.250);
-            obj.taskState = TaskState.taskStarttrial;
-            obj.dataState = DataState.dataIdle;
+            obj.taskState = MetricsTaskState.taskStarttrial;
+            obj.dataState = MetricsDataState.dataIdle;
             obj.trialStartTimeS = 0;
             obj.samplesRead = 0;
-%             obj.startStimS = 0;
             obj.stimTimeS = 0;
             obj.testMode = false;                                  % testMode is set in EOG, not here
             obj.voltage = 0;

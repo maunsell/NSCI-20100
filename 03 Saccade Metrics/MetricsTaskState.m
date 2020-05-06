@@ -1,4 +1,4 @@
-classdef TaskState
+classdef MetricsTaskState
     enumeration
         taskStarttrial
         taskSettle

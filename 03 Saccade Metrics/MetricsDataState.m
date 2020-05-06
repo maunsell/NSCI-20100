@@ -1,4 +1,4 @@
-classdef DataState
+classdef MetricsDataState
     enumeration
         dataIdle
         dataStart
