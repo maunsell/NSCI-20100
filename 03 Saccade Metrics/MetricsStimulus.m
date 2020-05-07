@@ -10,7 +10,7 @@ classdef MetricsStimulus < handle
   end
   properties (GetAccess = private)
     blankImage
-    currentImageIndex
+%     currentImageIndex
     currentOffsetIndex
     doStimDisplay
     dotImage
@@ -44,7 +44,7 @@ classdef MetricsStimulus < handle
         imtool close all;                               % close imtool figures from Image Processing Toolbox
         obj.spotRadiusPix = 10;
         obj.stepSizeDeg = stepSizeDeg;
-        obj.currentImageIndex = 1;
+%         obj.currentImageIndex = 1;
         dockPix = 75;
         windHeightPix = 60;
         screenRectPix = get(0, 'MonitorPositions');   	% get the size of the primary screen
@@ -66,7 +66,7 @@ classdef MetricsStimulus < handle
         obj.hAxes = axes('Parent', obj.hFig, 'units', 'pixels', 'visible', 'off');
         obj.pixPerMM = java.awt.Toolkit.getDefaultToolkit().getScreenResolution() / MetricsConstants.mmPerInch;
         setViewDistanceCM(obj, app);
-        drawDot(obj);
+%         drawDot(obj);
       else
         obj.windRectPix = [0, 0, 2000, 100];
         obj.pixPerMM = 3;
@@ -75,8 +75,9 @@ classdef MetricsStimulus < handle
     
     %%
     function centerStimulus(obj)
-      obj.currentOffsetPix = 0;
-      drawDot(obj);
+      drawImage(obj, obj.blankImage);
+      obj.currentOffsetPix = obj.marginPix + obj.windRectPix(3) / 2.0;
+      drawImage(obj, obj.dotImage);
     end
     
     %%
@@ -89,17 +90,7 @@ classdef MetricsStimulus < handle
     function delete(obj)
       close(obj.hFig);
     end
-   
-%     function cleanup(~)
-%       sca;
-%     end
-        
-    function clearScreen(obj)
-      if obj.doStimDisplay
-%         Screen('Flip', obj.window);
-      end
-    end
-    
+       
     %% currentOffsetDeg -- offset of the spot from screen center in degrees
     function offsetDeg = currentOffsetDeg(obj)
       offsetMM = obj.currentOffsetPix / obj.pixPerMM;
@@ -109,25 +100,25 @@ classdef MetricsStimulus < handle
   	%%
     function drawCenterStimulus(obj)
       obj.currentOffsetIndex = ceil(obj.numPos / 2);
-      drawImage(obj, MetricsConstants.kLeftStim);
+      obj.currentOffsetPix = obj.marginPix + obj.windRectPix(3) / 2.0;
+      drawImage(obj, obj.dotImage);
     end
 
-    %% drawDot -- draw the dot at the currently specified pixel offset
-    function drawDot(obj)
-      if obj.doStimDisplay
-%         Screen('BlendFunction', obj.window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
-%         Screen('DrawDots', obj.window, [obj.currentOffsetPix; 0], 16 , obj.whiteColor, ...
-%           [obj.xCenterPix obj.yCenterPix], 1);
-%         Screen('Flip', obj.window);
-      end
-    end
+%     %% drawDot -- draw the dot at the currently specified pixel offset
+%     function drawDot(obj)
+%       if obj.doStimDisplay
+% %         Screen('BlendFunction', obj.window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
+% %         Screen('DrawDots', obj.window, [obj.currentOffsetPix; 0], 16 , obj.whiteColor, ...
+% %           [obj.xCenterPix obj.yCenterPix], 1);
+% %         Screen('Flip', obj.window);
+%       end
+%     end
     
      %% drawImage -- draw the dot at the currently specified pixel offset
-    function drawImage(obj, imageIndex)
-      obj.hAxes.Position(1) = obj.imagePosPix(obj.currentOffsetIndex);
-      imshow(obj.dotImage, [0.5, 0.5, 0.5; 1.0, 1.0, 1.0], 'parent', obj.hAxes);
+    function drawImage(obj, theImage)
+      obj.hAxes.Position(1) = obj.currentOffsetPix;
+      imshow(theImage, [0.5, 0.5, 0.5; 1.0, 1.0, 1.0], 'parent', obj.hAxes);
       drawnow;
-      obj.currentImageIndex = imageIndex;
     end
     
     %% maxDeg -- maximum extent of the display in degrees (left edge to right edge)
@@ -182,39 +173,39 @@ classdef MetricsStimulus < handle
       end
     end
     
-    %% prepareImages -- set up the images that will be needed for the upcoming trial
-    function prepareImages(obj, trialType, stepDirection)
-      % first offset the image position if the current position won't accommodate the left or right step.
-      % we don't need to do anything for a centering trial because that will be a different image location
-      if trialType == MetricsConstants.kCenteringTrial
-        drawImage(obj, obj.currentImageIndex);                          % draw for trial equivalence
-        obj.gapStim = MetricsConstants.kLeftStim;
-        obj.finalStim = obj.gapStim;
-      else
-        if stepDirection == MetricsConstants.kLeft                           % going to step left
-          if obj.currentImageIndex == MetricsConstants.kLeftStim
-            obj.currentOffsetIndex = obj.currentOffsetIndex - 1;	% shift one position leftward
-          end
-          drawImage(obj, MetricsConstants.kRightStim);                  	% draw same spot with new image
-          obj.finalStim = MetricsConstants.kLeftStim;
-        else
-          if obj.currentImageIndex == MetricsConstants.kRightStim          % going to step right
-            obj.currentOffsetIndex = obj.currentOffsetIndex + 1; % shift one position leftward
-          end
-          drawImage(obj, MetricsConstants.kLeftStim);
-          obj.finalStim = MetricsConstants.kRightStim;
-        end
-        % set up the gap stimuli
-        switch trialType
-          case MetricsConstants.kStepTrial
-            obj.gapStim = obj.finalStim;
-          case MetricsConstants.kGapTrial
-            obj.gapStim = MetricsConstants.kBlankStim;
-          case MetricsConstants.kOverlapTrial
-            obj.gapStim = MetricsConstants.kBothStim;
-        end
-      end
-    end
+%     %% prepareImages -- set up the images that will be needed for the upcoming trial
+%     function prepareImages(obj, trialType, stepDirection)
+%       % first offset the image position if the current position won't accommodate the left or right step.
+%       % we don't need to do anything for a centering trial because that will be a different image location
+%       if trialType == MetricsConstants.kCenteringTrial
+%         drawImage(obj, obj.currentImageIndex);                          % draw for trial equivalence
+%         obj.gapStim = MetricsConstants.kLeftStim;
+%         obj.finalStim = obj.gapStim;
+%       else
+%         if stepDirection == MetricsConstants.kLeft                           % going to step left
+%           if obj.currentImageIndex == MetricsConstants.kLeftStim
+%             obj.currentOffsetIndex = obj.currentOffsetIndex - 1;	% shift one position leftward
+%           end
+%           drawImage(obj, MetricsConstants.kRightStim);                  	% draw same spot with new image
+%           obj.finalStim = MetricsConstants.kLeftStim;
+%         else
+%           if obj.currentImageIndex == MetricsConstants.kRightStim          % going to step right
+%             obj.currentOffsetIndex = obj.currentOffsetIndex + 1; % shift one position leftward
+%           end
+%           drawImage(obj, MetricsConstants.kLeftStim);
+%           obj.finalStim = MetricsConstants.kRightStim;
+%         end
+%         % set up the gap stimuli
+%         switch trialType
+%           case MetricsConstants.kStepTrial
+%             obj.gapStim = obj.finalStim;
+%           case MetricsConstants.kGapTrial
+%             obj.gapStim = MetricsConstants.kBlankStim;
+%           case MetricsConstants.kOverlapTrial
+%             obj.gapStim = MetricsConstants.kBothStim;
+%         end
+%       end
+%     end
     
     %% stepOutOfRange -- Report whether a step would move the target offscreen
     function outOfRange = stepOutOfRange(obj, offsetDeg)
@@ -236,23 +227,26 @@ classdef MetricsStimulus < handle
         obj.viewDistanceMM = newViewMM;
         makeImages(obj);                                            % make new spot images
         obj.currentOffsetIndex = ceil(obj.numPos / 2);            	% select center position
-        drawImage(obj, MetricsConstants.kLeftStim);                 % draw the center spot
+        drawImage(obj, obj.dotImage);                               % draw the center spot
       end
     end
     
-%     %% stepStimulus -- Step the stimulus
-%     
-%     %         function stepSign = stepStimulus(obj, offsetDeg)
-%     function stepStimulus(obj, offsetDeg)
-%       %             stepSign = -sign(obj.currentOffsetPix);
-%       %             if stepSign == 0
-%       %                 stepSign = sign(rand - 0.5);
-%       %             end
-%       %             newOffsetDeg = currentOffsetDeg + stepSign  * offsetDeg;
-%       newOffsetDeg = currentOffsetDeg(obj) + offsetDeg;
-%       newOffsetMM = obj.viewDistanceMM * tan(newOffsetDeg / 57.2958);
-%       obj.currentOffsetPix = newOffsetMM * obj.pixPerMM;
+    %% stepStimulus -- Step the stimulus
+    
+    %         function stepSign = stepStimulus(obj, offsetDeg)
+    function stepStimulus(obj, offsetDeg)
+      %             stepSign = -sign(obj.currentOffsetPix);
+      %             if stepSign == 0
+      %                 stepSign = sign(rand - 0.5);
+      %             end
+      %             newOffsetDeg = currentOffsetDeg + stepSign  * offsetDeg;
+      fprintf('stepStimulus offsetDeg: %f\n', offsetDeg);
+      drawImage(obj, obj.blankImage);                               % erase the current image
+      newOffsetDeg = currentOffsetDeg(obj) + offsetDeg;
+      newOffsetMM = obj.viewDistanceMM * tan(newOffsetDeg / 57.2958);
+      obj.currentOffsetPix = obj.marginPix + obj.windRectPix(3) / 2.0 + newOffsetMM * obj.pixPerMM;
+      drawImage(obj, obj.dotImage);
 %       drawDot(obj);
-%     end
+    end
   end
 end
