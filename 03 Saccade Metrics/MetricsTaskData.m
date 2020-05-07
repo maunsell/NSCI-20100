@@ -30,6 +30,7 @@ classdef MetricsTaskData < handle
         saccadeTraceS;
         saccHalfTimeS;
         stepSign;
+        stepSizeDeg;
         stimStartPixel;
         stimTimeS;
         trialDurS;
@@ -56,6 +57,7 @@ classdef MetricsTaskData < handle
             obj.offsetIndex = 1;
             obj.absStepIndex = 1;
             obj.stepSign = 1;
+            obj.stepSizeDeg = 0;
             obj.saccadeTraceS = 0.250;                              % duratoin of saccade trace
             obj.trialDurS = max(1.0, 2 * obj.saccadeTraceS);
             obj.prestimDurS = min(obj.trialDurS / 4, 0.250);

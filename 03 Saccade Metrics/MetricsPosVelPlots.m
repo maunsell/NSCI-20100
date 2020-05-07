@@ -58,12 +58,12 @@ classdef MetricsPosVelPlots < handle
                     obj.posAvgAxes.ColorOrderIndex = 1;
                     plot(obj.posAvgAxes, saccadeTimes, data.posAvg(:, data.numOffsets / 2 + 1:data.numOffsets), '-');
                     hold(obj.posAvgAxes, 'off');
-                    title(obj.posAvgAxes, sprintf('Average position traces (n>=%d)', data.blocksDone), ...
+                    title(obj.posAvgAxes, sprintf('Average position traces (n\x2265%d)', data.blocksDone), ...
                         'FontSize',12,'FontWeight','Bold')
                     % set both plots to the same y scale
                     a3 = axis(obj.posAvgAxes);
                     yLim = max(abs(a3(3:4)));
-                    text(-112, 0.8 * yLim, '2', 'parent', obj.posAvgAxes, 'FontSize', 24, 'FontWeight', 'Bold');
+%                     text(-112, 0.8 * yLim, '2', 'parent', obj.posAvgAxes, 'FontSize', 24, 'FontWeight', 'Bold');
                     axis(obj.posAvgAxes, [-inf inf -yLim yLim]);
                     hold(obj.posAvgAxes, 'on');
                     % averages are always aligned on onset, so draw a vertical line at that point
@@ -94,8 +94,8 @@ classdef MetricsPosVelPlots < handle
                 axis(obj.posAxes, [-inf inf -yLim yLim]);       % scale pos plot to avgPos plot y-axis
             end
             a1 = axis(obj.posAxes);                             % label the pos plot "1"
-            text(trialTimes(1) + 0.05 * (trialTimes(end) - trialTimes(1)), ...
-                a1(3) + 0.9 * (a1(4) - a1(3)), '1', 'parent', obj.posAxes, 'FontSize', 24, 'FontWeight', 'Bold');
+%             text(trialTimes(1) + 0.05 * (trialTimes(end) - trialTimes(1)), ...
+%                 a1(3) + 0.9 * (a1(4) - a1(3)), '1', 'parent', obj.posAxes, 'FontSize', 24, 'FontWeight', 'Bold');
             % Once the y-axis scaling is set, we can draw vertical marks for stimOn and saccades
             hold(obj.posAxes, 'on');
             plot(obj.posAxes, [data.stimTimeS * 1000.0, data.stimTimeS * 1000.0], [a1(3), a1(4)], 'k-.');
@@ -136,14 +136,15 @@ classdef MetricsPosVelPlots < handle
                     obj.velAvgAxes.ColorOrderIndex = 1;
                     plot(obj.velAvgAxes, saccadeTimes, data.velAvg(:, data.numOffsets / 2 + 1:data.numOffsets), '-');
                     hold(obj.velAvgAxes, 'off');
-                    title(obj.velAvgAxes, 'Average velocity traces', 'FontSize', 12, 'FontWeight','Bold')
+                    title(obj.velAvgAxes, sprintf('Average velocity traces (n\x2265%d)', data.blocksDone), ...
+                            'fontSize', 12, 'fontWeight','Bold')
                     ylabel(obj.velAvgAxes,'Analog Input (dV/dt)', 'FontSize', 14);
                     xlabel(obj.velAvgAxes,'Time (ms)','FontSize', 14);
                     % put both plots on the same y scale
                     a1 = axis(obj.velAxes);
                     a2 = axis(obj.velAvgAxes);
                     yLim = max([abs(a1(3)), abs(a1(4)), abs(a2(3)), abs(a2(4))]);
-                    text(-112, 0.8 * yLim, '4', 'parent', obj.velAvgAxes, 'FontSize', 24, 'FontWeight', 'Bold');
+%                     text(-112, 0.8 * yLim, '4', 'parent', obj.velAvgAxes, 'FontSize', 24, 'FontWeight', 'Bold');
                     axis(obj.velAxes, [-inf inf -yLim yLim]);
                     axis(obj.velAvgAxes, [-inf inf -yLim yLim]);
                     % averages are always aligned on onset, so draw a vertical line at that point
@@ -174,8 +175,8 @@ classdef MetricsPosVelPlots < handle
                 end
             end
             a1 = axis(obj.velAxes);
-            text(trialTimes(1) + 0.05 * (trialTimes(end) - trialTimes(1)), ...
-                a1(3) + 0.9 * (a1(4) - a1(3)), '3', 'parent', obj.velAxes, 'FontSize', 24, 'FontWeight', 'Bold');
+%             text(trialTimes(1) + 0.05 * (trialTimes(end) - trialTimes(1)), ...
+%                 a1(3) + 0.9 * (a1(4) - a1(3)), '3', 'parent', obj.velAxes, 'FontSize', 24, 'FontWeight', 'Bold');
             % Once the y-axis scaling is set, we can draw vertical marks for stimOn and saccades
             hold(obj.velAxes, 'on');
             plot(obj.velAxes, [data.stimTimeS * 1000.0, data.stimTimeS * 1000.0], [a1(3), a1(4)], 'k-.');

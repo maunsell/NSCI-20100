@@ -61,7 +61,7 @@ classdef MetricsAmpDur < handle
     end
     
     %% plotAmpDur
-    function plotAmpDur(obj)
+    function plotAmpDur(obj, blocksDone)
       minN = min(obj.n);
       if minN < 2 || minN == obj.lastN
         return;
@@ -69,7 +69,7 @@ classdef MetricsAmpDur < handle
       cla(obj.fHandle);
       boxplot(obj.fHandle, obj.reactTimesMS(1:minN, :), 'labels', num2str(obj.offsetsDeg(:)), ...
         'notch', 'on', 'whisker', 0, 'positions', obj.offsetsDeg, 'symbol', '');
-      title(obj.fHandle, 'Duration v. Amplitude', 'FontSize', 12, 'FontWeight', 'Bold');
+      title(obj.fHandle, sprintf('Duration v. Amplitude (n\x2265%d)', blocksDone), 'FontSize', 12, 'FontWeight', 'Bold');
       xlabel(obj.fHandle, 'Saccade Amplitude (deg)','FontSize',14);
       ylabel(obj.fHandle, 'Saccade Duration (ms)','FontSize',14);
       a = axis(obj.fHandle);

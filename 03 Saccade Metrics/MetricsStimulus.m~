@@ -10,7 +10,6 @@ classdef MetricsStimulus < handle
   end
   properties (GetAccess = private)
     blankImage
-    currentImageIndex
     currentOffsetIndex
     doStimDisplay
     dotImage
@@ -44,7 +43,6 @@ classdef MetricsStimulus < handle
         imtool close all;                               % close imtool figures from Image Processing Toolbox
         obj.spotRadiusPix = 10;
         obj.stepSizeDeg = stepSizeDeg;
-        obj.currentImageIndex = 1;
         dockPix = 75;
         windHeightPix = 60;
         screenRectPix = get(0, 'MonitorPositions');   	% get the size of the primary screen
@@ -73,17 +71,10 @@ classdef MetricsStimulus < handle
       end
     end
     
-    %%
     function centerStimulus(obj)
       obj.currentOffsetPix = 0;
       drawDot(obj);
     end
-    
-    %%
-    function pix = degToPix(obj, deg)
-      assert(obj.viewDistanceMM > 0, 'Metrics degToPix: viewDistanceMM has not yet been set');
-      pix = round(tan(deg / MetricsConstants.degPerRadian) * obj.viewDistanceMM * obj.pixPerMM);
-    end   
     
     %% delete the window
     function delete(obj)
@@ -120,14 +111,6 @@ classdef MetricsStimulus < handle
 %           [obj.xCenterPix obj.yCenterPix], 1);
 %         Screen('Flip', obj.window);
       end
-    end
-    
-     %% drawImage -- draw the dot at the currently specified pixel offset
-    function drawImage(obj, imageIndex)
-      obj.hAxes.Position(1) = obj.imagePosPix(obj.currentOffsetIndex);
-      imshow(obj.dotImage, [0.5, 0.5, 0.5; 1.0, 1.0, 1.0], 'parent', obj.hAxes);
-      drawnow;
-      obj.currentImageIndex = imageIndex;
     end
     
     %% maxDeg -- maximum extent of the display in degrees (left edge to right edge)
@@ -230,13 +213,12 @@ classdef MetricsStimulus < handle
     end
     
     %% setViewDistanceCM -- set the viewing distance
-    function setViewDistanceCM(obj, app)
-      newViewMM = str2double(app.viewDistanceText.Value) / 10.0;
-      if isempty(obj.viewDistanceMM) || obj.viewDistanceMM ~= newViewMM
-        obj.viewDistanceMM = newViewMM;
+    function setViewDistanceCM(obj, newValueCM)
+      if obj.viewDistanceMM ~= newValueCM
+        obj.viewDistanceMM = newValueCM * 10.0;
         makeImages(obj);                                            % make new spot images
-        obj.currentOffsetIndex = ceil(obj.numPos / 2);            	% select center position
-        drawImage(obj, MetricsConstants.kLeftStim);                 % draw the center spot
+        obj.currentOffsetIndex = ceil(obj.numPos / 2);            	% center position
+        drawImage(obj, MetricsConstants.kLeftStim);                     	% draw the center spot
       end
     end
     
