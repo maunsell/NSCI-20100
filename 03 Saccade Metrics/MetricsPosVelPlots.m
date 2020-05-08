@@ -21,8 +21,8 @@ classdef MetricsPosVelPlots < handle
             obj.velAxes = app.velAxes;            
         end
             
-        function plot(obj, handles, startIndex, endIndex, mustPlot)
-        %EOGPlots Updata all plots for EOG
+        function plotPosVel(obj, handles, startIndex, endIndex, mustPlot)
+        %doPlot Updata all plots for EOG
             mustPlot = mustPlot || (mod(sum(handles.data.numSummed), handles.data.numOffsets) == 0);
             posPlots(obj, handles, startIndex, endIndex, mustPlot);
             velPlots(obj, handles, startIndex, endIndex, mustPlot);

@@ -57,7 +57,7 @@ classdef MetricsAmpDur < handle
       obj.lastN = 0;
       cla(obj.fHandle);
       axis(obj.fHandle, [0 1 0 1]);
-      text(0.05, 0.1, '5', 'parent', obj.fHandle, 'FontSize', 24, 'FontWeight', 'Bold');
+%       text(0.05, 0.1, '5', 'parent', obj.fHandle, 'FontSize', 24, 'FontWeight', 'Bold');
     end
     
     %% plotAmpDur
