@@ -10,7 +10,6 @@ classdef ctTaskData < handle
     numBases;
     numIncrements;
     output;
-%     resultsTable;
     sampFreqHz;
     stimStartTimeS;
     stimParams;
@@ -32,8 +31,8 @@ classdef ctTaskData < handle
       obj = obj@handle();                                             % object initialization
       %% Post Initialization %%
       
-      obj.testMode = false;
-      obj.doStimDisplay = true;                                       % for PsychToolbox not working
+      obj.testMode = true;
+      obj.doStimDisplay = false;                                       % for PsychToolbox not working
       obj.doStim = true;                                              % for faster debugging
       
       tones = [];
@@ -79,14 +78,14 @@ classdef ctTaskData < handle
     
     %% clearAll
     function clearOneContrast(obj, app)
-      items = get(app.baseContrastMenu, 'items');
-      value = get(app.baseContrastMenu, 'value');
+      items = app.baseContrastMenu.Items;
+      value = app.baseContrastMenu.Value;
       baseIndex = find(contains(items, value));
       obj.trialsDone(baseIndex, :) = 0;
       obj.hits(baseIndex, :) = 0;
       obj.blocksFit(baseIndex) = 0;
       obj.curveFits(baseIndex, :) = 0;
-      tableData = get(app.resultsTable, 'Data');
+      tableData = app.resultsTable.Data;
       tableData{1, baseIndex} = 0;
       tableData{2, baseIndex} = 0;
       set(app.resultsTable, 'Data', tableData);
