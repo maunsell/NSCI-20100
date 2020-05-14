@@ -10,7 +10,7 @@ classdef ctStimuli
     hFig
     pixPerMM
     screenNumber
-    topPriorityLevel
+%     topPriorityLevel
     whiteColor
     window
     windowRectPix
@@ -79,6 +79,11 @@ methods
     %      obj.gaborTex = CreateProceduralGabor(obj.window, obj.gaborDimPix, obj.gaborDimPix, [], ...
     %        [0.5 0.5 0.5 0.0], 1, 0.5);
     %             Screen('Preference','SuppressAllWarnings',oldEnableFlag);
+    
+    
+    obj.frameDurS = 0.016666;
+    
+    
   end
    
    %    %% cleanup
@@ -103,7 +108,7 @@ methods
    
    %% doStimulus
    function doStimulus(obj, stimParams)
-     Priority(obj.topPriorityLevel);
+%      Priority(obj.topPriorityLevel);
      propertiesMat = repmat([NaN, obj.gaborFreqPix, obj.gaborSigma, obj.gaborContrast, 1.0, 0, 0, 0], ...
        obj.numGabors, 1);
      propertiesMat(:, 1) = [0; 180];

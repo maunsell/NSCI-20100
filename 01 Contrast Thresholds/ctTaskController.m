@@ -1,9 +1,9 @@
 
 %% taskController: function to handle transition of task state.
-function ctTaskController(obj, ~)
+function ctTaskController(obj, ~, app)
     handles = obj.UserData;
     data = handles.data;
-    switch data.taskState
+    switch app.taskState
         case ctTaskState.taskStopped
             % do nothing
         case ctTaskState.taskStartRunning
@@ -11,7 +11,7 @@ function ctTaskController(obj, ~)
             ctControlState(handles, 'off', {handles.runButton});
             data.trialStartTimeS = 0;
             data.stimStartTimeS = 0;
-            data.taskState = ctTaskState.taskStartTrial;
+            app.taskState = ctTaskState.taskStartTrial;
         case ctTaskState.taskStartTrial
            if data.trialStartTimeS == 0                                   % start the trial
                 ctDrawStatusText(handles, 'intertrial');
@@ -31,10 +31,10 @@ function ctTaskController(obj, ~)
                     end
                     ctDrawStatusText(handles, 'wait');
                 end
-                if ~data.testMode
-                    data.taskState = ctTaskState.taskWaitGoKey;
+                if ~app.testMode
+                    app.taskState = ctTaskState.taskWaitGoKey;
                 else
-                    data.taskState = ctTaskState.taskDoStim;
+                    app.taskState = ctTaskState.taskDoStim;
                 end
             end
         case ctTaskState.taskWaitGoKey
@@ -69,17 +69,17 @@ function ctTaskController(obj, ~)
                     doFixSpot(handles.stimuli, 0.0);
                     ctDrawStatusText(handles, 'response');
                 end
-                data.taskState = ctTaskState.taskWaitResponse;
+                app.taskState = ctTaskState.taskWaitResponse;
             end
         case ctTaskState.taskWaitResponse
-            if data.testMode
-                data.taskState = ctTaskState.taskProcessResponse;
+            if app.testMode
+                app.taskState = ctTaskState.taskProcessResponse;
             end
         case ctTaskState.taskProcessResponse
             baseIndex = get(handles.baseContrastMenu, 'value');
             blocksDone = min(data.trialsDone(baseIndex, :));
 %             undone = find(data.trialsDone(baseIndex, :) == blocksDone);
-            if data.testMode
+            if app.testMode
                 prob = 0.5 + 0.5 / (1.0 + exp(-10.0 * (data.testContrasts(baseIndex, data.testIndex) - ...
                     data.testContrasts(baseIndex, 3)) / data.baseContrasts(baseIndex)));
                 hit = rand(1,1) < prob;
@@ -99,18 +99,18 @@ function ctTaskController(obj, ~)
             data.trialsDone(baseIndex, data.testIndex) = data.trialsDone(baseIndex, data.testIndex) + 1;
             data.trialStartTimeS = 0;
             data.stimStartTimeS = 0;
-            data.taskState = ctTaskState.taskStartTrial;
+            app.taskState = ctTaskState.taskStartTrial;
             if data.doStimDisplay && data.doStim
                 clearScreen(handles.stimuli);
             end
             handles = ctDrawHitRates(handles, false);            
             % Check whether we are done with all the trials
             if sum(data.trialsDone(baseIndex, :)) >= data.stimParams.stimReps * data.numIncrements
-                if (~data.testMode)                         % if we're not in test mode, we're done testing
-                    data.taskState = ctTaskState.taskStopRunning;
+                if (~app.testMode)                         % if we're not in test mode, we're done testing
+                    app.taskState = ctTaskState.taskStopRunning;
                 else                                        % if we're testing, see if there are more to do
                     if sum(sum(data.trialsDone)) >=  data.stimParams.stimReps * data.numIncrements * data.numBases
-                        data.taskState = ctTaskState.taskStopRunning;
+                        app.taskState = ctTaskState.taskStopRunning;
                     else                                    % more to do, try the next multiplier
                         while sum(data.trialsDone(baseIndex, :)) >= data.stimParams.stimReps * data.numIncrements
                             baseIndex = mod(baseIndex, data.numBases) + 1;
@@ -126,6 +126,6 @@ function ctTaskController(obj, ~)
             ctDrawStatusText(handles, 'idle');
             set(handles.runButton, 'string', 'Run','backgroundColor', 'green');
             ctControlState(handles, 'on', {handles.runButton});
-            data.taskState = ctTaskState.taskStopped;
+            app.taskState = ctTaskState.taskStopped;
     end
 end

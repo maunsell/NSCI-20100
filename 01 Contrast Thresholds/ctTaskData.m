@@ -13,13 +13,13 @@ classdef ctTaskData < handle
     sampFreqHz;
     stimStartTimeS;
     stimParams;
-    taskState;
+%     taskState;
     testContrasts;
     testIndex;
-    testMode;
+%     testMode;
     trialsDone;
     trialStartTimeS;
-    theKey;
+%     theKey;
     tones;
   end
   
@@ -31,8 +31,8 @@ classdef ctTaskData < handle
       obj = obj@handle();                                             % object initialization
       %% Post Initialization %%
       
-      obj.testMode = true;
-      obj.doStimDisplay = false;                                       % for PsychToolbox not working
+%       obj.testMode = true;
+      obj.doStimDisplay = true;                                       % for PsychToolbox not working
       obj.doStim = true;                                              % for faster debugging
       
       tones = [];
@@ -70,9 +70,9 @@ classdef ctTaskData < handle
       obj.hits = zeros(obj.numBases, obj.numIncrements);
       obj.blocksFit = zeros(1, obj.numBases);
       obj.curveFits = zeros(obj.numBases, obj.numIncrements + 1);
-      obj.taskState = ctTaskState.taskStopped;
+%       obj.taskState = ctTaskState.taskStopped;
       obj.trialStartTimeS = 0;
-      obj.theKey = '';
+%       obj.theKey = '';
       obj.stimParams = struct;
     end
     
