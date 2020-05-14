@@ -1,13 +1,13 @@
 classdef ctTaskData < handle
   % ctTaskData: common data for Contrasts Thresholds
   properties
-    baseContrasts;
+%     baseContrasts;
     blocksFit;
     curveFits;
     doStim;
-    doStimDisplay;
+%     doStimDisplay;
     hits;
-    numBases;
+%     numBases;
     numIncrements;
     output;
     sampFreqHz;
@@ -31,8 +31,7 @@ classdef ctTaskData < handle
       obj = obj@handle();                                             % object initialization
       %% Post Initialization %%
       
-%       obj.testMode = true;
-      obj.doStimDisplay = true;                                       % for PsychToolbox not working
+%       obj.doStimDisplay = true;                                       % for PsychToolbox not working
       obj.doStim = true;                                              % for faster debugging
       
       tones = [];
@@ -44,21 +43,20 @@ classdef ctTaskData < handle
       obj.tones = tones';
       obj.sampFreqHz = sampFreqHz;
       %             obj.multipliers = [1.0375 1.075 1.15 1.50 2.0];
-      obj.baseContrasts = [0.03 0.058 0.12 0.24 0.48];
-      obj.numBases = length(obj.baseContrasts);
+%       app.numBases = length(obj.baseContrasts);
       obj.testContrasts = [0.032	0.034 0.045 0.052 0.060;...
         0.062 0.071 0.084 0.096 0.121;...
         0.126 0.133 0.140 0.180 0.238;...
         0.249 0.260 0.271 0.357 0.480;...
         0.495 0.514 0.550 0.718 0.961];
       obj.numIncrements = size(obj.testContrasts, 2);
-      contrastStrings = cell(1, obj.numBases);
-      for i = 1:obj.numBases
-        contrastStrings{i} = sprintf('%.0f%%', obj.baseContrasts(i) * 100.0);
-      end
-      set(app.baseContrastMenu, 'items', contrastStrings);
+%       contrastStrings = cell(1, app.numBases);
+%       for i = 1:app.numBases
+%         contrastStrings{i} = sprintf('%.0f%%', app.baseContrasts(i) * 100.0);
+%       end
+%       set(app.baseContrastMenu, 'items', contrastStrings);
       tableData = get(app.resultsTable, 'data');
-      for c = 1:obj.numBases
+      for c = 1:app.numBases
         for r = 1:2
           tableData{r, c} = 0;
         end
@@ -66,13 +64,11 @@ classdef ctTaskData < handle
       set(app.resultsTable, 'Data', tableData);
 
       obj.testIndex = 0;
-      obj.trialsDone = zeros(obj.numBases, obj.numIncrements);
-      obj.hits = zeros(obj.numBases, obj.numIncrements);
-      obj.blocksFit = zeros(1, obj.numBases);
-      obj.curveFits = zeros(obj.numBases, obj.numIncrements + 1);
-%       obj.taskState = ctTaskState.taskStopped;
+      obj.trialsDone = zeros(app.numBases, obj.numIncrements);
+      obj.hits = zeros(app.numBases, obj.numIncrements);
+      obj.blocksFit = zeros(1, app.numBases);
+      obj.curveFits = zeros(app.numBases, obj.numIncrements + 1);
       obj.trialStartTimeS = 0;
-%       obj.theKey = '';
       obj.stimParams = struct;
     end
     

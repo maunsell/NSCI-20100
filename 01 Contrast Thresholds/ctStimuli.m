@@ -107,18 +107,18 @@ methods
    end
    
    %% doStimulus
-   function doStimulus(obj, stimParams)
+   function doStimulus(obj, app, stimParams)
 %      Priority(obj.topPriorityLevel);
      propertiesMat = repmat([NaN, obj.gaborFreqPix, obj.gaborSigma, obj.gaborContrast, 1.0, 0, 0, 0], ...
        obj.numGabors, 1);
      propertiesMat(:, 1) = [0; 180];
      propertiesMat(:, 4) = [stimParams.leftContrast; stimParams.rightContrast];
      stimFrames = stimParams.stimDurS / obj.frameDurS;
-     drawGabors(obj, propertiesMat);
+     drawGabors(obj, app, propertiesMat);
      drawFixSpot(obj, obj.whiteColor);
      %             vbl = Screen('Flip', obj.window);
      for frame = 1:stimFrames - 1
-       drawGabors(obj, propertiesMat);
+       drawGabors(obj, app, propertiesMat);
        drawFixSpot(obj, obj.whiteColor);
        %                 vbl = Screen('Flip', obj.window, vbl + 0.5 * obj.frameDurS);
      end
@@ -132,7 +132,7 @@ methods
    end
    
    %% drawGabors
-   function drawGabors(obj, propertiesMat)
+   function drawGabors(obj, app, propertiesMat)
      %         	Screen('BlendFunction', obj.window, 'GL_ONE', 'GL_ZERO');
      %             Screen('DrawTextures', obj.window, obj.gaborTex, [], obj.allRects, obj.gaborOriDeg, [], [], [], [],...
      %                     kPsychDontDoRotation, propertiesMat');
@@ -141,17 +141,17 @@ methods
    %% testStimuli -- make sure all the contrast settings are distinct from each other. If they
    % are not, the full list of possible contrasts will be dumped so
    % they can be used to make adjustments (by hand) to the multipliers
-   function testStimuli(obj, handles)
+   function testStimuli(obj, handles, app)
      clean = true;
      propertiesMat = [0, obj.gaborFreqPix, obj.gaborSigma, obj.gaborContrast, 1.0, 0, 0, 0];
      obj.gaborTex = CreateProceduralGabor(obj.window, obj.gaborDimPix, obj.gaborDimPix, [], ...
        [0.5 0.5 0.5 0.0], 1, 0.5);
-     for bIndex = 1:handles.data.numBases
-       propertiesMat(:, 4) = [handles.data.baseContrasts(bIndex)];
-       [lastMin, lastMax] = sampleImage(obj, propertiesMat);
+     for bIndex = 1:app.numBases
+       propertiesMat(:, 4) = [app.baseContrasts(bIndex)];
+       [lastMin, lastMax] = sampleImage(obj, app, propertiesMat);
        for cIndex = 1:handles.data.numIncrements
          propertiesMat(4) = [handles.data.testContrasts(bIndex, cIndex)];
-         [thisMin, thisMax] = sampleImage(obj, propertiesMat);
+         [thisMin, thisMax] = sampleImage(obj, app, propertiesMat);
          if (thisMin == lastMin && thisMax == lastMax)
            fprintf('Screen settings for %d %d (contrast %.1f%%) same as previous value\n', ...
              bIndex, cIndex, propertiesMat(4) * 100.0);
@@ -164,15 +164,15 @@ methods
      if ~clean
        for contrast = 0.00:0.001:1.0
          propertiesMat(:, 4) = contrast;
-         [thisMin, thisMax] = sampleImage(obj, propertiesMat);
+         [thisMin, thisMax] = sampleImage(obj, app, propertiesMat);
        end
      end
      clearScreen(obj);
    end
    
    %% sampleImage -- draw a gabor and get the min and max pixels
-   function [minValue, maxValue] = sampleImage(obj, propertiesMat)
-     drawGabors(obj, propertiesMat);
+   function [minValue, maxValue] = sampleImage(obj, app, propertiesMat)
+     drawGabors(obj, app, propertiesMat);
      %             Screen('Flip', obj.window);
      %             img = Screen('GetImage', obj.window);
      minValue = min(min(min(img)));

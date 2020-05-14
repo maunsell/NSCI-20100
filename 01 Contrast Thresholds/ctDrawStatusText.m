@@ -1,4 +1,4 @@
-function ctDrawStatusText(handles, status)
+function ctDrawStatusText(app, handles, status)
     runString = 'Status: Running (''escape'' to quit)';
     switch status
         case 'idle'
@@ -13,7 +13,8 @@ function ctDrawStatusText(handles, status)
         case 'intertrial'
             statusString = '     Waiting intertrial interval';
     end
-    baseIndex = get(handles.baseContrastMenu, 'value');
+%     baseIndex = get(app.baseContrastMenu, 'value');
+    baseIndex = find(contains(get(app.baseContrastMenu, 'items'), get(app.baseContrastMenu, 'value')));
     trialsPerBlock = size(handles.data.trialsDone, 2);
     blocksDone = min(handles.data.trialsDone(baseIndex, :));
     undone = find(handles.data.trialsDone(baseIndex, :) == blocksDone);
