@@ -1,33 +1,33 @@
 
 %% taskController: function to handle transition of task state.
-function ctTaskController(obj, ~, app)
-    handles = obj.UserData;
-    data = handles.data;
+function ctTaskController(~, ~, app)
+%     handles = obj.UserData;
+%     data = handles.data;
     switch app.taskState
         case ctTaskState.taskStopped
             % do nothing
         case ctTaskState.taskStartRunning
-            set(handles.runButton, 'string', 'Stop','backgroundColor', 'red');
-            ctControlState(handles, 'off', {handles.runButton});
-            data.trialStartTimeS = 0;
-            data.stimStartTimeS = 0;
+            set(app.runButton, 'text', 'Stop','backgroundColor', 'red');
+            ctControlState(app, 'off', {app.runButton});
+            app.trialStartTimeS = 0;
+            app.stimStartTimeS = 0;
             app.taskState = ctTaskState.taskStartTrial;
         case ctTaskState.taskStartTrial
-           if data.trialStartTimeS == 0                                   % start the trial
-                ctDrawStatusText(app, handles, 'intertrial');
-                data.trialStartTimeS = clock;
-                data.stimParams.stimReps = str2double(get(handles.stimRepsText, 'string'));
-                data.stimParams.prestimDurS = str2double(get(handles.prestimDurText, 'string'));
-                data.stimParams.stimDurS = str2double(get(handles.stimDurText, 'string'));
-                data.stimParams.intertrialDurS = str2double(get(handles.intertrialDurText, 'string'));
+           if app.trialStartTimeS == 0                                   % start the trial
+               ctDrawStatusText(app, 'intertrial');
+                app.trialStartTimeS = clock;
+                app.stimParams.stimReps = str2double(app.stimRepsText.Value);
+                app.stimParams.prestimDurS = str2double(app.prestimDurText.Value);
+                app.stimParams.stimDurS = str2double(app.stimDurText.Value);
+                app.stimParams.intertrialDurS = str2double(app.intertrialDurText.Value);
 %                 baseIndex = contains(app.baseContrastMenu.Items, app.baseContrastMenu.Value);
-                data.stimParams.changeSide = floor(2 * rand(1, 1));
-            elseif (etime(clock, data.trialStartTimeS) > data.stimParams.intertrialDurS) || ~data.doStim
+                app.stimParams.changeSide = floor(2 * rand(1, 1));
+            elseif (etime(clock, app.trialStartTimeS) > app.stimParams.intertrialDurS) || ~app.doStim
                % Draw dark gray fixspot
-               sound(data.tones(3, :), data.sampFreqHz);
-                if data.doStim
+               sound(app.tones(3, :), app.sampFreqHz);
+                if app.doStim
                   doFixSpot(app.stimuli, 0.65);
-                 	ctDrawStatusText(app, handles, 'wait');
+                 	ctDrawStatusText(app, 'wait');
                 end
                 if ~app.testMode
                     app.taskState = ctTaskState.taskWaitGoKey;
@@ -38,79 +38,79 @@ function ctTaskController(obj, ~, app)
         case ctTaskState.taskWaitGoKey
            % just wait for user to hit the down arrow button to start the stimulus
         case ctTaskState.taskDoStim
-           if data.stimStartTimeS == 0                                     % start the stimulus
+           if app.stimStartTimeS == 0                                     % start the stimulus
                 baseIndex = contains(app.baseContrastMenu.Items, app.baseContrastMenu.Value);
                 baseContrast = app.baseContrasts(baseIndex);
-                data.stimStartTimeS = clock;
-                if data.doStim                        % Draw the base stimuli with a white fixspot
-                    ctDrawStatusText(app, handles, 'run')
-                    data.stimParams.leftContrast = baseContrast;
-                    data.stimParams.rightContrast = baseContrast;
-                    doStimulus(app.stimuli, app, data.stimParams);           % display the base contrast
+                app.stimStartTimeS = clock;
+                if app.doStim                        % Draw the base stimuli with a white fixspot
+                    ctDrawStatusText(app, 'run')
+                    app.stimParams.leftContrast = baseContrast;
+                    app.stimParams.rightContrast = baseContrast;
+                    doStimulus(app.stimuli, app, app.stimParams);           % display the base contrast
                 end
-            elseif etime(clock, data.stimStartTimeS) > data.stimParams.prestimDurS
+            elseif etime(clock, app.stimStartTimeS) > app.stimParams.prestimDurS
                % Draw the test stimuli, followed by the gray fixspot
                 baseIndex = contains(app.baseContrastMenu.Items, app.baseContrastMenu.Value);
                 baseContrast = app.baseContrasts(baseIndex);
-                blocksDone = min(data.trialsDone(baseIndex, :));
-                undone = find(data.trialsDone(baseIndex, :) == blocksDone);
-                data.testIndex = undone(ceil(length(undone) * (rand(1, 1))));
-                if (data.stimParams.changeSide == 0)
-                    data.stimParams.leftContrast = data.testContrasts(baseIndex, data.testIndex);
-                    data.stimParams.rightContrast = baseContrast;
+                blocksDone = min(app.trialsDone(baseIndex, :));
+                undone = find(app.trialsDone(baseIndex, :) == blocksDone);
+                app.testIndex = undone(ceil(length(undone) * (rand(1, 1))));
+                if (app.stimParams.changeSide == 0)
+                    app.stimParams.leftContrast = app.testContrasts(baseIndex, app.testIndex);
+                    app.stimParams.rightContrast = baseContrast;
                 else
-                    data.stimParams.leftContrast = baseContrast;
-                    data.stimParams.rightContrast = data.testContrasts(baseIndex, data.testIndex);
+                    app.stimParams.leftContrast = baseContrast;
+                    app.stimParams.rightContrast = app.testContrasts(baseIndex, app.testIndex);
                 end
-                if data.doStim
-                    doStimulus(app.stimuli, app, data.stimParams);           % display the increment stimulus
+                if app.doStim
+                    doStimulus(app.stimuli, app, app.stimParams);           % display the increment stimulus
                     doFixSpot(app.stimuli, 0.0);
-                    ctDrawStatusText(app, handles, 'response');
+                    ctDrawStatusText(app, 'response');
                 end
                 app.taskState = ctTaskState.taskWaitResponse;
             end
         case ctTaskState.taskWaitResponse
-            if app.testMode
+           if app.testMode
                 app.taskState = ctTaskState.taskProcessResponse;
             end
         case ctTaskState.taskProcessResponse
                 baseIndex = contains(app.baseContrastMenu.Items, app.baseContrastMenu.Value);
-%             blocksDone = min(data.trialsDone(baseIndex, :));
-%             undone = find(data.trialsDone(baseIndex, :) == blocksDone);
+%             blocksDone = min(app.trialsDone(baseIndex, :));
+%             undone = find(app.trialsDone(baseIndex, :) == blocksDone);
             if app.testMode
-                prob = 0.5 + 0.5 / (1.0 + exp(-10.0 * (data.testContrasts(baseIndex, data.testIndex) - ...
-                    data.testContrasts(baseIndex, 3)) / app.baseContrasts(baseIndex)));
+                prob = 0.5 + 0.5 / (1.0 + exp(-10.0 * (app.testContrasts(baseIndex, app.testIndex) - ...
+                    app.testContrasts(baseIndex, 3)) / app.baseContrasts(baseIndex)));
                 hit = rand(1,1) < prob;
             else
                 if strcmp(app.theKey, 'left')
-                    hit = data.stimParams.changeSide == 0;
+                    hit = app.stimParams.changeSide == 0;
                 elseif strcmp(app.theKey, 'right')
-                    hit = data.stimParams.changeSide == 1;
+                    hit = app.stimParams.changeSide == 1;
                 end
             end
             if (hit == 1)
-                data.hits(baseIndex, data.testIndex) = data.hits(baseIndex, data.testIndex) + hit;
-                sound(data.tones(2, :), data.sampFreqHz);
+                app.hits(baseIndex, app.testIndex) = app.hits(baseIndex, app.testIndex) + hit;
+                sound(app.tones(2, :), app.sampFreqHz);
             else
-                sound(data.tones(1, :), data.sampFreqHz);
+                sound(app.tones(1, :), app.sampFreqHz);
             end
-            data.trialsDone(baseIndex, data.testIndex) = data.trialsDone(baseIndex, data.testIndex) + 1;
-            data.trialStartTimeS = 0;
-            data.stimStartTimeS = 0;
+            app.trialsDone(baseIndex, app.testIndex) = app.trialsDone(baseIndex, app.testIndex) + 1;
+            app.trialStartTimeS = 0;
+            app.stimStartTimeS = 0;
             app.taskState = ctTaskState.taskStartTrial;
-            if data.doStim
+            if app.doStim
                 clearScreen(app.stimuli);
             end
-            handles = ctDrawHitRates(app, handles, false);            
+            ctDrawHitRates(app, false);            
             % Check whether we are done with all the trials
-            if sum(data.trialsDone(baseIndex, :)) >= data.stimParams.stimReps * data.numIncrements
+            if sum(app.trialsDone(baseIndex, :)) >= app.stimParams.stimReps * app.numIncrements
                 if (~app.testMode)                         % if we're not in test mode, we're done testing
                     app.taskState = ctTaskState.taskStopRunning;
                 else                                        % if we're testing, see if there are more to do
-                    if sum(sum(data.trialsDone)) >=  data.stimParams.stimReps * data.numIncrements * app.numBases
+                    if sum(sum(app.trialsDone)) >=  app.stimParams.stimReps * app.numIncrements * app.numBases
                         app.taskState = ctTaskState.taskStopRunning;
                     else                                    % more to do, try the next multiplier
-                        while sum(data.trialsDone(baseIndex, :)) >= data.stimParams.stimReps * data.numIncrements
+                        while sum(app.trialsDone(baseIndex, :)) >= app.stimParams.stimReps * app.numIncrements
                             baseIndex = mod(baseIndex, app.numBases) + 1;
                         end
                         app.baseContrastMenu.Value = app.baseContrastMenu.Items{baseIndex};
@@ -118,12 +118,12 @@ function ctTaskController(obj, ~, app)
                 end
             end     
         case ctTaskState.taskStopRunning
-            if data.doStim
+            if app.doStim
                 clearScreen(app.stimuli);
             end
-            ctDrawStatusText(app, handles, 'idle');
+            ctDrawStatusText(app, 'idle');
             set(app.runButton, 'text', 'Run', 'backgroundColor', 'green');
-            ctControlState(handles, 'on', {handles.runButton});
+            ctControlState(app, 'on', {app.runButton});
             app.taskState = ctTaskState.taskStopped;
     end
 end

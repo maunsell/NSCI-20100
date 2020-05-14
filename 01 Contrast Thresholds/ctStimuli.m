@@ -141,7 +141,7 @@ methods
    %% testStimuli -- make sure all the contrast settings are distinct from each other. If they
    % are not, the full list of possible contrasts will be dumped so
    % they can be used to make adjustments (by hand) to the multipliers
-   function testStimuli(obj, handles, app)
+   function testStimuli(obj, app)
      clean = true;
      propertiesMat = [0, obj.gaborFreqPix, obj.gaborSigma, obj.gaborContrast, 1.0, 0, 0, 0];
      obj.gaborTex = CreateProceduralGabor(obj.window, obj.gaborDimPix, obj.gaborDimPix, [], ...
@@ -149,8 +149,8 @@ methods
      for bIndex = 1:app.numBases
        propertiesMat(:, 4) = [app.baseContrasts(bIndex)];
        [lastMin, lastMax] = sampleImage(obj, app, propertiesMat);
-       for cIndex = 1:handles.data.numIncrements
-         propertiesMat(4) = [handles.data.testContrasts(bIndex, cIndex)];
+       for cIndex = 1:app.numIncrements
+         propertiesMat(4) = [app.testContrasts(bIndex, cIndex)];
          [thisMin, thisMax] = sampleImage(obj, app, propertiesMat);
          if (thisMin == lastMin && thisMax == lastMax)
            fprintf('Screen settings for %d %d (contrast %.1f%%) same as previous value\n', ...

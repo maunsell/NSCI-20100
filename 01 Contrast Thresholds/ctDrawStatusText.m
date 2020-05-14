@@ -1,4 +1,4 @@
-function ctDrawStatusText(app, handles, status)
+function ctDrawStatusText(app, status)
     runString = 'Status: Running (''escape'' to quit)';
     switch status
         case 'idle'
@@ -15,10 +15,10 @@ function ctDrawStatusText(app, handles, status)
     end
 %     baseIndex = get(app.baseContrastMenu, 'value');
     baseIndex = find(contains(get(app.baseContrastMenu, 'items'), get(app.baseContrastMenu, 'value')));
-    trialsPerBlock = size(handles.data.trialsDone, 2);
-    blocksDone = min(handles.data.trialsDone(baseIndex, :));
-    undone = find(handles.data.trialsDone(baseIndex, :) == blocksDone);
-    set(handles.statusText, 'string', {runString, statusString, '', ...
+    trialsPerBlock = size(app.trialsDone, 2);
+    blocksDone = min(app.trialsDone(baseIndex, :));
+    undone = find(app.trialsDone(baseIndex, :) == blocksDone);
+    set(app.statusText, 'text', {runString, statusString, '', ...
            sprintf('      Trial %d of %d', trialsPerBlock - length(undone) + 1, trialsPerBlock)});
     drawnow;
 end
