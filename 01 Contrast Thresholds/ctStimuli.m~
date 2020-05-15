@@ -18,7 +18,7 @@ properties (GetAccess = private)
   windowRectPix
 end
 properties (Constant)
-  fixSpotRadiusPix = 4;
+  fixSpotRadiusPix = 8;
   gaborSigma = 300 / 7;
   gaborFreqPix = 4 / 300;
   gaborShiftPix = 240;
@@ -28,7 +28,7 @@ properties (Constant)
   gaborPhaseDeg = 0;
   gaborCycles = 4;
 	windMarginPix = 10;
-  windSidePix = 600;
+  windSidePix = 60
 end
 methods
   %% ctStimuli()
@@ -41,7 +41,9 @@ methods
 %     if screenRectPix(3) > 3000                  % Retina display
 %       screenRectPix(3) = screenRectPix(3) / 2.0;
 %     end
-    obj.windowRectPix = [0, 0, obj.windSidePix, obj.windSidePix];
+    windWidthPix = 600;
+    windHeightPix = 600;
+    obj.windowRectPix = [0, 0, windWidthPix, windHeightPix];
     obj.hFig = figure('renderer', 'painters', 'position', obj.windowRectPix, 'visible', 'off');
     movegui(obj.hFig, [-obj.windMarginPix, -obj.windMarginPix]);
     set(obj.hFig, 'menubar', 'none', 'toolbar', 'none', 'numberTitle', 'off', 'resize', 'off');
@@ -68,13 +70,13 @@ methods
     circlePixels = (imgRows - obj.gaborRadiusPix).^2 + (imgCols - obj.gaborRadiusPix).^2 <= obj.gaborRadiusPix^2;
     [obj.gaborImage, ~] = gray2ind(circlePixels, 2);         % make an image from the circle matrix
     obj.hLeftGaborAxes = axes('parent', obj.hFig, 'units', 'pixels', 'visible', 'off');
-    obj.hLeftGaborAxes.Position = [ obj.windowRectPix(1) + obj.windowRectPix(3) / 2 - obj.gaborRadiusPix - 150, ...
+    obj.hLeftGaborAxes.Position = [ obj.windowRectPix(1) + obj.windowRectPix(3) / 2 - obj.gaborRadiusPix - 200, ...
                                     obj.windowRectPix(2) + obj.windowRectPix(4) / 2 - obj.gaborRadiusPix, ...
                                     gaborDiameterPix, gaborDiameterPix];    
 
     % make the right Gabor image and axes
     obj.hRightGaborAxes = axes('parent', obj.hFig, 'units', 'pixels', 'visible', 'off');
-    obj.hRightGaborAxes.Position = [obj.windowRectPix(1) + obj.windowRectPix(3) / 2 - obj.gaborRadiusPix + 150, ...
+    obj.hRightGaborAxes.Position = [obj.windowRectPix(1) + obj.windowRectPix(3) / 2 + obj.gaborRadiusPix - 200, ...
                                     obj.windowRectPix(2) + obj.windowRectPix(4) / 2 - obj.gaborRadiusPix, ...
                                     gaborDiameterPix, gaborDiameterPix];    
 

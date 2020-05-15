@@ -26,7 +26,7 @@ function ctTaskController(~, ~, app)
         % Draw dark gray fixspot
         sound(app.tones(3, :), app.sampFreqHz);
         if app.doStim
-          doFixSpot(app.stimuli, 0.65);
+          drawFixSpot(app.stimuli, [0.65, 0.65, 0.65]);
           ctDrawStatusText(app, 'wait');
         end
         if ~app.testMode
@@ -62,7 +62,7 @@ function ctTaskController(~, ~, app)
         end
         if app.doStim
           doStimulus(app.stimuli, app);       % display the increment stimulus
-          doFixSpot(app.stimuli, 0.0);
+          drawFixSpot(app.stimuli, [0.0, 0.0, 0.0]);
           ctDrawStatusText(app, 'response');
         end
         app.taskState = ctTaskState.taskWaitResponse;
