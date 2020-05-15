@@ -1,6 +1,5 @@
 function ctDrawHitRates(app, doAllBaseContrasts)
 
-  baseIndex = find(contains(get(app.baseContrastMenu, 'items'), get(app.baseContrastMenu, 'value')));
   hitRate = zeros(size(app.trialsDone));             % for all hitRates
   errNeg = zeros(size(app.trialsDone));              % for all neg CIs
   errPos = zeros(size(app.trialsDone));              % for all pos CIs
@@ -9,7 +8,7 @@ function ctDrawHitRates(app, doAllBaseContrasts)
     [hitRate(i,:), pci(i,:,:)] = binofit(app.hits(i, :), app.trialsDone(i, :));
     errNeg(i, :) = hitRate(i, :) - pci(i, :, 1);
     errPos(i, :) = pci(i, :, 2) - hitRate(i, :);
-    if doAllBaseContrasts || i == baseIndex                 % for current block (or when all are requested
+    if doAllBaseContrasts || i == app.baseIndex      	% for current block (or when all are requested
       blocksDone = floor(mean(app.trialsDone(i, :)));
       tableData = get(app.resultsTable, 'Data');      % update table, regardless
       tableData{1, i} = sprintf('%.0f', blocksDone);

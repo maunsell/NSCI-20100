@@ -94,26 +94,26 @@ methods
    function clearScreen(obj)
      cla(obj.hAxes);
    end
- 
+   
    %%
    function delete(obj)
-      close(obj.hFig);
+     close(obj.hFig);
    end
    
    %% doFixSpot
    function doFixSpot(obj, color)
-   drawFixSpot(obj, color);
-   %             Screen('Flip', obj.window);
+     drawFixSpot(obj, color);
+     %             Screen('Flip', obj.window);
    end
    
    %% doStimulus
-   function doStimulus(obj, app, stimParams)
-%      Priority(obj.topPriorityLevel);
+   function doStimulus(obj, app)
+     %      Priority(obj.topPriorityLevel);
      propertiesMat = repmat([NaN, obj.gaborFreqPix, obj.gaborSigma, obj.gaborContrast, 1.0, 0, 0, 0], ...
        obj.numGabors, 1);
      propertiesMat(:, 1) = [0; 180];
-     propertiesMat(:, 4) = [stimParams.leftContrast; stimParams.rightContrast];
-     stimFrames = stimParams.stimDurS / obj.frameDurS;
+     propertiesMat(:, 4) = [app.stimParams.leftContrast; app.stimParams.rightContrast];
+     stimFrames = app.stimParams.stimDurS / obj.frameDurS;
      drawGabors(obj, app, propertiesMat);
      drawFixSpot(obj, obj.whiteColor);
      %             vbl = Screen('Flip', obj.window);
@@ -122,7 +122,6 @@ methods
        drawFixSpot(obj, obj.whiteColor);
        %                 vbl = Screen('Flip', obj.window, vbl + 0.5 * obj.frameDurS);
      end
-     %             Priority(0);
    end
    
    % drawFixSpot

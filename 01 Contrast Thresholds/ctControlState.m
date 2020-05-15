@@ -2,8 +2,7 @@ function ctControlState(app, state, except)
 
 controls = {app.stimRepsText, app.stimDurText, app.intertrialDurText, ...
   app.prestimDurText, app.baseContrastMenu, app.clearDataButton, ...
-  app.savePlotsButton, app.loadDataButton, app.saveDataButton, ...
-  app.showHideButton, app.runButton};
+  app.savePlotsButton, app.loadDataButton, app.saveDataButton, app.runButton};
 
 for c = 1:length(controls)
   skip = false;
