@@ -1,13 +1,10 @@
 classdef ctStimuli
 % Contrast threshold stimuli controller
 properties (GetAccess = private)
-  allRects
-  blackColor
+  colorMap
   frameDurS
   fixSpotImage
-  gaborImage
-  gaborTex
-  grayColor
+  gaborBaseImages
   hFig
   hFixSpotAxes
   hLeftGaborAxes
@@ -18,21 +15,20 @@ properties (GetAccess = private)
   windowRectPix
 end
 properties (Constant)
+	degPerRadian = 57.2958;
   fixSpotRadiusPix = 4;
-  gaborSigma = 300 / 7;
-  gaborFreqPix = 4 / 300;
-  gaborShiftPix = 240;
-	gaborRadiusPix = 100;
+  gaborFreqPix = 35;
   gaborOriDeg = 0;
-  gaborContrast = 0.5;
-  gaborPhaseDeg = 0;
-  gaborCycles = 4;
+  gaborPhaseDeg = 90.0;
+	gaborRadiusPix = 100;
+  gaborSigmaPix = 20;
+  gaborThetaDeg = 0.0;
 	windMarginPix = 10;
   windSidePix = 600;
 end
 methods
   %% ctStimuli()
-  function obj = ctStimuli()
+  function obj = ctStimuli(app)
     imtool close all;                               % close imtool figures from Image Processing Toolbox
 %     screenRectPix = get(0, 'MonitorPositions');   	% get the size of the primary screen
 %     if size(screenRectPix, 1) > 1
@@ -64,9 +60,13 @@ methods
                                     fixDiameterPix, fixDiameterPix];   
     % make the left Gabor image and axes
     gaborDiameterPix = floor(obj.gaborRadiusPix) * 2 + 1;
-    [imgCols, imgRows] = meshgrid(1:gaborDiameterPix);
-    circlePixels = (imgRows - obj.gaborRadiusPix).^2 + (imgCols - obj.gaborRadiusPix).^2 <= obj.gaborRadiusPix^2;
-    [obj.gaborImage, ~] = gray2ind(circlePixels, 2);         % make an image from the circle matrix
+%     [imgCols, imgRows] = meshgrid(1:gaborDiameterPix);
+
+    obj.gaborBaseImages = cell(1, app.numBases);
+    for g = 1:app.numBases
+      G = makeGabor(obj);
+      [obj.gaborBaseImages{g}, ~] = gray2ind(G, 256);         % make an image from the circle matrix
+    end
     obj.hLeftGaborAxes = axes('parent', obj.hFig, 'units', 'pixels', 'visible', 'off');
     obj.hLeftGaborAxes.Position = [ obj.windowRectPix(1) + obj.windowRectPix(3) / 2 - obj.gaborRadiusPix - 150, ...
                                     obj.windowRectPix(2) + obj.windowRectPix(4) / 2 - obj.gaborRadiusPix, ...
@@ -77,7 +77,10 @@ methods
     obj.hRightGaborAxes.Position = [obj.windowRectPix(1) + obj.windowRectPix(3) / 2 - obj.gaborRadiusPix + 150, ...
                                     obj.windowRectPix(2) + obj.windowRectPix(4) / 2 - obj.gaborRadiusPix, ...
                                     gaborDiameterPix, gaborDiameterPix];    
-
+     obj.colorMap = zeros(256, 3, 'uint8');
+     for c = 0:255
+       obj.colorMap(c + 1, :) = [c, c, c];
+     end
   end
    
    %%
@@ -94,23 +97,9 @@ methods
    
    %% doStimulus
    function doStimulus(obj, app)
-     imshow(obj.gaborImage, [0.5, 0.5, 0.5; 1.0, 1.0, 1.0], 'parent', obj.hLeftGaborAxes);
-     imshow(obj.gaborImage, [0.5, 0.5, 0.5; 1.0, 1.0, 1.0], 'parent', obj.hRightGaborAxes);
+     imshow(obj.gaborBaseImages{app.baseIndex}, obj.colorMap, 'parent', obj.hLeftGaborAxes);
+     imshow(obj.gaborBaseImages{app.baseIndex}, obj.colorMap, 'parent', obj.hRightGaborAxes);
      drawnow;
-     
-     %      propertiesMat = repmat([NaN, obj.gaborFreqPix, obj.gaborSigma, obj.gaborContrast, 1.0, 0, 0, 0], ...
-     %        obj.numGabors, 1);
-     %      propertiesMat(:, 1) = [0; 180];
-     %      propertiesMat(:, 4) = [app.stimParams.leftContrast; app.stimParams.rightContrast];
-     %      stimFrames = app.stimParams.stimDurS / obj.frameDurS;
-     %      drawGabors(obj, app, propertiesMat);
-     %      drawFixSpot(obj, [1.0, 1.0, 1.0]);
-     %             vbl = Screen('Flip', obj.window);
-     %      for frame = 1:stimFrames - 1
-     %        drawGabors(obj, app, propertiesMat);
-     %        drawFixSpot(obj, [1.0, 1.0, 1.0]);
-     %        %                 vbl = Screen('Flip', obj.window, vbl + 0.5 * obj.frameDurS);
-     %      end
    end
    
    % drawFixSpot
@@ -129,35 +118,50 @@ methods
    %% testStimuli -- make sure all the contrast settings are distinct from each other. If they
    % are not, the full list of possible contrasts will be dumped so
    % they can be used to make adjustments (by hand) to the multipliers
-   function testStimuli(obj, app)
-     clean = true;
-     propertiesMat = [0, obj.gaborFreqPix, obj.gaborSigma, obj.gaborContrast, 1.0, 0, 0, 0];
-     obj.gaborTex = CreateProceduralGabor(obj.window, obj.gaborDimPix, obj.gaborDimPix, [], ...
-       [0.5 0.5 0.5 0.0], 1, 0.5);
-     for bIndex = 1:app.numBases
-       propertiesMat(:, 4) = [app.baseContrasts(bIndex)];
-       [lastMin, lastMax] = sampleImage(obj, app, propertiesMat);
-       for cIndex = 1:app.numIncrements
-         propertiesMat(4) = [app.testContrasts(bIndex, cIndex)];
-         [thisMin, thisMax] = sampleImage(obj, app, propertiesMat);
-         if (thisMin == lastMin && thisMax == lastMax)
-           fprintf('Screen settings for %d %d (contrast %.1f%%) same as previous value\n', ...
-             bIndex, cIndex, propertiesMat(4) * 100.0);
-           clean = false;
-         end
-         lastMin = thisMin;
-         lastMax = thisMax;
-       end
-     end
-     if ~clean
-       for contrast = 0.00:0.001:1.0
-         propertiesMat(:, 4) = contrast;
-         [thisMin, thisMax] = sampleImage(obj, app, propertiesMat);
-       end
-     end
-     clearScreen(obj);
-   end
+%    function testStimuli(obj, app)
+%      clean = true;
+%      propertiesMat = [0, obj.gaborFreqPix, obj.gaborSigmaPix, obj.gaborContrast, 1.0, 0, 0, 0];
+%      obj.gaborTex = CreateProceduralGabor(obj.window, obj.gaborDimPix, obj.gaborDimPix, [], ...
+%        [0.5 0.5 0.5 0.0], 1, 0.5);
+%      for bIndex = 1:app.numBases
+%        propertiesMat(:, 4) = [app.baseContrasts(bIndex)];
+%        [lastMin, lastMax] = sampleImage(obj, app, propertiesMat);
+%        for cIndex = 1:app.numIncrements
+%          propertiesMat(4) = [app.testContrasts(bIndex, cIndex)];
+%          [thisMin, thisMax] = sampleImage(obj, app, propertiesMat);
+%          if (thisMin == lastMin && thisMax == lastMax)
+%            fprintf('Screen settings for %d %d (contrast %.1f%%) same as previous value\n', ...
+%              bIndex, cIndex, propertiesMat(4) * 100.0);
+%            clean = false;
+%          end
+%          lastMin = thisMin;
+%          lastMax = thisMax;
+%        end
+%      end
+%      if ~clean
+%        for contrast = 0.00:0.001:1.0
+%          propertiesMat(:, 4) = contrast;
+%          [thisMin, thisMax] = sampleImage(obj, app, propertiesMat);
+%        end
+%      end
+%      clearScreen(obj);
+%    end
    
+  %% makeGabor
+  function G = makeGabor(obj)
+
+    sinTheta = sin(obj.gaborThetaDeg / obj.degPerRadian);
+    cosTheta = cos(obj.gaborThetaDeg / obj.degPerRadian);
+    diameterPix = floor(obj.gaborRadiusPix) * 2 + 1;
+    [x, y] = meshgrid(1:diameterPix, 1:diameterPix);
+    thetaX = (x - obj.gaborRadiusPix) * cosTheta + (y - obj.gaborRadiusPix) * sinTheta;
+    thetaY = -(x - obj.gaborRadiusPix) * sinTheta + (y - obj.gaborRadiusPix) * cosTheta;
+    % We need a baseline incrementally greater than 0.5, because the gray2ind() function places the boundary
+    % between 127 and 128 precisely at 0.5. Incrementally greater settles to 128, which is background gray
+    G = (exp(-0.5 * (thetaX.^2 / obj.gaborSigmaPix^2 + thetaY.^2 / obj.gaborSigmaPix^2)) .* ...
+        cos(2.0 * pi * thetaX / obj.gaborFreqPix + obj.gaborPhaseDeg / obj.degPerRadian)) / 2.0 + 0.5001;
+  end
+  
    %% sampleImage -- draw a gabor and get the min and max pixels
    function [minValue, maxValue] = sampleImage(obj, app, propertiesMat)
      drawGabors(obj, app, propertiesMat);
