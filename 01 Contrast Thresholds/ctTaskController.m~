@@ -45,7 +45,7 @@ function ctTaskController(~, ~, app)
           ctDrawStatusText(app, 'run')
           app.stimParams.leftContrast = baseContrast;
           app.stimParams.rightContrast = baseContrast;
-          drawStimuli(app.stimuli, app.baseIndex, 0, 0);          % display the base stimulus
+          doStimulus(app.stimuli, app);       % display the base contrast
         end
       elseif etime(clock, app.stimStartTimeS) > app.stimParams.prestimDurS
         % Draw the test stimuli, followed by the gray fixspot
@@ -57,17 +57,13 @@ function ctTaskController(~, ~, app)
           app.stimParams.leftContrast = app.testContrasts(app.baseIndex, app.testIndex);
           app.stimParams.rightContrast = baseContrast;
           if app.doStim
-            drawStimuli(app.stimuli, app.baseIndex, app.testIndex, 0);          % display the increment stimulus
+            drawStimuli(app.stimuli, app.baseIndex, app.stimParams.leftContrast);       % display the increment stimulus
   %           drawFixSpot(app.stimuli, [0.0, 0.0, 0.0]);
           end
         else
           app.stimParams.leftContrast = baseContrast;
           app.stimParams.rightContrast = app.testContrasts(app.baseIndex, app.testIndex);
-           if app.doStim
-              drawStimuli(app.stimuli, app.baseIndex, 0, app.testIndex);          % display the increment stimulus
-  %           drawFixSpot(app.stimuli, [0.0, 0.0, 0.0]);
-          end
-       end
+        end
        	ctDrawStatusText(app, 'response');
         app.taskState = ctTaskState.taskWaitResponse;
       end

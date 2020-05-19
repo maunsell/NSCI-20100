@@ -5,6 +5,7 @@ properties (GetAccess = private)
   frameDurS
   fixSpotImage
   gaborBaseImages
+  gaborTestImages
   hFig
   hFixSpotAxes
   hLeftGaborAxes
@@ -63,9 +64,12 @@ methods
 %     [imgCols, imgRows] = meshgrid(1:gaborDiameterPix);
 
     obj.gaborBaseImages = cell(1, app.numBases);
+    obj.gaborTestImages = cell(app.numBases, app.numIncrements);
     for g = 1:app.numBases
-      G = makeGabor(obj);
-      [obj.gaborBaseImages{g}, ~] = gray2ind(G, 256);         % make an image from the circle matrix
+      obj.gaborBaseImages{g} = makeGabor(obj, app.baseContrasts(g));
+      for i = 1:app.numIncrements
+        obj.gaborTestImages{g, i} = makeGabor(obj, app.testContrasts(g, i));
+      end
     end
     obj.hLeftGaborAxes = axes('parent', obj.hFig, 'units', 'pixels', 'visible', 'off');
     obj.hLeftGaborAxes.Position = [ obj.windowRectPix(1) + obj.windowRectPix(3) / 2 - obj.gaborRadiusPix - 150, ...
@@ -95,16 +99,26 @@ methods
      close(obj.hFig);
    end
    
-   %% doStimulus
-   function doStimulus(obj, app)
-     imshow(obj.gaborBaseImages{app.baseIndex}, obj.colorMap, 'parent', obj.hLeftGaborAxes);
-     imshow(obj.gaborBaseImages{app.baseIndex}, obj.colorMap, 'parent', obj.hRightGaborAxes);
+   %% drawFixSpot
+   function drawFixSpot(obj, color)
+     imshow(obj.fixSpotImage, [0.5, 0.5, 0.5; color], 'parent', obj.hFixSpotAxes);
      drawnow;
    end
    
-   % drawFixSpot
-   function drawFixSpot(obj, color)
-     imshow(obj.fixSpotImage, [0.5, 0.5, 0.5; color], 'parent', obj.hFixSpotAxes);
+   %% drawStimuli
+   function drawStimuli(obj, baseIndex, leftIndex, rightIndex)
+     if leftIndex == 0
+       leftGabor = obj.gaborBaseImages{baseIndex};
+     else
+       leftGabor = obj.gaborTestImages{baseIndex, leftIndex};
+     end
+     if rightIndex == 0
+       rightGabor = obj.gaborBaseImages{baseIndex};
+     else
+       rightGabor = obj.gaborTestImages{baseIndex, rightIndex};
+     end
+     imshow(leftGabor, obj.colorMap, 'parent', obj.hLeftGaborAxes);
+     imshow(rightGabor, obj.colorMap, 'parent', obj.hRightGaborAxes);
      drawnow;
    end
    
@@ -148,7 +162,7 @@ methods
 %    end
    
   %% makeGabor
-  function G = makeGabor(obj)
+  function theGabor = makeGabor(obj, contrast)
 
     sinTheta = sin(obj.gaborThetaDeg / obj.degPerRadian);
     cosTheta = cos(obj.gaborThetaDeg / obj.degPerRadian);
@@ -159,7 +173,8 @@ methods
     % We need a baseline incrementally greater than 0.5, because the gray2ind() function places the boundary
     % between 127 and 128 precisely at 0.5. Incrementally greater settles to 128, which is background gray
     G = (exp(-0.5 * (thetaX.^2 / obj.gaborSigmaPix^2 + thetaY.^2 / obj.gaborSigmaPix^2)) .* ...
-        cos(2.0 * pi * thetaX / obj.gaborFreqPix + obj.gaborPhaseDeg / obj.degPerRadian)) / 2.0 + 0.5001;
+        cos(2.0 * pi * thetaX / obj.gaborFreqPix + obj.gaborPhaseDeg / obj.degPerRadian)) / 2.0 * contrast + 0.5001;
+    theGabor = gray2ind(G, 256);                    % make an image from the Gabor
   end
   
    %% sampleImage -- draw a gabor and get the min and max pixels
