@@ -121,14 +121,7 @@ methods
      imshow(rightGabor, obj.colorMap, 'parent', obj.hRightGaborAxes);
      drawnow;
    end
-   
-%    %% drawGabors
-%    function drawGabors(obj, app, propertiesMat)
-%      %         	Screen('BlendFunction', obj.window, 'GL_ONE', 'GL_ZERO');
-%      %             Screen('DrawTextures', obj.window, obj.gaborTex, [], obj.allRects, obj.gaborOriDeg, [], [], [], [],...
-%      %                     kPsychDontDoRotation, propertiesMat');
-%    end
-   
+      
    %% testStimuli -- make sure all the contrast settings are distinct from each other. If they
    % are not, the full list of possible contrasts will be dumped so
    % they can be used to make adjustments (by hand) to the multipliers

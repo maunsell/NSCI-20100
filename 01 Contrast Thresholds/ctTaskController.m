@@ -23,10 +23,9 @@ function ctTaskController(~, ~, app)
         %                 baseIndex = contains(app.baseContrastMenu.Items, app.baseContrastMenu.Value);
         app.stimParams.changeSide = floor(2 * rand(1, 1));
       elseif (etime(clock, app.trialStartTimeS) > app.stimParams.intertrialDurS) || ~app.doStim
-        % Draw dark gray fixspot
         sound(app.tones(3, :), app.sampFreqHz);
         if app.doStim
-          drawFixSpot(app.stimuli, [0.65, 0.65, 0.65]);
+          drawFixSpot(app.stimuli, [0.65, 0.65, 0.65]);             % dark gray fixspot
           ctDrawStatusText(app, 'wait');
         end
         if ~app.testMode
@@ -35,46 +34,39 @@ function ctTaskController(~, ~, app)
           app.taskState = ctTaskState.taskDoStim;
         end
       end
-    case ctTaskState.taskWaitGoKey
-      % just wait for user to hit the down arrow button to start the stimulus
+    case ctTaskState.taskWaitGoKey                                  % just wait for user to hit the down arrow
     case ctTaskState.taskDoStim
-      if app.stimStartTimeS == 0                                     % start the stimulus
-        baseContrast = app.baseContrasts(app.baseIndex);
-        app.stimStartTimeS = clock;
-        if app.doStim                         % Draw the base stimuli with a white fixspot
-          ctDrawStatusText(app, 'run')
-          app.stimParams.leftContrast = baseContrast;
-          app.stimParams.rightContrast = baseContrast;
-          drawStimuli(app.stimuli, app.baseIndex, 0, 0);          % display the base stimulus
-        end
-      elseif etime(clock, app.stimStartTimeS) > app.stimParams.prestimDurS
-        % Draw the test stimuli, followed by the gray fixspot
-        baseContrast = app.baseContrasts(app.baseIndex);
+      % start of the stimulus presentation
+      if app.stimStartTimeS == 0
         blocksDone = min(app.trialsDone(app.baseIndex, :));
         undone = find(app.trialsDone(app.baseIndex, :) == blocksDone);
         app.testIndex = undone(ceil(length(undone) * (rand(1, 1))));
-        if (app.stimParams.changeSide == 0)
-          app.stimParams.leftContrast = app.testContrasts(app.baseIndex, app.testIndex);
-          app.stimParams.rightContrast = baseContrast;
-          if app.doStim
-            drawStimuli(app.stimuli, app.baseIndex, app.testIndex, 0);          % display the increment stimulus
-  %           drawFixSpot(app.stimuli, [0.0, 0.0, 0.0]);
-          end
-        else
-          app.stimParams.leftContrast = baseContrast;
-          app.stimParams.rightContrast = app.testContrasts(app.baseIndex, app.testIndex);
-           if app.doStim
-              drawStimuli(app.stimuli, app.baseIndex, 0, app.testIndex);          % display the increment stimulus
-  %           drawFixSpot(app.stimuli, [0.0, 0.0, 0.0]);
-          end
-       end
-       	ctDrawStatusText(app, 'response');
+        app.stimStartTimeS = clock;
+        if app.doStim                                               % draw the base stimuli with a white fixspot
+          drawFixSpot(app.stimuli, [0.9, 0.9, 0.9]);
+          drawStimuli(app.stimuli, app.baseIndex, 0, 0);            % display the base stimulus
+          ctDrawStatusText(app, 'run')
+        end
+      % after the increment stimulus has finished
+      elseif etime(clock, app.stimStartTimeS) > app.stimParams.prestimDurS + app.stimParams.stimDurS
+        clearScreen(app.stimuli);
+        ctDrawStatusText(app, 'response');
         app.taskState = ctTaskState.taskWaitResponse;
+      % after base contrast, start of increment stimulus
+      elseif etime(clock, app.stimStartTimeS) > app.stimParams.prestimDurS
+        if app.doStim
+          if (app.stimParams.changeSide == 0)
+              drawStimuli(app.stimuli, app.baseIndex, app.testIndex, 0);          % increment on dleft
+          else
+              drawStimuli(app.stimuli, app.baseIndex, 0, app.testIndex);          % increment on right
+          end
+        end
       end
     case ctTaskState.taskWaitResponse
       if app.testMode
         app.taskState = ctTaskState.taskProcessResponse;
       end
+      drawFixSpot(app.stimuli, [0.0, 0.0, 0.0]);
     case ctTaskState.taskProcessResponse
       %             blocksDone = min(app.trialsDone(app.baseIndex, :));
       %             undone = find(app.trialsDone(app.baseIndex, :) == blocksDone);
