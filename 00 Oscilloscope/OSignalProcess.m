@@ -8,7 +8,7 @@ classdef OSignalProcess < handle
   
   methods
     %% Object Initialization %%
-    function obj = OSignalProcess(handles)
+    function obj = OSignalProcess(handles, app)
       obj = obj@handle();                                            % object initialization
       obj.fH = handles;
       inSampleRateHz = handles.lbj.SampleRateHz;

@@ -17,14 +17,14 @@ classdef OPlots < handle
     
     methods
          %% Object Initialization %%
-        function obj = OPlots(handles)
+        function obj = OPlots(handles, app)
             obj = obj@handle();                                            % object initialization
             % continuous plot
             obj.samplesPlotted = 0;
             obj.vContAxes = handles.axes1;
             obj.vContAxes.XGrid = 'on';
             obj.vContAxes.YGrid = 'on';
-            clearContPlot(obj, handles);
+            clearContPlot(obj, app, handles);
             % triggered plot
             obj.vTrigAxes = handles.axes2;
             obj.vTrigAxes.XGrid = 'on';
@@ -41,13 +41,13 @@ classdef OPlots < handle
         end
         
         %% clearAll -- clear all plots 
-        function clearAll(obj, handles)
-            clearContPlot(obj, handles);
+        function clearAll(obj, app, handles)
+            clearContPlot(obj, app, handles);
             clearTriggerPlot(obj, handles);
         end
         
         %% clearContPlot -- clear the continuous trace plot
-        function clearContPlot(obj, handles)
+        function clearContPlot(obj, app, handles)
             data = handles.data;
             obj.samplesPlotted = 0;
             obj.lastThresholdXPlotted = 0;
@@ -61,20 +61,20 @@ classdef OPlots < handle
             cla(obj.vContAxes);
             axis(obj.vContAxes, [0, data.contSamples, -maxV, maxV]);
             % x axis setup
-            samplePerDiv = data.contMSPerDiv / 1000.0 * data.sampleRateHz;
+            samplePerDiv = app.contMSPerDiv / 1000.0 * data.sampleRateHz;
             xticks(obj.vContAxes, 0:samplePerDiv:data.contTimeDivs * samplePerDiv);
             xTickLabels = cell(data.contTimeDivs, 1);
             for t = 1:data.contTimeDivs + 1
                 if mod(t, 2)
-                    if data.contMSPerDiv <= 50
-                        xTickLabels{t} = sprintf('%.0f', (t-1) * data.contMSPerDiv);
+                    if app.contMSPerDiv <= 50
+                        xTickLabels{t} = sprintf('%.0f', (t-1) * app.contMSPerDiv);
                     else
-                        xTickLabels{t} = sprintf('%.1f', (t-1) * data.contMSPerDiv / 1000.0);
+                        xTickLabels{t} = sprintf('%.1f', (t-1) * app.contMSPerDiv / 1000.0);
                     end
                 end
             end
             xticklabels(obj.vContAxes, xTickLabels);
-            if data.contMSPerDiv <= 50
+            if app.contMSPerDiv <= 50
                 xlabel(obj.vContAxes, 'Time (ms)', 'FontSize', 14,'FontWeight','Bold');
             else
                 xlabel(obj.vContAxes, 'Time (s)' ,'FontSize', 14,'FontWeight','Bold');

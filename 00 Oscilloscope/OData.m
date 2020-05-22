@@ -3,7 +3,7 @@ classdef OData < handle
     % Support for global data for Oscilloscope
     
     properties
-        contMSPerDiv;               % ms/division in continuous plot
+%         contMSPerDiv;               % ms/division in continuous plot
         contPlotRescale;            % flag for rescale needed on continuous plot
         contSamples;                % number of samples in the continuous plot
         contTimeDivs;               % number of time divisions in continuous plot
@@ -36,10 +36,12 @@ classdef OData < handle
              app.inTrigger = false;
             obj.fH = handles;
             obj.sampleRateHz = handles.lbj.SampleRateHz;
-            contents = get(handles.contMSPerDivButton, 'string');
-            obj.contMSPerDiv = str2double(contents{get(handles.contMSPerDivButton, 'Value')});
+%             contents = get(handles.contMSPerDivButton, 'string');
+%             obj.contMSPerDiv = str2double(contents{get(handles.contMSPerDivButton, 'Value')});
             obj.contTimeDivs = 20;
-            contents = cellstr(get(handles.contMSPerDivButton,'String'));
+%             contents = cellstr(get(handles.contMSPerDivButton,'String'));
+            contents = app.contMSPerDivButton.Items;
+            
             maxMSPerDiv = str2double(contents{end});
             obj.maxContSamples = obj.contTimeDivs * maxMSPerDiv / 1000.0 * obj.sampleRateHz;
             obj.vDivs = 6;
@@ -84,7 +86,7 @@ classdef OData < handle
         function setLimits(obj, app, handles)
             app.samplesRead = 0;
             obj.spikeIndices = [];
-            obj.contSamples = obj.contMSPerDiv / 1000.0 * obj.sampleRateHz * obj.contTimeDivs;
+            obj.contSamples = app.contMSPerDiv / 1000.0 * obj.sampleRateHz * obj.contTimeDivs;
             vLimit = obj.vPerDiv * obj.vDivs / 2.0;
             threshV = get(handles.thresholdSlider, 'value');
             threshV = max(-vLimit * 0.9, min(vLimit * 0.9, threshV));
