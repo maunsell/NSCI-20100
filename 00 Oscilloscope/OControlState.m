@@ -1,6 +1,6 @@
-function OControlState(handles, state, except)
+function OControlState(app, state, except)
       
-    controls = {handles.startButton, handles.clearButton, handles.savePlotsButton};
+    controls = {app.startButton, app.clearButton, app.savePlotsButton};
         
     for c = 1:length(controls)
         skip = false;

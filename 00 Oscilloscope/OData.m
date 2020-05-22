@@ -11,13 +11,13 @@ classdef OData < handle
         filter;                     % pointer to filter in use
         filters;                    % pointer to all the filters we have made
         filteredTrace;              % filtered version of samples
-        inTrigger;                  % flag showing that trigger finding routine is in middle of a triggered trace
+%         inTrigger;                  % flag showing that trigger finding routine is in middle of a triggered trace
         lastSpikeIndex;             % index of last triggered spike
         maxContSamples;             % allocate large buffers to avoid auto-lengthening.
         rawData;                    % most recent raw snippet of sampled data
         rawTrace;                   % raw version of samples
         sampleRateHz;               % sampling rate
-        samplesRead;                % number of samples read in the continuous trace
+%         samplesRead;                % number of samples read in the continuous trace
         stopAtTraceEnd;            	% flag for displaying a single continous trace
         spikeIndices;               % indices for unplotted spikes in continuous trace
         thresholdV;                 % used by signals and plots
@@ -28,11 +28,12 @@ classdef OData < handle
     
     methods
         %% OData -- instantiate and initialize
-       function obj = OData(handles)
+       function obj = OData(handles, app)
              % Object Initialization %%
              obj = obj@handle();                                    % object initialization
 
              % Post Initialization %%
+             app.inTrigger = false;
             obj.fH = handles;
             obj.sampleRateHz = handles.lbj.SampleRateHz;
             contents = get(handles.contMSPerDivButton, 'string');
@@ -56,21 +57,21 @@ classdef OData < handle
             end
             selectFilter(obj);
             obj.stopAtTraceEnd = false;
-            obj.inTrigger = false;
+%             obj.inTrigger = false;
             obj.testMode = false;                                           % testMode is set in O, not here
             obj.thresholdV = 1.0;
             obj.vPerDiv = 1.0;
             obj.rawData = zeros(obj.maxContSamples, 1);                    % raw data
             obj.rawTrace = zeros(obj.maxContSamples, 1);                   % continuous voltage trace
             obj.filteredTrace = zeros(obj.maxContSamples, 1);              % filtered voltage trace
-            setLimits(obj, handles)
+            setLimits(obj, app, handles)
         end
 
         %% clearAll
-        function clearAll(obj)
+        function clearAll(obj, app)
             obj.spikeIndices = [];
-            obj.inTrigger = false;
-            obj.samplesRead = 0;
+            app.inTrigger = false;
+            app.samplesRead = 0;
             obj.lastSpikeIndex = 2 * obj.maxContSamples;                    % flag start with invalid index
         end
         
@@ -80,8 +81,8 @@ classdef OData < handle
         end
 
         %% setLimits -- used when plot scaling changes
-        function setLimits(obj, handles)
-            obj.samplesRead = 0;
+        function setLimits(obj, app, handles)
+            app.samplesRead = 0;
             obj.spikeIndices = [];
             obj.contSamples = obj.contMSPerDiv / 1000.0 * obj.sampleRateHz * obj.contTimeDivs;
             vLimit = obj.vPerDiv * obj.vDivs / 2.0;

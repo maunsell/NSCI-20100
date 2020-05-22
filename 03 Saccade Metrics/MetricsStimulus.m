@@ -51,7 +51,6 @@ classdef MetricsStimulus < handle
     
     %%
     function centerStimulus(obj)
-%       drawImage(obj, obj.blankImage);
       cla(obj.hAxes);
       obj.currentOffsetPix = 0;
       drawImage(obj, obj.spotImage);
@@ -65,7 +64,6 @@ classdef MetricsStimulus < handle
     
     %% delete the window
     function delete(obj)
-%       close(obj.hFig);
       delete(obj.hFig);
     end
        

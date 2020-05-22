@@ -40,6 +40,7 @@ methods
 %     end
     obj.windowRectPix = [0, 0, obj.windSidePix, obj.windSidePix];
     obj.hFig = figure('renderer', 'painters', 'position', obj.windowRectPix, 'visible', 'off');
+    obj.hFig.CloseRequestFcn = '';                % prevent user from closing the stimulus window
     movegui(obj.hFig, [-obj.windMarginPix, -obj.windMarginPix]);
     set(obj.hFig, 'menubar', 'none', 'toolbar', 'none', 'numberTitle', 'off', 'resize', 'off');
     set(obj.hFig, 'color', [0.5, 0.5, 0.5], 'name', 'NSCI 20100 Contrast Thresholds');

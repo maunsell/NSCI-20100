@@ -125,12 +125,12 @@ classdef OPlots < handle
         end
   
         %% plot the continuous and triggered spike waveforms
-        function plot(obj, handles)
+        function plot(obj, app, handles)
             dirty = false;
             data = handles.data;
             % continuous trace
             startIndex = max(1, obj.samplesPlotted + 1);  	% start from previous plotted point
-            endIndex = min(length(data.rawTrace), data.samplesRead);
+            endIndex = min(length(data.rawTrace), app.samplesRead);
             % save some CPU time by not plotting the treshold line every time
             if endIndex >= data.contSamples || endIndex - obj.lastThresholdXPlotted > data.sampleRateHz / 10
                 plot(obj.vContAxes, [obj.lastThresholdXPlotted, endIndex], [data.thresholdV, data.thresholdV], ...
@@ -153,7 +153,7 @@ classdef OPlots < handle
                     data.spikeIndices(1) = [];
                     continue;
                 end
-                if endIndex > data.samplesRead              % haven't read all the samples yet, wait for next pass
+                if endIndex > app.samplesRead              % haven't read all the samples yet, wait for next pass
                     break;
                 end
                 if ~obj.singleSpikeDisplayed
