@@ -27,7 +27,7 @@ classdef OSignalProcess < handle
     
     %% processSignals: function to process data from one trial
     function processSignals(obj, app, data, old, new)
-      if data.testMode
+      if app.testMode
         % add 60Hz noise and random noise
         dt = 1/app.sampleRateHz;                   % seconds per sample
         samples = old + 1:old + new;                 % seconds
@@ -36,10 +36,10 @@ classdef OSignalProcess < handle
       end
       data.filteredTrace(old + 1:old + new) = filter(app.filter, data.rawData(old + 1:old + new));
       % Find parts of the trace above the trigger level
-      if data.thresholdV >= 0
-        sIndices = find(data.filteredTrace(old + 1:old + new) > data.thresholdV);
+      if app.thresholdV >= 0
+        sIndices = find(data.filteredTrace(old + 1:old + new) > app.thresholdV);
       else
-        sIndices = find(data.filteredTrace(old + 1:old + new) < data.thresholdV);
+        sIndices = find(data.filteredTrace(old + 1:old + new) < app.thresholdV);
       end
       if isempty(sIndices)                                    % nothing above threshold
         app.inTrigger = false;                           	% clear the inTrigger flag
@@ -76,7 +76,7 @@ classdef OSignalProcess < handle
         end
         data.spikeIndices = [data.spikeIndices, spikeIndices + old]; % add new spikes to the list of spikes
       end
-      data.lastSpikeIndex = data.lastSpikeIndex - new;        % save index for computing ISIs
+      app.lastSpikeIndex = app.lastSpikeIndex - new;        % save index for computing ISIs
     end
     
   end

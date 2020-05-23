@@ -51,11 +51,11 @@ classdef OPlots < handle
             data = handles.data;
             obj.samplesPlotted = 0;
             obj.lastThresholdXPlotted = 0;
-            maxV = data.vPerDiv * data.vDivs / 2;
-            vLimit = data.vDivs / 2 * data.vPerDiv;
-            yTickLabels = cell(data.vDivs, 1);
-            for t = 1:data.vDivs + 1
-                yTickLabels{t} = sprintf('%.1f', (t - data.vDivs/2 - 1) * data.vPerDiv);
+            maxV = app.vPerDiv * app.vDivs / 2;
+            vLimit = app.vDivs / 2 * app.vPerDiv;
+            yTickLabels = cell(app.vDivs, 1);
+            for t = 1:app.vDivs + 1
+                yTickLabels{t} = sprintf('%.1f', (t - app.vDivs/2 - 1) * app.vPerDiv);
             end
             hold(obj.vContAxes, 'off');
             cla(obj.vContAxes);
@@ -80,7 +80,7 @@ classdef OPlots < handle
                 xlabel(obj.vContAxes, 'Time (s)' ,'FontSize', 14,'FontWeight','Bold');
             end
             % y axis
-            yticks(obj.vContAxes, -vLimit:data.vPerDiv:vLimit);
+            yticks(obj.vContAxes, -vLimit:app.vPerDiv:vLimit);
             yticklabels(obj.vContAxes, yTickLabels);
             ylabel(obj.vContAxes, 'Analog Input (V)','FontSize', 14, 'FontWeight','Bold');
             hold(obj.vContAxes, 'on');
@@ -108,13 +108,13 @@ classdef OPlots < handle
             xticklabels(theAxes, xTickLabels);
             xlabel(theAxes, 'Time (ms)', 'fontsize', 14, 'fontWeight', 'bold');
             % y axis
-            maxV = data.vPerDiv * data.vDivs / 2;
-            vLimit = data.vDivs / 2 * data.vPerDiv;
-            yTickLabels = cell(data.vDivs, 1);
-            for t = 1:data.vDivs + 1
-                yTickLabels{t} = sprintf('%.1f', (t - data.vDivs/2 - 1) * data.vPerDiv);
+            maxV = app.vPerDiv * app.vDivs / 2;
+            vLimit = app.vDivs / 2 * app.vPerDiv;
+            yTickLabels = cell(app.vDivs, 1);
+            for t = 1:app.vDivs + 1
+                yTickLabels{t} = sprintf('%.1f', (t - app.vDivs/2 - 1) * app.vPerDiv);
             end
-            yticks(theAxes, -vLimit:data.vPerDiv:vLimit);
+            yticks(theAxes, -vLimit:app.vPerDiv:vLimit);
             yticklabels(theAxes, yTickLabels);
             theAxes.YGrid = 'on';
             ylabel(theAxes, 'Analog Input (V)', 'fontSize', 14, 'fontWeight', 'bold');            
@@ -125,7 +125,7 @@ classdef OPlots < handle
         end
   
         %% plot the continuous and triggered spike waveforms
-        function plot(obj, app, handles)
+        function doPlots(obj, app, handles)
             dirty = false;
             data = handles.data;
             % continuous trace
@@ -133,7 +133,7 @@ classdef OPlots < handle
             endIndex = min(length(data.rawTrace), app.samplesRead);
             % save some CPU time by not plotting the treshold line every time
             if endIndex >= app.contSamples || endIndex - obj.lastThresholdXPlotted > app.sampleRateHz / 10
-                plot(obj.vContAxes, [obj.lastThresholdXPlotted, endIndex], [data.thresholdV, data.thresholdV], ...
+                plot(obj.vContAxes, [obj.lastThresholdXPlotted, endIndex], [app.thresholdV, app.thresholdV], ...
                     'color', [1.0, 0.25, 0.25]);
                 obj.lastThresholdXPlotted = endIndex;
                 plot(obj.vContAxes, startIndex:endIndex, data.filteredTrace(startIndex:endIndex), 'b');
@@ -157,7 +157,7 @@ classdef OPlots < handle
                     break;
                 end
                 if ~obj.singleSpikeDisplayed
-                    plot(obj.vTrigAxes, [1, obj.triggerSamples], [data.thresholdV, data.thresholdV], 'color', ...
+                    plot(obj.vTrigAxes, [1, obj.triggerSamples], [app.thresholdV, app.thresholdV], 'color', ...
                         [1.0, 0.25, 0.25]);
                     obj.singleSpikeDisplayed = true;
                 end
