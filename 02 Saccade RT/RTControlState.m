@@ -1,4 +1,4 @@
-function EOGControlState(handles, state, except)
+function RTControlState(app, handles, state, except)
       
     controls = {handles.startButton,handles.clearButton, handles.savePlotsButton, handles.saveDataButton, ...
             handles.loadDataButton, handles.viewDistanceText, handles.thresholdDegText};

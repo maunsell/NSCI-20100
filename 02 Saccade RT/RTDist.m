@@ -16,13 +16,13 @@ classdef RTDist < handle
 
   methods
     %% Initialization
-    function obj = RTDist(i, axes)
+    function obj = RTDist(app, i, axes)
       obj = obj@handle();                                % object initiatlization
       obj.index = i;                                     % post initialization
       obj.fHandle = axes;
       obj.ampLabel = sprintf('%.0f', 25.3);
       obj.reactTimesMS = zeros(1, 10000);             	 % preallocate a generous buffer
-      clearAll(obj);
+      clearAll(obj, app);
     end
 
     %% addRT -- add a RT value to the distributioin
@@ -32,7 +32,7 @@ classdef RTDist < handle
     end
 
     %% clearAll -- clear all the buffers
-    function clearAll(obj)
+    function clearAll(obj, app)
       obj.n = 0;
       obj.maxRT = 0;
       cla(obj.fHandle, 'reset');                        % clear the figures

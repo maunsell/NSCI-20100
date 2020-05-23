@@ -38,14 +38,14 @@ classdef RTPosVelPlots < handle
         end
         
         %%
-        function plot(obj, handles, startIndex, endIndex)
+        function plot(obj, app, handles, startIndex, endIndex)
         % RTPlots Updata all plots for RT
-            posPlots(obj, handles, startIndex, endIndex);
-            velPlots(obj, handles, startIndex, endIndex);
+            posPlots(obj, app, handles, startIndex, endIndex);
+            velPlots(obj, app, handles, startIndex, endIndex);
         end
 
         %% posPlots: do the trial and average position plots
-        function posPlots(obj, handles, startIndex, endIndex)
+        function posPlots(obj, app, handles, startIndex, endIndex)
             data = handles.data;
             saccades = handles.saccades;
             timestepMS = 1000.0 / data.sampleRateHz;                   	% time interval of samples
@@ -88,7 +88,7 @@ classdef RTPosVelPlots < handle
        end
 
         %% velPlots: do the trial velocity plot
-        function velPlots(obj, handles, startIndex, endIndex)
+        function velPlots(obj, app, handles, startIndex, endIndex)
             data = handles.data;
             saccades = handles.saccades;
             timestepMS = 1000.0 / data.sampleRateHz;                       	% time interval of samples

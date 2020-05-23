@@ -12,7 +12,7 @@ end
 methods
         
   %% clearAll
-  function clearAll(obj)
+  function clearAll(obj, app)
       obj.degPerV = 0;
       obj.degPerSPerV = 0;
   end

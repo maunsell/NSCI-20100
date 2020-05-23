@@ -10,7 +10,7 @@ classdef RTTaskData < handle
         filter60Hz;
         fixOffTimeS;
         gapDurS;
-        numChannels;
+%         numChannels;
         numTrialTypes;
         numSummed;
         posAvg;
@@ -42,13 +42,13 @@ classdef RTTaskData < handle
     end
     
     methods
-        function obj = RTTaskData(numChannels, sampleRateHz)
+        function obj = RTTaskData(app)
 
              %% Object Initialization %%
              obj = obj@handle();                                    % object initialization
 
              %% Post Initialization %%
-            obj.numChannels = numChannels;
+%             obj.numChannels = numChannels;
             obj.numTrialTypes = RTConstants.kTrialTypes;
             obj.saccadeTraceS = 0.250;                              % duratoin of saccade trace
             obj.trialDurS = max(1.0, 2 * obj.saccadeTraceS);
@@ -65,18 +65,17 @@ classdef RTTaskData < handle
             obj.taskMode = RTConstants.kNormal;                     % taskMode is overridden in RT, not here
             obj.voltage = 0;
             obj.doFilter = false;
-            setSampleRateHz(obj, sampleRateHz);
         end
 
         %% clearAll
-        function clearAll(obj)
+        function clearAll(obj, app)
             obj.blocksDone = 0;
             obj.calTrialsDone = 0;
             obj.numSummed = 0;
             obj.posTrace = zeros(obj.trialSamples, 1);                      % trial RT position trace
             obj.posSummed = zeros(obj.saccadeSamples, 1);                   % summed position traces
             obj.posAvg = zeros(obj.saccadeSamples, 1);                      % averaged position traces
-            obj.rawData = zeros(obj.trialSamples, obj.numChannels);         % raw data
+            obj.rawData = zeros(obj.trialSamples, app.lbj.numChannels);   	% raw data
             obj.saccadeDurS = zeros(1, obj.numTrialTypes);                	% average saccade durations
             obj.trialTypesDone = zeros(1, obj.numTrialTypes);               % table of completed trials in block
             obj.velTrace = zeros(obj.trialSamples, 1);                      % trial RT velocity trace
@@ -85,7 +84,8 @@ classdef RTTaskData < handle
         end
         
         %% setSampleRate
-        function setSampleRateHz(obj, rateHz)
+        function setSampleRateHz(obj, app)
+            rateHz = app.lbj.SampleRateHz;
             obj.sampleRateHz = rateHz;
             obj.saccadeSamples = floor(obj.saccadeTraceS * obj.sampleRateHz);
             obj.trialSamples = floor(obj.trialDurS * obj.sampleRateHz);
@@ -99,7 +99,7 @@ classdef RTTaskData < handle
             obj.filterLP = design(fdesign.lowpass('Fp,Fst,Ap,Ast', 30 / nyquistHz, 120 / nyquistHz, 0.1, 40), 'butter');
             obj.filterLP.persistentmemory = false;      % no piecemeal filtering of trace
             obj.filterLP.states = 1;                      % uses scalar expansion.
-            clearAll(obj);                              % clear -- and also re-size buffers
+            clearAll(obj, app);                              % clear -- and also re-size buffers
         end
        
         %% set60HzFilter
