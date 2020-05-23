@@ -29,12 +29,12 @@ classdef OSignalProcess < handle
     function processSignals(obj, app, data, old, new)
       if data.testMode
         % add 60Hz noise and random noise
-        dt = 1/data.sampleRateHz;                   % seconds per sample
+        dt = 1/app.sampleRateHz;                   % seconds per sample
         samples = old + 1:old + new;                 % seconds
         data.rawData(old + 1:old + new) = ones(new, 1) + cos(2.0 * pi * 60 * samples * dt)' * 0.5...
           + 0.25 * rand(new, 1) - 0.125;
       end
-      data.filteredTrace(old + 1:old + new) = filter(data.filter, data.rawData(old + 1:old + new));
+      data.filteredTrace(old + 1:old + new) = filter(app.filter, data.rawData(old + 1:old + new));
       % Find parts of the trace above the trigger level
       if data.thresholdV >= 0
         sIndices = find(data.filteredTrace(old + 1:old + new) > data.thresholdV);

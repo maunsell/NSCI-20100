@@ -37,13 +37,13 @@ classdef OPlots < handle
             obj.triggerTraceDurS = 0.020;
             obj.triggerSamples = floor(obj.triggerTraceDurS * handles.lbj.SampleRateHz);
             
-            clearTriggerPlot(obj, handles);
+            clearTriggerPlot(obj, app, handles);
         end
         
         %% clearAll -- clear all plots 
         function clearAll(obj, app, handles)
             clearContPlot(obj, app, handles);
-            clearTriggerPlot(obj, handles);
+            clearTriggerPlot(obj, app, handles);
         end
         
         %% clearContPlot -- clear the continuous trace plot
@@ -59,12 +59,12 @@ classdef OPlots < handle
             end
             hold(obj.vContAxes, 'off');
             cla(obj.vContAxes);
-            axis(obj.vContAxes, [0, data.contSamples, -maxV, maxV]);
+            axis(obj.vContAxes, [0, app.contSamples, -maxV, maxV]);
             % x axis setup
-            samplePerDiv = app.contMSPerDiv / 1000.0 * data.sampleRateHz;
-            xticks(obj.vContAxes, 0:samplePerDiv:data.contTimeDivs * samplePerDiv);
-            xTickLabels = cell(data.contTimeDivs, 1);
-            for t = 1:data.contTimeDivs + 1
+            samplePerDiv = app.contMSPerDiv / 1000.0 * app.sampleRateHz;
+            xticks(obj.vContAxes, 0:samplePerDiv:app.contTimeDivs * samplePerDiv);
+            xTickLabels = cell(app.contTimeDivs, 1);
+            for t = 1:app.contTimeDivs + 1
                 if mod(t, 2)
                     if app.contMSPerDiv <= 50
                         xTickLabels{t} = sprintf('%.0f', (t-1) * app.contMSPerDiv);
@@ -87,12 +87,12 @@ classdef OPlots < handle
         end
                 
         %% clearTriggerPlot -- clear the continuous trace plot
-        function clearTriggerPlot(obj, handles)
+        function clearTriggerPlot(obj, app, handles)
             data = handles.data;
             theAxes = obj.vTrigAxes;
             % set up the triggered spike plot
             triggerMSPerDiv = obj.triggerTraceDurS * 1000.0 / obj.triggerDivisions;
-            samplesPerDiv = triggerMSPerDiv / 1000.0 * data.sampleRateHz;
+            samplesPerDiv = triggerMSPerDiv / 1000.0 * app.sampleRateHz;
             triggerSample = obj.triggerSamples * obj.triggerFraction + 1;
             triggerSampleOffset = mod(triggerSample - 1, samplesPerDiv);
             negTriggerDivisions = floor(obj.triggerDivisions * obj.triggerFraction) + 1;
@@ -132,7 +132,7 @@ classdef OPlots < handle
             startIndex = max(1, obj.samplesPlotted + 1);  	% start from previous plotted point
             endIndex = min(length(data.rawTrace), app.samplesRead);
             % save some CPU time by not plotting the treshold line every time
-            if endIndex >= data.contSamples || endIndex - obj.lastThresholdXPlotted > data.sampleRateHz / 10
+            if endIndex >= app.contSamples || endIndex - obj.lastThresholdXPlotted > app.sampleRateHz / 10
                 plot(obj.vContAxes, [obj.lastThresholdXPlotted, endIndex], [data.thresholdV, data.thresholdV], ...
                     'color', [1.0, 0.25, 0.25]);
                 obj.lastThresholdXPlotted = endIndex;
@@ -149,7 +149,7 @@ classdef OPlots < handle
                 spikeIndex = data.spikeIndices(1);
                 startIndex = floor(spikeIndex - obj.triggerSamples * obj.triggerFraction);
                 endIndex = startIndex + obj.triggerSamples - 1;
-                if startIndex < 1 || endIndex > data.contSamples  % spike too close to sweep ends, skip it
+                if startIndex < 1 || endIndex > app.contSamples  % spike too close to sweep ends, skip it
                     data.spikeIndices(1) = [];
                     continue;
                 end
