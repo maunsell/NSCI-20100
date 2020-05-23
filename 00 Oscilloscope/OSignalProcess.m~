@@ -2,13 +2,15 @@ classdef OSignalProcess < handle
   % OSignalProcess
   %   Support for filtering voltage traces and finding spikes
   properties
+    fH
     outSampleRatio
   end
   
   methods
     %% Object Initialization %%
-    function obj = OSignalProcess(app)
+    function obj = OSignalProcess(handles, app)
       obj = obj@handle();                                            % object initialization
+      obj.fH = handles;
       inSampleRateHz = app.lbj.SampleRateHz;
       obj.outSampleRatio = 1;
       outSampleRateHz = inSampleRateHz;
@@ -18,8 +20,13 @@ classdef OSignalProcess < handle
       end
     end
     
+%     %% clearAll: clear buffers
+%     function clearAll(~, app)
+%       app.inTrigger = false;
+%     end
+    
     %% processSignals: function to process data from one trial
-    function processSignals(~, app, old, new)
+    function processSignals(obj, app, old, new)
       if app.testMode
         % add 60Hz noise and random noise
         dt = 1/app.sampleRateHz;                   % seconds per sample
@@ -57,7 +64,7 @@ classdef OSignalProcess < handle
         spikeIndices = lastIndex;                           % save the start of this spike
         if length(sIndices) > 1                             % for all the remaining indices...
           for i = 2:length(sIndices)
-            if sIndices(i) > lastIndex + 1 && (sIndices(i) - lastIndex) > app.plots.triggerSamples
+            if sIndices(i) > lastIndex + 1 && (sIndices(i) - lastIndex) > obj.fH.plots.triggerSamples
               numSpikes = numSpikes + 1;              % it's a new spike
               spikeIndices(numSpikes) = sIndices(i);  % record the index for this spike
             end
