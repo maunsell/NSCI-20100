@@ -20,26 +20,26 @@ classdef OSignalProcess < handle
       end
     end
     
-    %% clearAll: clear buffers
-    function clearAll(~, app)
-      app.inTrigger = false;
-    end
+%     %% clearAll: clear buffers
+%     function clearAll(~, app)
+%       app.inTrigger = false;
+%     end
     
     %% processSignals: function to process data from one trial
-    function processSignals(obj, app, data, old, new)
+    function processSignals(obj, app, old, new)
       if app.testMode
         % add 60Hz noise and random noise
         dt = 1/app.sampleRateHz;                   % seconds per sample
         samples = old + 1:old + new;                 % seconds
-        data.rawData(old + 1:old + new) = ones(new, 1) + cos(2.0 * pi * 60 * samples * dt)' * 0.5...
+        app.rawData(old + 1:old + new) = ones(new, 1) + cos(2.0 * pi * 60 * samples * dt)' * 0.5...
           + 0.25 * rand(new, 1) - 0.125;
       end
-      data.filteredTrace(old + 1:old + new) = filter(app.filter, data.rawData(old + 1:old + new));
+      app.filteredTrace(old + 1:old + new) = filter(app.filter, app.rawData(old + 1:old + new));
       % Find parts of the trace above the trigger level
       if app.thresholdV >= 0
-        sIndices = find(data.filteredTrace(old + 1:old + new) > app.thresholdV);
+        sIndices = find(app.filteredTrace(old + 1:old + new) > app.thresholdV);
       else
-        sIndices = find(data.filteredTrace(old + 1:old + new) < app.thresholdV);
+        sIndices = find(app.filteredTrace(old + 1:old + new) < app.thresholdV);
       end
       if isempty(sIndices)                                    % nothing above threshold
         app.inTrigger = false;                           	% clear the inTrigger flag
@@ -74,7 +74,7 @@ classdef OSignalProcess < handle
         if sIndices(end) == new                             % end of new data in middle of a triggered trace?
           app.inTrigger = true;
         end
-        data.spikeIndices = [data.spikeIndices, spikeIndices + old]; % add new spikes to the list of spikes
+        app.spikeIndices = [app.spikeIndices, spikeIndices + old]; % add new spikes to the list of spikes
       end
       app.lastSpikeIndex = app.lastSpikeIndex - new;        % save index for computing ISIs
     end

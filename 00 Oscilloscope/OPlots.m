@@ -48,7 +48,6 @@ classdef OPlots < handle
         
         %% clearContPlot -- clear the continuous trace plot
         function clearContPlot(obj, app, handles)
-            data = handles.data;
             obj.samplesPlotted = 0;
             obj.lastThresholdXPlotted = 0;
             maxV = app.vPerDiv * app.vDivs / 2;
@@ -88,7 +87,6 @@ classdef OPlots < handle
                 
         %% clearTriggerPlot -- clear the continuous trace plot
         function clearTriggerPlot(obj, app, handles)
-            data = handles.data;
             theAxes = obj.vTrigAxes;
             % set up the triggered spike plot
             triggerMSPerDiv = obj.triggerTraceDurS * 1000.0 / obj.triggerDivisions;
@@ -127,30 +125,29 @@ classdef OPlots < handle
         %% plot the continuous and triggered spike waveforms
         function doPlots(obj, app, handles)
             dirty = false;
-            data = handles.data;
             % continuous trace
             startIndex = max(1, obj.samplesPlotted + 1);  	% start from previous plotted point
-            endIndex = min(length(data.rawTrace), app.samplesRead);
+            endIndex = min(length(app.rawData), app.samplesRead);
             % save some CPU time by not plotting the treshold line every time
             if endIndex >= app.contSamples || endIndex - obj.lastThresholdXPlotted > app.sampleRateHz / 10
                 plot(obj.vContAxes, [obj.lastThresholdXPlotted, endIndex], [app.thresholdV, app.thresholdV], ...
                     'color', [1.0, 0.25, 0.25]);
                 obj.lastThresholdXPlotted = endIndex;
-                plot(obj.vContAxes, startIndex:endIndex, data.filteredTrace(startIndex:endIndex), 'b');
+                plot(obj.vContAxes, startIndex:endIndex, app.filteredTrace(startIndex:endIndex), 'b');
                 obj.samplesPlotted = endIndex;
                 dirty = true;
             end
             % triggered spikes
             if obj.singleSpike && obj.singleSpikeDisplayed        % in single spike mode and already displayed?
-                data.spikeIndices = [];                             %   then don't plot the spikes
+                app.spikeIndices = [];                             %   then don't plot the spikes
                 return;
             end
-            while ~isempty(data.spikeIndices)
-                spikeIndex = data.spikeIndices(1);
+            while ~isempty(app.spikeIndices)
+                spikeIndex = app.spikeIndices(1);
                 startIndex = floor(spikeIndex - obj.triggerSamples * obj.triggerFraction);
                 endIndex = startIndex + obj.triggerSamples - 1;
                 if startIndex < 1 || endIndex > app.contSamples  % spike too close to sweep ends, skip it
-                    data.spikeIndices(1) = [];
+                    app.spikeIndices(1) = [];
                     continue;
                 end
                 if endIndex > app.samplesRead              % haven't read all the samples yet, wait for next pass
@@ -161,12 +158,12 @@ classdef OPlots < handle
                         [1.0, 0.25, 0.25]);
                     obj.singleSpikeDisplayed = true;
                 end
-                plot(obj.vTrigAxes, 1:obj.triggerSamples, data.filteredTrace(startIndex:endIndex), 'b');
+                plot(obj.vTrigAxes, 1:obj.triggerSamples, app.filteredTrace(startIndex:endIndex), 'b');
                 dirty = true;
                 if obj.singleSpike
-                    data.spikeIndices = [];                 % single spike, throw out any remaining
+                    app.spikeIndices = [];                 % single spike, throw out any remaining
                 else
-                    data.spikeIndices(1) = [];              % delete this spike time
+                    app.spikeIndices(1) = [];              % delete this spike time
                 end
             end
             if dirty
