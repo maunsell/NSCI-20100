@@ -63,8 +63,8 @@ methods
   end
 
   %% findSaccade: extract the saccade timing using speed threshold
-  function [sIndex, eIndex] = findSaccade(obj, data, posTrace, velTrace, stepSign, startIndex)
-    if data.taskMode == RTConstants.kTiming
+  function [sIndex, eIndex] = findSaccade(obj, app, data, posTrace, velTrace, stepSign, startIndex)
+    if data.taskMode == app.kTiming
       stepSign = -1;                                      % photodiode always driven negative
     end
     if data.calTrialsDone < 4                              	% still getting a calibration
@@ -138,39 +138,32 @@ methods
   end
 
   %% processSignals: function to process data from one trial
-  function [startIndex, endIndex] = processSignals(obj, data)
+  function [startIndex, endIndex] = processSignals(obj, app, data)
     % remove the DC offset
-    fprintf('processSignals 0\n');
-    if data.taskMode == RTConstants.kNormal || data.taskMode == RTConstants.kTiming
+    if data.taskMode == app.kNormal || data.taskMode == app.kTiming
       data.posTrace = data.rawData - mean(data.rawData(1:floor(data.sampleRateHz * data.prestimDurS)));
     else
-      fprintf('processSignals 0.0\n');
       data.posTrace = fakeDataTrace(obj, data);
-      fprintf('processSignals 0.1\n');
     end
     % do 60 Hz filtering
-    fprintf('processSignals 1\n');
     if data.doFilter
       data.posTrace = filter(data.filter60Hz, data.posTrace);
     end
     % make the velocity trace and then apply boxcar filter
-    fprintf('processSignals 2\n');
     data.velTrace(1:end - 1) = diff(data.posTrace);
     data.velTrace(end) = data.velTrace(end - 1);
     if data.doFilter
       data.velTrace = filter(data.filterLP, data.velTrace);
     end
     % find a saccade and make sure we have enough samples before and after its start
-    fprintf('processSignals 3\n');
     sIndex = floor(data.targetTimeS * data.sampleRateHz); 	% no saccades before stimon
-    [startIndex, endIndex] = obj.findSaccade(data, data.posTrace, data.velTrace, data.stepDirection, sIndex);
+    [startIndex, endIndex] = obj.findSaccade(app, data, data.posTrace, data.velTrace, data.stepDirection, sIndex);
     saccadeOffset = floor(data.saccadeSamples / 2);
     firstIndex = startIndex - saccadeOffset;
     lastIndex = startIndex + saccadeOffset;
     if mod(data.saccadeSamples, 2) == 0                     % make sure the samples are divisible by 2
       lastIndex = lastIndex - 1;
     end
-    fprintf('processSignals 4\n');
     if (firstIndex < 1 || lastIndex > data.trialSamples)    % not enough samples around saccade to process
       startIndex = 0;
       return
@@ -179,15 +172,13 @@ methods
     data.posSummed = data.posSummed + data.posTrace(firstIndex:lastIndex) * data.stepDirection;
     data.velSummed = data.velSummed + data.velTrace(firstIndex:lastIndex) * data.stepDirection;
     % tally the sums and compute the averages
-    fprintf('processSignals 5\n');
     data.numSummed = data.numSummed + 1;
     data.posAvg = data.posSummed / data.numSummed;
     data.velAvg = data.velSummed / data.numSummed;
     data.trialTypesDone(data.trialType) = data.trialTypesDone(data.trialType) + 1;
     % now that we've updated all the traces, compute the degrees per volt if we have enough trials
     % take average peaks to get each point
-    fprintf('processSignals 6\n');
-    if data.trialType ~= RTConstants.kCenteringTrial && sum(data.numSummed) > RTConstants.kTrialTypes
+    if data.trialType ~= app.kCenteringTrial && sum(data.numSummed) > app.kTrialTypes
       rangeV = max(data.posAvg) - min(data.posAvg);
       obj.degPerV = mean(data.stepSizeDeg ./ rangeV);
       obj.degPerSPerV = obj.degPerV * data.sampleRateHz;          % needed for velocity plots

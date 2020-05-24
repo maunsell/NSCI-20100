@@ -67,9 +67,9 @@ classdef RTStimulus < handle
     end
     
     %%
-    function pix = degToPix(obj, app, deg)
+    function pix = degToPix(obj, deg)
       assert(obj.viewDistanceMM > 0, 'RTStimulus, degToPix: viewDistanceMM has not yet been set');
-      pix = round(tan(deg / app.degPerRadian) * obj.viewDistanceMM * obj.pixPerMM);
+      pix = round(tan(deg / RTConstants.degPerRadian) * obj.viewDistanceMM * obj.pixPerMM);
     end
     
     %%
@@ -78,9 +78,9 @@ classdef RTStimulus < handle
     end
     
     %%
-    function drawCenterStimulus(obj, app)
+    function drawCenterStimulus(obj)
       obj.currentOffsetIndex = ceil(obj.numPos / 2);
-      drawImage(obj, app.kLeftStim);
+      drawImage(obj, RTConstants.kLeftStim);
     end
     
     %% drawImage -- draw the dot at the currently specified pixel offset
@@ -91,16 +91,16 @@ classdef RTStimulus < handle
       obj.currentImageIndex = imageIndex;
     end
     
-%     %% maxDeg -- maximum extent of the display in degrees (left edge to right edge)
-%     function limitDeg = maxDeg(obj, app)
-%       limitDeg = pixToDeg(obj, app, obj.viewDistanceMM);
-%     end
+    %% maxDeg -- maximum extent of the display in degrees (left edge to right edge)
+    function limitDeg = maxDeg(obj)
+      limitDeg = pixToDeg(obj, obj.viewDistanceMM);
+    end
     
     %% makeImages.  Each image has the height of a spot and the width of stepSizeDeg*2.  The spots, if they appear
     % are centered at 0.5 and 1.5 stepSizeDeg horizontally.  A set of four images is created, one for each possible
     % occupancy of the two spot locations
     
-    function makeImages(obj, app)
+    function makeImages(obj)
       % make a circleImage
       diameterPix = floor(obj.spotRadiusPix) * 2;
       circlePix = 1:diameterPix;
@@ -108,7 +108,7 @@ classdef RTStimulus < handle
       circlePixels = (imgRows - obj.spotRadiusPix).^2 + (imgCols - obj.spotRadiusPix).^2 <= obj.spotRadiusPix^2;
       [circleImg, ~] = gray2ind(circlePixels, 2);         % make an image from the circle matrix
       % make the background rectangle
-      obj.stepSizePix  = degToPix(obj, app, obj.stepSizeDeg);
+      obj.stepSizePix  = degToPix(obj, obj.stepSizeDeg);
       obj.hAxes.Position(2) = (obj.windRectPix(4) - diameterPix) / 2;
       obj.hAxes.Position(3) = obj.stepSizePix  * 2;
       obj.hAxes.Position(4) = diameterPix;
@@ -118,16 +118,16 @@ classdef RTStimulus < handle
       rightCenterPix = floor(1.5 * obj.stepSizePix);
       heightCenterPix = floor(diameterPix / 2);
       pRange = circlePix - obj.spotRadiusPix;
-      for i = app.kBlankStim:app.kBothStim                           	% four images, one for each possible mix of dot/no-dot
-        if i == app.kRightStim || i == app.kBothStim       	% needs a right hand dot
+      for i = RTConstants.kBlankStim:RTConstants.kBothStim                           	% four images, one for each possible mix of dot/no-dot
+        if i == RTConstants.kRightStim || i == RTConstants.kBothStim       	% needs a right hand dot
           imageSet(i, heightCenterPix + pRange, rightCenterPix + pRange) = circleImg(circlePix, circlePix);
         end
-        if i == app.kLeftStim || i == app.kBothStim        	% needs a left hand dot
+        if i == RTConstants.kLeftStim || i == RTConstants.kBothStim        	% needs a left hand dot
           imageSet(i, heightCenterPix + pRange, leftCenterPix + pRange) = circleImg(circlePix, circlePix);
         end
         obj.images{i} = squeeze(imageSet(i, :, :));     % save the image in a cell array
       end
-      obj.images{app.kTestStim} = ones(obj.windRectPix(4), obj.stepSizePix, 'uint8'); % test image (white rect)
+      obj.images{RTConstants.kTestStim} = ones(obj.windRectPix(4), obj.stepSizePix, 'uint8'); % test image (white rect)
       % update the image position values.
       obj.numPos = floor(obj.windRectPix(3) / obj.stepSizePix);
       obj.numPos = obj.numPos - (1 - mod(obj.numPos, 2)); % numPos must be odd
@@ -141,55 +141,55 @@ classdef RTStimulus < handle
     end
     
     %%
-    function degrees = pixToDeg(obj, app, pix)
+    function degrees = pixToDeg(obj, pix)
       assert(obj.viewDistanceMM > 0, 'RTStimulus, pixToDeg: viewDistanceMM has not yet been set');
-      degrees = atan2(pix / obj.pixPerMM, obj.viewDistanceMM) * app.degPerRadian;
+      degrees = atan2(pix / obj.pixPerMM, obj.viewDistanceMM) * RTConstants.degPerRadian;
     end
     
     %% prepareImages -- set up the images that will be needed for the upcoming trial
-    function prepareImages(obj, app, trialType, stepDirection)
+    function prepareImages(obj, trialType, stepDirection)
       % first offset the image position if the current position won't accommodate the left or right step.
       % we don't need to do anything for a centering trial because that will be a different image location
-      if trialType == app.kCenteringTrial
+      if trialType == RTConstants.kCenteringTrial
         drawImage(obj, obj.currentImageIndex);                          % draw for trial equivalence
-        obj.gapStim = app.kLeftStim;
+        obj.gapStim = RTConstants.kLeftStim;
         obj.finalStim = obj.gapStim;
       else
-        if stepDirection == app.kLeft                           % going to step left
-          if obj.currentImageIndex == app.kLeftStim
+        if stepDirection == RTConstants.kLeft                           % going to step left
+          if obj.currentImageIndex == RTConstants.kLeftStim
             obj.currentOffsetIndex = obj.currentOffsetIndex - 1;	% shift one position leftward
           end
-          drawImage(obj, app.kRightStim);                  	% draw same spot with new image
-          obj.finalStim = app.kLeftStim;
+          drawImage(obj, RTConstants.kRightStim);                  	% draw same spot with new image
+          obj.finalStim = RTConstants.kLeftStim;
         else
-          if obj.currentImageIndex == app.kRightStim          % going to step right
+          if obj.currentImageIndex == RTConstants.kRightStim          % going to step right
             obj.currentOffsetIndex = obj.currentOffsetIndex + 1; % shift one position leftward
           end
-          drawImage(obj, app.kLeftStim);
-          obj.finalStim = app.kRightStim;
+          drawImage(obj, RTConstants.kLeftStim);
+          obj.finalStim = RTConstants.kRightStim;
         end
         % set up the gap stimuli
         switch trialType
-          case app.kStepTrial
+          case RTConstants.kStepTrial
             obj.gapStim = obj.finalStim;
-          case app.kGapTrial
-            obj.gapStim = app.kBlankStim;
-          case app.kOverlapTrial
-            obj.gapStim = app.kBothStim;
+          case RTConstants.kGapTrial
+            obj.gapStim = RTConstants.kBlankStim;
+          case RTConstants.kOverlapTrial
+            obj.gapStim = RTConstants.kBothStim;
         end
       end
     end
     
     %% prepareTimingImages -- set up the images that will are used for timing tests
-    function prepareTimingImages(obj, app, trialType)
+    function prepareTimingImages(obj, trialType)
       obj.currentOffsetIndex = ceil(obj.numPos / 2);                      % always at center location
-      drawImage(obj, app.kBlankStim);                             % blank anything there
-      if trialType == app.kGapTrial
-        obj.gapStim = app.kBlankStim;
+      drawImage(obj, RTConstants.kBlankStim);                             % blank anything there
+      if trialType == RTConstants.kGapTrial
+        obj.gapStim = RTConstants.kBlankStim;
       else
-        obj.gapStim = app.kTestStim;
+        obj.gapStim = RTConstants.kTestStim;
       end
-      obj.finalStim = app.kTestStim;
+      obj.finalStim = RTConstants.kTestStim;
       obj.hAxes.Position(2) = 0;
       obj.hAxes.Position(4) = obj.windRectPix(4);
     end
@@ -203,12 +203,12 @@ classdef RTStimulus < handle
     end
     
     %% setViewDistanceCM -- set the viewing distance, build the visual stimuli
-    function setViewDistanceCM(obj, app, newValueCM)
+    function setViewDistanceCM(obj, newValueCM)
       if obj.viewDistanceMM ~= newValueCM
         obj.viewDistanceMM = newValueCM * 10.0;
-        makeImages(obj, app);                                       % make new spot images
+        makeImages(obj);                                            % make new spot images
         obj.currentOffsetIndex = ceil(obj.numPos / 2);            	% center position
-        drawImage(obj, app.kLeftStim);                              % draw the center spot
+        drawImage(obj, RTConstants.kLeftStim);                     	% draw the center spot
       end
     end
   end
