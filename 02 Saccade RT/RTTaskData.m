@@ -2,10 +2,10 @@ classdef RTTaskData < handle
     % RTTaskData
     %   Support for processing eye traces and detecting saccades in RT
     properties
-        blocksDone;
-        calTrialsDone;
-        dataState;
-        doFilter;
+%         blocksDone;
+%         calTrialsDone;
+%         dataState;
+%         doFilter;
         filterLP;
         filter60Hz;
         fixOffTimeS;
@@ -30,7 +30,7 @@ classdef RTTaskData < handle
         trialSamples;
         targetTimeS;
         taskMode;
-        taskState;
+%         taskState;
         trialStartTimeVec;
         trialStartTic;
         trialType;
@@ -53,8 +53,8 @@ classdef RTTaskData < handle
             obj.saccadeTraceS = 0.250;                              % duratoin of saccade trace
             obj.trialDurS = max(1.0, 2 * obj.saccadeTraceS);
             obj.prestimDurS = min(obj.trialDurS / 4, 0.250);
-            obj.taskState = RTTaskState.taskStarttrial;
-            obj.dataState = RTDataState.dataIdle;
+%             obj.taskState = RTTaskState.taskStarttrial;
+%             obj.dataState = RTDataState.dataIdle;
             obj.trialStartTimeVec = [];
             obj.targetTimeS = 0;
             obj.gapDurS = 0.200;
@@ -64,13 +64,13 @@ classdef RTTaskData < handle
             obj.stepSizeDeg = 10.0;
             obj.taskMode = app.kNormal;                     % taskMode is overridden in RT, not here
             obj.voltage = 0;
-            obj.doFilter = false;
+%             obj.doFilter = false;
         end
 
         %% clearAll
         function clearAll(obj, app)
-            obj.blocksDone = 0;
-            obj.calTrialsDone = 0;
+%             obj.blocksDone = 0;
+%             obj.calTrialsDone = 0;
             obj.numSummed = 0;
             obj.posTrace = zeros(obj.trialSamples, 1);                      % trial RT position trace
             obj.posSummed = zeros(obj.saccadeSamples, 1);                   % summed position traces
@@ -102,10 +102,10 @@ classdef RTTaskData < handle
             clearAll(obj, app);                              % clear -- and also re-size buffers
         end
        
-        %% set60HzFilter
-        function set60HzFilter(obj, state)
-            obj.doFilter = state;
-        end
+%         %% set60HzFilter
+%         function set60HzFilter(obj, state)
+%             obj.doFilter = state;
+%         end
    end   
 end
 

@@ -67,7 +67,7 @@ methods
     if data.taskMode == app.kTiming
       stepSign = -1;                                      % photodiode always driven negative
     end
-    if data.calTrialsDone < 4                              	% still getting a calibration
+    if app.calTrialsDone < 4                              	% still getting a calibration
       if (stepSign == 1)
         DPV = abs(data.stepSizeDeg / (max(posTrace(:)) - mean(posTrace(1:startIndex))));
         %                     range = (max(posTrace(:)) - mean(posTrace(1:startIndex)));
@@ -75,9 +75,9 @@ methods
         DPV = abs(data.stepSizeDeg / (mean(posTrace(1:startIndex) - min(posTrace(:)))));
         %                     range = (mean(posTrace(1:startIndex) - min(posTrace(:))));
       end
-      obj.degPerV = (obj.degPerV * data.calTrialsDone + DPV) / (data.calTrialsDone + 1);
+      obj.degPerV = (obj.degPerV * app.calTrialsDone + DPV) / (app.calTrialsDone + 1);
       obj.degPerSPerV = obj.degPerV * data.sampleRateHz;	% needed for velocity plots
-      data.calTrialsDone = data.calTrialsDone + 1;
+      app.calTrialsDone = app.calTrialsDone + 1;
       sIndex = 0; eIndex = 0;
       return;                                             % no saccades until we have a calibration
     end
@@ -146,14 +146,15 @@ methods
       data.posTrace = fakeDataTrace(obj, data);
     end
     % do 60 Hz filtering
-    if data.doFilter
+    if app.Filter60Hz.Value
       data.posTrace = filter(data.filter60Hz, data.posTrace);
-    end
-    % make the velocity trace and then apply boxcar filter
-    data.velTrace(1:end - 1) = diff(data.posTrace);
-    data.velTrace(end) = data.velTrace(end - 1);
-    if data.doFilter
+      data.velTrace(1:end - 1) = diff(data.posTrace);
+      data.velTrace(end) = data.velTrace(end - 1);
       data.velTrace = filter(data.filterLP, data.velTrace);
+    else
+      % make the velocity trace and then apply boxcar filter
+      data.velTrace(1:end - 1) = diff(data.posTrace);
+      data.velTrace(end) = data.velTrace(end - 1);
     end
     % find a saccade and make sure we have enough samples before and after its start
     sIndex = floor(data.targetTimeS * data.sampleRateHz); 	% no saccades before stimon
