@@ -75,8 +75,8 @@ classdef RTPosVelPlots < handle
             title(obj.posAxes, 'Most recent position trace', 'fontSize', 12, 'fontWeight', 'bold')
             a1 = axis(obj.posAxes);
             plot(obj.posAxes, [data.targetTimeS, data.targetTimeS] * 1000, [a1(3), a1(4)], 'k-.');
-            if (data.fixOffTimeS ~= data.targetTimeS)
-                plot(obj.posAxes, [data.fixOffTimeS, data.fixOffTimeS] * 1000, [a1(3), a1(4)], 'r-.');
+            if (app.fixOffTimeS ~= data.targetTimeS)
+                plot(obj.posAxes, [app.fixOffTimeS, app.fixOffTimeS] * 1000, [a1(3), a1(4)], 'r-.');
             end
             if (startIndex > 0)                                 % mark the saccade start and end
                 plot(obj.posAxes, [startIndex, startIndex] * timestepMS, [a1(3), a1(4)], 'b:');
@@ -116,8 +116,8 @@ classdef RTPosVelPlots < handle
             hold(obj.velAxes, 'on');
             title(obj.velAxes, 'Most recent velocity trace', 'fontSize', 12, 'fontWeight', 'bold')
             plot(obj.velAxes, [data.targetTimeS, data.targetTimeS] * 1000, [a1(3), a1(4)], 'k-.');
-            if (data.fixOffTimeS ~= data.targetTimeS)
-                plot(obj.velAxes, [data.fixOffTimeS, data.fixOffTimeS] * 1000, [a1(3), a1(4)], 'r-.');
+            if (app.fixOffTimeS ~= data.targetTimeS)
+                plot(obj.velAxes, [app.fixOffTimeS, app.fixOffTimeS] * 1000, [a1(3), a1(4)], 'r-.');
             end
             if (startIndex > 0)                                         % plot the saccade start and end
                 plot(obj.velAxes, [startIndex, startIndex] * timestepMS, [a1(3), a1(4)], 'b:');

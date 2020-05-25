@@ -3,29 +3,14 @@ classdef RTSaccades < handle
 %   Support for processing eye traces and detecting saccades
 
 properties
-  filter60Hz;
-  filterLP;
-  filterWidthMS = 0;
-  thresholdDeg = 0;
-  degPerSPerV = 0;
-  degPerV = 0;
+    filterLP = [];
+    filterWidthMS = 0;
+    thresholdDeg = 0;
+    degPerSPerV = 0;
+    degPerV = 0;
 end
 
 methods
-  function obj = RTSaccades(app)
-    %% Object Initialization %%
-    obj = obj@handle();                                    % object initialization
-    nyquistHz = app.lbj.SampleRateHz / 2.0;
-%     create a 60 Hz bandstop filter  for the sample rate
-    obj.filter60Hz = design(fdesign.bandstop('Fp1,Fst1,Fst2,Fp2,Ap1,Ast,Ap2', ...
-      55 / nyquistHz, 59 / nyquistHz, 61 / nyquistHz, 65 / nyquistHz, 1, 60, 1), 'butter');
-    obj.filter60Hz.persistentmemory = false;    % no piecemeal filtering of trace
-    obj.filter60Hz.states = 1;                      % uses scalar expansion.
-%     create a lowpass filter for velocity trace
-    obj.filterLP = design(fdesign.lowpass('Fp,Fst,Ap,Ast', 30 / nyquistHz, 120 / nyquistHz, 0.1, 40), 'butter');
-    obj.filterLP.persistentmemory = false;          % no piecemeal filtering of trace
-    obj.filterLP.states = 1;                        % uses scalar expansion.
-  end
   
   %% clearAll
   function clearAll(obj, app)

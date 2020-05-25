@@ -6,13 +6,13 @@ classdef RTTaskData < handle
 %         calTrialsDone;
 %         dataState;
 %         doFilter;
-        filterLP;
-        filter60Hz;
-        fixOffTimeS;
-        gapDurS;
+%         filterLP;
+%         filter60Hz;
+%         fixOffTimeS;
+%         gapDurS;
 %         numChannels;
 %         numTrialTypes;
-        numSummed;
+%         numSummed;
         posAvg;
         posSummed;
         posTrace;
@@ -57,8 +57,8 @@ classdef RTTaskData < handle
 %             obj.dataState = RTDataState.dataIdle;
             obj.trialStartTimeVec = [];
             obj.targetTimeS = 0;
-            obj.gapDurS = 0.200;
-            obj.fixOffTimeS = 0;
+%             obj.gapDurS = 0.200;
+%             obj.fixOffTimeS = 0;
             obj.samplesRead = 0;
             obj.stepDirection = 0;
             obj.stepSizeDeg = 10.0;
@@ -71,7 +71,7 @@ classdef RTTaskData < handle
         function clearAll(obj, app)
 %             obj.blocksDone = 0;
 %             obj.calTrialsDone = 0;
-            obj.numSummed = 0;
+%             obj.numSummed = 0;
             obj.posTrace = zeros(obj.trialSamples, 1);                      % trial RT position trace
             obj.posSummed = zeros(obj.saccadeSamples, 1);                   % summed position traces
             obj.posAvg = zeros(obj.saccadeSamples, 1);                      % averaged position traces
@@ -89,16 +89,16 @@ classdef RTTaskData < handle
             obj.sampleRateHz = rateHz;
             obj.saccadeSamples = floor(obj.saccadeTraceS * obj.sampleRateHz);
             obj.trialSamples = floor(obj.trialDurS * obj.sampleRateHz);
-            nyquistHz = obj.sampleRateHz / 2.0;
+%             nyquistHz = obj.sampleRateHz / 2.0;
             % create a 60 Hz bandstop filter  for the sample rate
-            obj.filter60Hz = design(fdesign.bandstop('Fp1,Fst1,Fst2,Fp2,Ap1,Ast,Ap2', ...
-                55 / nyquistHz, 59 / nyquistHz, 61 / nyquistHz, 65 / nyquistHz, 1, 60, 1), 'butter');
-            obj.filter60Hz.persistentmemory = false;    % no piecemeal filtering of trace
-            obj.filter60Hz.states = 1;                      % uses scalar expansion.
+%             obj.filter60Hz = design(fdesign.bandstop('Fp1,Fst1,Fst2,Fp2,Ap1,Ast,Ap2', ...
+%                 55 / nyquistHz, 59 / nyquistHz, 61 / nyquistHz, 65 / nyquistHz, 1, 60, 1), 'butter');
+%             obj.filter60Hz.persistentmemory = false;    % no piecemeal filtering of trace
+%             obj.filter60Hz.states = 1;                      % uses scalar expansion.
             % create a low pass filter for filtering the velocity trace
-            obj.filterLP = design(fdesign.lowpass('Fp,Fst,Ap,Ast', 30 / nyquistHz, 120 / nyquistHz, 0.1, 40), 'butter');
-            obj.filterLP.persistentmemory = false;      % no piecemeal filtering of trace
-            obj.filterLP.states = 1;                      % uses scalar expansion.
+%             obj.filterLP = design(fdesign.lowpass('Fp,Fst,Ap,Ast', 30 / nyquistHz, 120 / nyquistHz, 0.1, 40), 'butter');
+%             obj.filterLP.persistentmemory = false;      % no piecemeal filtering of trace
+%             obj.filterLP.states = 1;                      % uses scalar expansion.
             clearAll(obj, app);                              % clear -- and also re-size buffers
         end
        
