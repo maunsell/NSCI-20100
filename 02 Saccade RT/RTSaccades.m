@@ -34,9 +34,9 @@ methods
   end
 
   %% fakeDataTrace
-  function posTrace = fakeDataTrace(~, data)
+  function posTrace = fakeDataTrace(~, app, data)
     fprintf('fakeDataTrace 0\n');
-    samples = length(data.posTrace);
+    samples = length(app.posTrace);
     posTrace = zeros(samples, 1);
     accel = 0.01;
     time = floor(sqrt(2.0 * data.stepSizeDeg / 2.0 / accel));
@@ -50,7 +50,7 @@ methods
       positions(time + t) = positions(time) + accel * time * t - 0.5 * accel * t^2;
     end
     fprintf('fakeDataTrace 2\n');
-    preStimSamples = floor((data.targetTimeS + 0.095 + 0.005 * data.trialType) * data.sampleRateHz);
+    preStimSamples = floor((data.targetTimeS + 0.095 + 0.005 * app.trialType) * app.lbj.SampleRateHz);
     posTrace(preStimSamples + 1:preStimSamples + length(positions)) = positions;
     for i = preStimSamples + length(positions) + 1:length(posTrace)
       posTrace(i) = positions(time * 2);
@@ -58,8 +58,8 @@ methods
     % make the trace decay to zero
     fprintf('fakeDataTrace 3\n');
     decayTrace = zeros(samples, 1);
-    decayValue = mean(posTrace(1:floor(data.sampleRateHz * 0.250)));
-    multiplier = 1.0 / (0.250 * data.sampleRateHz);                % tau of 250 ms
+    decayValue = mean(posTrace(1:floor(app.lbj.SampleRateHz * 0.250)));
+    multiplier = 1.0 / (0.250 * app.lbj.SampleRateHz);                % tau of 250 ms
     for i = 1:samples
       decayTrace(i) = decayValue;
       decayValue = decayValue * (1.0 - multiplier) + posTrace(i) * multiplier;
@@ -68,12 +68,12 @@ methods
     fprintf('fakeDataTrace 4\n');
     posTrace = posTrace - decayTrace + 2.0 * rand(size(posTrace)) - 1.0;
     % smooth with a boxcar to take out the highest frequencies
-    filterSamples = max(1, floor(data.sampleRateHz * 10.0 / 1000.0));
+    filterSamples = max(1, floor(app.lbj.SampleRateHz * 10.0 / 1000.0));
     b = (1 / filterSamples) * ones(1, filterSamples);
     posTrace = filter(b, 1, posTrace);
     % add 60Hz noise
     fprintf('fakeDataTrace 5\n');
-    dt = 1 / data.sampleRateHz;               	% seconds per sample
+    dt = 1 / app.lbj.SampleRateHz;               	% seconds per sample
     t = (0:dt:samples * dt - dt)';              % seconds
     posTrace = posTrace + cos(2.0 * pi * 60 * t) * 0.25;
   end
@@ -92,7 +92,7 @@ methods
         %                     range = (mean(posTrace(1:startIndex) - min(posTrace(:))));
       end
       obj.degPerV = (obj.degPerV * app.calTrialsDone + DPV) / (app.calTrialsDone + 1);
-      obj.degPerSPerV = obj.degPerV * data.sampleRateHz;	% needed for velocity plots
+      obj.degPerSPerV = obj.degPerV * app.lbj.SampleRateHz;	% needed for velocity plots
       app.calTrialsDone = app.calTrialsDone + 1;
       sIndex = 0; eIndex = 0;
       return;                                             % no saccades until we have a calibration
@@ -137,7 +137,7 @@ methods
           sIndex = sIndex - 1;
         end
       end
-      if eIndex - sIndex < 0.005 * data.sampleRateHz      % no saccades less than 5 ms
+      if eIndex - sIndex < 0.005 * app.lbj.SampleRateHz      % no saccades less than 5 ms
         sIndex = 0;
         eIndex = 0;
       end
@@ -147,7 +147,7 @@ methods
     end
     % add some jitter to defeat the alignment on noise
     if sIndex > 0 && eIndex > 0
-      offset = floor(data.sampleRateHz * 0.01666 * rand(1));
+      offset = floor(app.lbj.SampleRateHz * 0.01666 * rand(1));
       sIndex = sIndex - offset;
       eIndex = eIndex - offset;
     end
@@ -157,48 +157,48 @@ methods
   function [startIndex, endIndex] = processSignals(obj, app, data)
     % remove the DC offset
     if data.taskMode == app.kNormal || data.taskMode == app.kTiming
-      data.posTrace = data.rawData - mean(data.rawData(1:floor(data.sampleRateHz * data.prestimDurS)));
+      app.posTrace = app.rawData - mean(app.rawData(1:floor(app.lbj.SampleRateHz * app.prestimDurS)));
     else
-      data.posTrace = fakeDataTrace(obj, data);
+      app.posTrace = fakeDataTrace(obj, app, data);
     end
     % do 60 Hz filtering
     if app.Filter60Hz.Value
-      data.posTrace = filter(obj.filter60Hz, data.posTrace);
-      data.velTrace(1:end - 1) = diff(data.posTrace);
-      data.velTrace(end) = data.velTrace(end - 1);
-      data.velTrace = filter(obj.filterLP, data.velTrace);
+      app.posTrace = filter(obj.filter60Hz, app.posTrace);
+      app.velTrace(1:end - 1) = diff(app.posTrace);
+      app.velTrace(end) = app.velTrace(end - 1);
+      app.velTrace = filter(obj.filterLP, app.velTrace);
     else
       % make the velocity trace and then apply boxcar filter
-      data.velTrace(1:end - 1) = diff(data.posTrace);
-      data.velTrace(end) = data.velTrace(end - 1);
+      app.velTrace(1:end - 1) = diff(app.posTrace);
+      app.velTrace(end) = app.velTrace(end - 1);
     end
     % find a saccade and make sure we have enough samples before and after its start
-    sIndex = floor(data.targetTimeS * data.sampleRateHz); 	% no saccades before stimon
-    [startIndex, endIndex] = obj.findSaccade(app, data, data.posTrace, data.velTrace, data.stepDirection, sIndex);
-    saccadeOffset = floor(data.saccadeSamples / 2);
+    sIndex = floor(data.targetTimeS * app.lbj.SampleRateHz); 	% no saccades before stimon
+    [startIndex, endIndex] = obj.findSaccade(app, data, app.posTrace, app.velTrace, data.stepDirection, sIndex);
+    saccadeOffset = floor(app.saccadeSamples / 2);
     firstIndex = startIndex - saccadeOffset;
     lastIndex = startIndex + saccadeOffset;
-    if mod(data.saccadeSamples, 2) == 0                     % make sure the samples are divisible by 2
+    if mod(app.saccadeSamples, 2) == 0                     % make sure the samples are divisible by 2
       lastIndex = lastIndex - 1;
     end
-    if (firstIndex < 1 || lastIndex > data.trialSamples)    % not enough samples around saccade to process
+    if (firstIndex < 1 || lastIndex > app.trialSamples)    % not enough samples around saccade to process
       startIndex = 0;
       return
     end
     % sum into the average pos and vel plot, inverting for negative steps
-    data.posSummed = data.posSummed + data.posTrace(firstIndex:lastIndex) * data.stepDirection;
-    data.velSummed = data.velSummed + data.velTrace(firstIndex:lastIndex) * data.stepDirection;
+    app.posSummed = app.posSummed + app.posTrace(firstIndex:lastIndex) * data.stepDirection;
+    app.velSummed = app.velSummed + app.velTrace(firstIndex:lastIndex) * data.stepDirection;
     % tally the sums and compute the averages
-    data.numSummed = data.numSummed + 1;
-    data.posAvg = data.posSummed / data.numSummed;
-    data.velAvg = data.velSummed / data.numSummed;
-    data.trialTypesDone(data.trialType) = data.trialTypesDone(data.trialType) + 1;
+    app.numSummed = app.numSummed + 1;
+    app.posAvg = app.posSummed / app.numSummed;
+    app.velAvg = app.velSummed / app.numSummed;
+    app.trialTypesDone(app.trialType) = app.trialTypesDone(app.trialType) + 1;
     % now that we've updated all the traces, compute the degrees per volt if we have enough trials
     % take average peaks to get each point
-    if data.trialType ~= app.kCenteringTrial && sum(data.numSummed) > app.kTrialTypes
-      rangeV = max(data.posAvg) - min(data.posAvg);
+    if app.trialType ~= app.kCenteringTrial && sum(app.numSummed) > app.numTrialTypes
+      rangeV = max(app.posAvg) - min(app.posAvg);
       obj.degPerV = mean(data.stepSizeDeg ./ rangeV);
-      obj.degPerSPerV = obj.degPerV * data.sampleRateHz;          % needed for velocity plots
+      obj.degPerSPerV = obj.degPerV * app.lbj.SampleRateHz;          % needed for velocity plots
     end
   end
   

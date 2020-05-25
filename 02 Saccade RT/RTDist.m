@@ -53,7 +53,7 @@ classdef RTDist < handle
     end
 
     %% plot -- plot all the distributions
-    function rescale = plot(obj)
+    function rescale = doPlots(obj)
       rescale = 0;
       if obj.n == 0                                       % nothing to plot
         return

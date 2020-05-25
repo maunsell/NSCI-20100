@@ -38,7 +38,7 @@ classdef RTPosVelPlots < handle
         end
         
         %%
-        function plot(obj, app, handles, startIndex, endIndex)
+        function doPlots(obj, app, handles, startIndex, endIndex)
         % RTPlots Updata all plots for RT
             posPlots(obj, app, handles, startIndex, endIndex);
             velPlots(obj, app, handles, startIndex, endIndex);
@@ -48,8 +48,8 @@ classdef RTPosVelPlots < handle
         function posPlots(obj, app, handles, startIndex, endIndex)
             data = handles.data;
             saccades = handles.saccades;
-            timestepMS = 1000.0 / data.sampleRateHz;                   	% time interval of samples
-            xLimit = (size(data.posTrace, 1) - 1) * timestepMS;
+            timestepMS = 1000.0 / app.lbj.SampleRateHz;                 % time interval of samples
+            xLimit = (size(app.posTrace, 1) - 1) * timestepMS;
             trialTimes = 0:timestepMS:xLimit;                           % make array of trial time points
             % current trial position trace
 
@@ -58,7 +58,7 @@ classdef RTPosVelPlots < handle
 %             a1 = axis(obj.posAxes);                             % label the pos plot "1"
 %             text(trialTimes(1) + 0.05 * (trialTimes(end) - trialTimes(1)), ...
 %                 a1(3) + 0.9 * (a1(4) - a1(3)), '1', 'parent', obj.posAxes, 'FontSize', 24, 'FontWeight', 'Bold');
-            plot(obj.posAxes, [0, xLimit], [0, 0], 'k', trialTimes, data.posTrace, 'b');
+            plot(obj.posAxes, [0, xLimit], [0, 0], 'k', trialTimes, app.posTrace, 'b');
             a = axis(obj.posAxes);                                              % center vel plot vertically
             yLim = max(abs(a(3)), abs(a(4)));
             axis(obj.posAxes, [-inf inf -yLim yLim]);
@@ -91,15 +91,15 @@ classdef RTPosVelPlots < handle
         function velPlots(obj, app, handles, startIndex, endIndex)
             data = handles.data;
             saccades = handles.saccades;
-            timestepMS = 1000.0 / data.sampleRateHz;                       	% time interval of samples
-            xLimit = (size(data.posTrace, 1) - 1) * timestepMS;
+            timestepMS = 1000.0 / app.lbj.SampleRateHz;                     % time interval of samples
+            xLimit = (size(app.posTrace, 1) - 1) * timestepMS;
             trialTimes = 0:timestepMS:xLimit;                               % make array of trial time points
             % plot the trial velocity trace
 %             cla(obj.velAxes);
 %             title(obj.velAxes, 'Most recent velocity trace', 'FontSize',12,'FontWeight','Bold');
 %             text(trialTimes(1) + 0.05 * (trialTimes(end) - trialTimes(1)), ...
 %                 a1(3) + 0.9 * (a1(4) - a1(3)), '2', 'parent', obj.velAxes, 'FontSize', 24, 'FontWeight', 'Bold');
-            plot(obj.velAxes, [0, xLimit], [0, 0], 'k', trialTimes, data.velTrace, 'b');
+            plot(obj.velAxes, [0, xLimit], [0, 0], 'k', trialTimes, app.velTrace, 'b');
             a = axis(obj.velAxes);                                              % center vel plot vertically
             yLim = max(abs(a(3)), abs(a(4)));
             axis(obj.velAxes, [-inf inf -yLim yLim]);
