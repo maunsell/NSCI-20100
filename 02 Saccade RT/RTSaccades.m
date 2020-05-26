@@ -34,7 +34,7 @@ methods
   end
 
   %% fakeDataTrace
-  function posTrace = fakeDataTrace(~, app, data)
+  function posTrace = fakeDataTrace(~, app)
     fprintf('fakeDataTrace 0\n');
     samples = length(app.posTrace);
     posTrace = zeros(samples, 1);
@@ -50,7 +50,7 @@ methods
       positions(time + t) = positions(time) + accel * time * t - 0.5 * accel * t^2;
     end
     fprintf('fakeDataTrace 2\n');
-    preStimSamples = floor((data.targetTimeS + 0.095 + 0.005 * app.trialType) * app.lbj.SampleRateHz);
+    preStimSamples = floor((app.targetTimeS + 0.095 + 0.005 * app.trialType) * app.lbj.SampleRateHz);
     posTrace(preStimSamples + 1:preStimSamples + length(positions)) = positions;
     for i = preStimSamples + length(positions) + 1:length(posTrace)
       posTrace(i) = positions(time * 2);
@@ -79,8 +79,8 @@ methods
   end
 
   %% findSaccade: extract the saccade timing using speed threshold
-  function [sIndex, eIndex] = findSaccade(obj, app, data, posTrace, stepSign, startIndex)
-    if data.taskMode == app.kTiming
+  function [sIndex, eIndex] = findSaccade(obj, app, posTrace, stepSign, startIndex)
+    if app.taskMode == app.kTiming
       stepSign = -1;                                      % photodiode always driven negative
     end
     if app.calTrialsDone < 4                              	% still getting a calibration
@@ -154,12 +154,12 @@ methods
   end
 
   %% processSignals: function to process data from one trial
-  function [startIndex, endIndex] = processSignals(obj, app, data)
+  function [startIndex, endIndex] = processSignals(obj, app)
     % remove the DC offset
-    if data.taskMode == app.kNormal || data.taskMode == app.kTiming
+    if app.taskMode == app.kNormal || app.taskMode == app.kTiming
       app.posTrace = app.rawData - mean(app.rawData(1:floor(app.lbj.SampleRateHz * app.prestimDurS)));
     else
-      app.posTrace = fakeDataTrace(obj, app, data);
+      app.posTrace = fakeDataTrace(obj, app);
     end
     % do 60 Hz filtering
     if app.Filter60Hz.Value
@@ -173,8 +173,8 @@ methods
       app.velTrace(end) = app.velTrace(end - 1);
     end
     % find a saccade and make sure we have enough samples before and after its start
-    sIndex = floor(data.targetTimeS * app.lbj.SampleRateHz); 	% no saccades before stimon
-    [startIndex, endIndex] = obj.findSaccade(app, data, app.posTrace, app.stepDirection, sIndex);
+    sIndex = floor(app.targetTimeS * app.lbj.SampleRateHz); 	% no saccades before stimon
+    [startIndex, endIndex] = obj.findSaccade(app, app.posTrace, app.stepDirection, sIndex);
     saccadeOffset = floor(app.saccadeSamples / 2);
     firstIndex = startIndex - saccadeOffset;
     lastIndex = startIndex + saccadeOffset;

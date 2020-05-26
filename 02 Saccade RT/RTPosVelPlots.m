@@ -46,7 +46,7 @@ classdef RTPosVelPlots < handle
 
         %% posPlots: do the trial and average position plots
         function posPlots(obj, app, handles, startIndex, endIndex)
-            data = handles.data;
+%             data = handles.data;
             saccades = handles.saccades;
             timestepMS = 1000.0 / app.lbj.SampleRateHz;                 % time interval of samples
             xLimit = (size(app.posTrace, 1) - 1) * timestepMS;
@@ -74,8 +74,8 @@ classdef RTPosVelPlots < handle
             hold(obj.posAxes, 'on');                            % mark fixOff and targetOn
             title(obj.posAxes, 'Most recent position trace', 'fontSize', 12, 'fontWeight', 'bold')
             a1 = axis(obj.posAxes);
-            plot(obj.posAxes, [data.targetTimeS, data.targetTimeS] * 1000, [a1(3), a1(4)], 'k-.');
-            if (app.fixOffTimeS ~= data.targetTimeS)
+            plot(obj.posAxes, [app.targetTimeS, app.targetTimeS] * 1000, [a1(3), a1(4)], 'k-.');
+            if (app.fixOffTimeS ~= app.targetTimeS)
                 plot(obj.posAxes, [app.fixOffTimeS, app.fixOffTimeS] * 1000, [a1(3), a1(4)], 'r-.');
             end
             if (startIndex > 0)                                 % mark the saccade start and end
@@ -89,7 +89,7 @@ classdef RTPosVelPlots < handle
 
         %% velPlots: do the trial velocity plot
         function velPlots(obj, app, handles, startIndex, endIndex)
-            data = handles.data;
+%             data = handles.data;
             saccades = handles.saccades;
             timestepMS = 1000.0 / app.lbj.SampleRateHz;                     % time interval of samples
             xLimit = (size(app.posTrace, 1) - 1) * timestepMS;
@@ -115,8 +115,8 @@ classdef RTPosVelPlots < handle
             % Once the y-axis scaling is set, we can draw vertical marks for stimOn and saccades
             hold(obj.velAxes, 'on');
             title(obj.velAxes, 'Most recent velocity trace', 'fontSize', 12, 'fontWeight', 'bold')
-            plot(obj.velAxes, [data.targetTimeS, data.targetTimeS] * 1000, [a1(3), a1(4)], 'k-.');
-            if (app.fixOffTimeS ~= data.targetTimeS)
+            plot(obj.velAxes, [app.targetTimeS, app.targetTimeS] * 1000, [a1(3), a1(4)], 'k-.');
+            if (app.fixOffTimeS ~= app.targetTimeS)
                 plot(obj.velAxes, [app.fixOffTimeS, app.fixOffTimeS] * 1000, [a1(3), a1(4)], 'r-.');
             end
             if (startIndex > 0)                                         % plot the saccade start and end

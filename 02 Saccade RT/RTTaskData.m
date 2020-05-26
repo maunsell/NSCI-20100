@@ -28,17 +28,17 @@ classdef RTTaskData < handle
 %         stepSizeDeg;
 %         trialDurS;
 %         trialSamples;
-        targetTimeS;
-        taskMode;
+%         targetTimeS;
+%         taskMode;
 %         taskState;
-        trialStartTimeVec;
-        trialStartTic;
+%         trialStartTimeVec;
+%         trialStartTic;
 %         trialType;
 %         trialTypesDone;
 %         velTrace;
 %         velSummed;
 %         velAvg;
-        voltage;
+%         voltage;
     end
     
     methods
@@ -55,15 +55,15 @@ classdef RTTaskData < handle
 %             obj.prestimDurS = min(obj.trialDurS / 4, 0.250);
 %             obj.taskState = RTTaskState.taskStarttrial;
 %             obj.dataState = RTDataState.dataIdle;
-            obj.trialStartTimeVec = [];
-            obj.targetTimeS = 0;
+%             obj.trialStartTimeVec = [];
+%             obj.targetTimeS = 0;
 %             obj.gapDurS = 0.200;
 %             obj.fixOffTimeS = 0;
 %             obj.samplesRead = 0;
 % %             obj.stepDirection = 0;
 %             obj.stepSizeDeg = 10.0;
-            obj.taskMode = app.kNormal;                     % taskMode is overridden in RT, not here
-            obj.voltage = 0;
+%             obj.taskMode = app.kNormal;                     % taskMode is overridden in RT, not here
+%             obj.voltage = 0;
 %             obj.doFilter = false;
         end
 
