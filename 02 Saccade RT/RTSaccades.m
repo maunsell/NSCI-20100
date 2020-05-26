@@ -39,9 +39,9 @@ methods
     samples = length(app.posTrace);
     posTrace = zeros(samples, 1);
     accel = 0.01;
-    time = floor(sqrt(2.0 * data.stepSizeDeg / 2.0 / accel));
+    time = floor(sqrt(2.0 * app.stepSizeDeg / 2.0 / accel));
     positions = zeros(time * 2, 1);
-    accel = accel * data.stepDirection;
+    accel = accel * app.stepDirection;
     fprintf('fakeDataTrace 1\n');
     for t = 1:time
       positions(t) = 0.5 * accel * t^2;
@@ -79,16 +79,16 @@ methods
   end
 
   %% findSaccade: extract the saccade timing using speed threshold
-  function [sIndex, eIndex] = findSaccade(obj, app, data, posTrace, velTrace, stepSign, startIndex)
+  function [sIndex, eIndex] = findSaccade(obj, app, data, posTrace, stepSign, startIndex)
     if data.taskMode == app.kTiming
       stepSign = -1;                                      % photodiode always driven negative
     end
     if app.calTrialsDone < 4                              	% still getting a calibration
       if (stepSign == 1)
-        DPV = abs(data.stepSizeDeg / (max(posTrace(:)) - mean(posTrace(1:startIndex))));
+        DPV = abs(app.stepSizeDeg / (max(posTrace(:)) - mean(posTrace(1:startIndex))));
         %                     range = (max(posTrace(:)) - mean(posTrace(1:startIndex)));
       else
-        DPV = abs(data.stepSizeDeg / (mean(posTrace(1:startIndex) - min(posTrace(:)))));
+        DPV = abs(app.stepSizeDeg / (mean(posTrace(1:startIndex) - min(posTrace(:)))));
         %                     range = (mean(posTrace(1:startIndex) - min(posTrace(:))));
       end
       obj.degPerV = (obj.degPerV * app.calTrialsDone + DPV) / (app.calTrialsDone + 1);
@@ -133,7 +133,7 @@ methods
       % if we have found the start and end of a saccade, walk the start from the position threshold to the
       % point where velocity turned positive at the start of the saccade
       if eIndex > sIndex
-        while sIndex > startIndex && velTrace(sIndex - 1) * stepSign > 0
+        while sIndex > startIndex && app.velTrace(sIndex - 1) * stepSign > 0
           sIndex = sIndex - 1;
         end
       end
@@ -174,7 +174,7 @@ methods
     end
     % find a saccade and make sure we have enough samples before and after its start
     sIndex = floor(data.targetTimeS * app.lbj.SampleRateHz); 	% no saccades before stimon
-    [startIndex, endIndex] = obj.findSaccade(app, data, app.posTrace, app.velTrace, data.stepDirection, sIndex);
+    [startIndex, endIndex] = obj.findSaccade(app, data, app.posTrace, app.stepDirection, sIndex);
     saccadeOffset = floor(app.saccadeSamples / 2);
     firstIndex = startIndex - saccadeOffset;
     lastIndex = startIndex + saccadeOffset;
@@ -186,8 +186,8 @@ methods
       return
     end
     % sum into the average pos and vel plot, inverting for negative steps
-    app.posSummed = app.posSummed + app.posTrace(firstIndex:lastIndex) * data.stepDirection;
-    app.velSummed = app.velSummed + app.velTrace(firstIndex:lastIndex) * data.stepDirection;
+    app.posSummed = app.posSummed + app.posTrace(firstIndex:lastIndex) * app.stepDirection;
+    app.velSummed = app.velSummed + app.velTrace(firstIndex:lastIndex) * app.stepDirection;
     % tally the sums and compute the averages
     app.numSummed = app.numSummed + 1;
     app.posAvg = app.posSummed / app.numSummed;
@@ -197,7 +197,7 @@ methods
     % take average peaks to get each point
     if app.trialType ~= app.kCenteringTrial && sum(app.numSummed) > app.numTrialTypes
       rangeV = max(app.posAvg) - min(app.posAvg);
-      obj.degPerV = mean(data.stepSizeDeg ./ rangeV);
+      obj.degPerV = mean(app.stepSizeDeg ./ rangeV);
       obj.degPerSPerV = obj.degPerV * app.lbj.SampleRateHz;          % needed for velocity plots
     end
   end

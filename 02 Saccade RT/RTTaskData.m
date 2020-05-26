@@ -13,19 +13,19 @@ classdef RTTaskData < handle
 %         numChannels;
 %         numTrialTypes;
 %         numSummed;
-        posAvg;
-        posSummed;
+%         posAvg;
+%         posSummed;
 %         posTrace;
 %         prestimDurS;
 %         prestimTimeS;
-        rawData;
+%         rawData;
 %         sampleRateHz;
-        samplesRead;
-        saccadeDurS;
-        saccadeSamples;
+%         samplesRead;
+%         saccadeDurS;
+%         saccadeSamples;
 %         saccadeTraceS;
-        stepDirection;
-        stepSizeDeg;
+%         stepDirection;
+%         stepSizeDeg;
 %         trialDurS;
 %         trialSamples;
         targetTimeS;
@@ -35,9 +35,9 @@ classdef RTTaskData < handle
         trialStartTic;
 %         trialType;
 %         trialTypesDone;
-        velTrace;
-        velSummed;
-        velAvg;
+%         velTrace;
+%         velSummed;
+%         velAvg;
         voltage;
     end
     
@@ -59,9 +59,9 @@ classdef RTTaskData < handle
             obj.targetTimeS = 0;
 %             obj.gapDurS = 0.200;
 %             obj.fixOffTimeS = 0;
-            obj.samplesRead = 0;
-            obj.stepDirection = 0;
-            obj.stepSizeDeg = 10.0;
+%             obj.samplesRead = 0;
+% %             obj.stepDirection = 0;
+%             obj.stepSizeDeg = 10.0;
             obj.taskMode = app.kNormal;                     % taskMode is overridden in RT, not here
             obj.voltage = 0;
 %             obj.doFilter = false;

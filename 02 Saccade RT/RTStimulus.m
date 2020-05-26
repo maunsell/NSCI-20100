@@ -19,7 +19,6 @@ classdef RTStimulus < handle
     imagePosPix                     % locations for putting the images in the window
     numPos
     spotRadiusPix
-    stepSizeDeg
     stepSizePix
     viewDistanceMM
     windRectPix
@@ -27,7 +26,7 @@ classdef RTStimulus < handle
   methods (Static)
   end
   methods
-    function obj = RTStimulus(app, stepDeg)
+    function obj = RTStimulus(app)
       imtool close all;                               % close imtool figures from Image Processing Toolbox
       screenRectPix = get(0, 'MonitorPositions');   	% get the size of the primary screen
       if size(screenRectPix, 1) > 1
@@ -39,7 +38,6 @@ classdef RTStimulus < handle
       obj.gapStim = 0;
       obj.images = cell(1, 4);
       obj.spotRadiusPix = 10;
-      obj.stepSizeDeg = stepDeg;
       obj.viewDistanceMM = 0;
       windHeightPix = 60;
       dockPix = 75;
@@ -108,7 +106,7 @@ classdef RTStimulus < handle
       circlePixels = (imgRows - obj.spotRadiusPix).^2 + (imgCols - obj.spotRadiusPix).^2 <= obj.spotRadiusPix^2;
       [circleImg, ~] = gray2ind(circlePixels, 2);         % make an image from the circle matrix
       % make the background rectangle
-      obj.stepSizePix  = degToPix(obj, app, obj.stepSizeDeg);
+      obj.stepSizePix  = degToPix(obj, app, app.stepSizeDeg);
       obj.hAxes.Position(2) = (obj.windRectPix(4) - diameterPix) / 2;
       obj.hAxes.Position(3) = obj.stepSizePix  * 2;
       obj.hAxes.Position(4) = diameterPix;
@@ -147,15 +145,15 @@ classdef RTStimulus < handle
     end
     
     %% prepareImages -- set up the images that will be needed for the upcoming trial
-    function prepareImages(obj, app, trialType, stepDirection)
+    function prepareImages(obj, app)
       % first offset the image position if the current position won't accommodate the left or right step.
       % we don't need to do anything for a centering trial because that will be a different image location
-      if trialType == app.kCenteringTrial
+      if app.trialType == app.kCenteringTrial
         drawImage(obj, obj.currentImageIndex);                          % draw for trial equivalence
         obj.gapStim = app.kLeftStim;
         obj.finalStim = obj.gapStim;
       else
-        if stepDirection == app.kLeft                           % going to step left
+        if app.stepDirection == app.kLeft                           % going to step left
           if obj.currentImageIndex == app.kLeftStim
             obj.currentOffsetIndex = obj.currentOffsetIndex - 1;	% shift one position leftward
           end
@@ -169,7 +167,7 @@ classdef RTStimulus < handle
           obj.finalStim = app.kRightStim;
         end
         % set up the gap stimuli
-        switch trialType
+        switch app.trialType
           case app.kStepTrial
             obj.gapStim = obj.finalStim;
           case app.kGapTrial

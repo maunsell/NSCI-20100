@@ -64,7 +64,7 @@ classdef RTPosVelPlots < handle
             axis(obj.posAxes, [-inf inf -yLim yLim]);
             if saccades.degPerV > 0                                     % plot saccade threshold
                 hold(obj.posAxes, 'on');
-                thresholdV = saccades.thresholdDeg / saccades.degPerV * data.stepDirection;
+                thresholdV = saccades.thresholdDeg / saccades.degPerV * app.stepDirection;
                 plot(obj.posAxes, [trialTimes(1) trialTimes(end)], [thresholdV, thresholdV], 'b:');
                 calibratedLabels(obj, obj.posAxes, saccades.degPerV, 2)
                 ylabel(obj.posAxes,'Eye Position (deg)','FontSize',14);
