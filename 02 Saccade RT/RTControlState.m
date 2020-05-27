@@ -1,7 +1,7 @@
-function RTControlState(app, handles, state, except)
+function RTControlState(app, state, except)
       
-    controls = {handles.startButton,handles.clearButton, handles.savePlotsButton, handles.saveDataButton, ...
-            handles.loadDataButton, handles.viewDistanceText, handles.thresholdDegText};
+    controls = {app.startButton, app.clearButton, app.savePlotsButton, app.saveDataButton, ...
+            app.loadDataButton, app.viewDistanceText, app.thresholdDegText};
         
     for c = 1:length(controls)
         skip = false;
