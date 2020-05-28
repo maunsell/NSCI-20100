@@ -6,6 +6,7 @@ classdef MetricsStimulus < handle
   properties (Constant)
     marginPix = 10;
     pixelDepth = 32;
+    mmPerInch = 25.40;
   end
   properties (GetAccess = private)
     blankImage
@@ -41,7 +42,7 @@ classdef MetricsStimulus < handle
         obj.hFig.CloseRequestFcn = '';
         axis off;
         obj.hAxes = axes('Parent', obj.hFig, 'units', 'pixels', 'visible', 'off');
-        obj.pixPerMM = java.awt.Toolkit.getDefaultToolkit().getScreenResolution() / MetricsConstants.mmPerInch;
+        obj.pixPerMM = java.awt.Toolkit.getDefaultToolkit().getScreenResolution() / obj.mmPerInch;
         setViewDistanceCM(obj, app);                    % setting distance, make images, draw center stimulus
       else
         obj.windRectPix = [0, 0, 2000, 100];
@@ -56,11 +57,11 @@ classdef MetricsStimulus < handle
       drawImage(obj, obj.spotImage);
     end
     
-    %%
-    function pix = degToPix(obj, deg)
-      assert(obj.viewDistanceMM > 0, 'Metrics degToPix: viewDistanceMM has not yet been set');
-      pix = round(tan(deg / MetricsConstants.degPerRadian) * obj.viewDistanceMM * obj.pixPerMM);
-    end   
+%     %%
+%     function pix = degToPix(obj, app, deg)
+%       assert(obj.viewDistanceMM > 0, 'Metrics degToPix: viewDistanceMM has not yet been set');
+%       pix = round(tan(deg / app.degPerRadian) * obj.viewDistanceMM * obj.pixPerMM);
+%     end   
     
     %% delete the window
     function delete(obj)
