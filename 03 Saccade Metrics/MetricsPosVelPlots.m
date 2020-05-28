@@ -21,16 +21,16 @@ classdef MetricsPosVelPlots < handle
             obj.velAxes = app.velAxes;            
         end
             
-        function plotPosVel(obj, handles, startIndex, endIndex, mustPlot)
+        function plotPosVel(obj, handles, app, startIndex, endIndex, mustPlot)
         %doPlot Updata all plots for EOG
             mustPlot = mustPlot || (mod(sum(handles.data.numSummed), handles.data.numOffsets) == 0);
-            posPlots(obj, handles, startIndex, endIndex, mustPlot);
-            velPlots(obj, handles, startIndex, endIndex, mustPlot);
+            posPlots(obj, handles, app, startIndex, endIndex, mustPlot);
+            velPlots(obj, handles, app, startIndex, endIndex, mustPlot);
 %             drawnow;
         end
 
         %% posPlots: do the trial and average position plots
-        function posPlots(obj, handles, startIndex, endIndex, mustPlot)
+        function posPlots(obj, handles, app, startIndex, endIndex, mustPlot)
             data = handles.data;
             saccades = handles.saccades;
             timestepMS = 1000.0 / data.sampleRateHz;                   	% time interval of samples
@@ -39,12 +39,12 @@ classdef MetricsPosVelPlots < handle
             colors = get(obj.posAxes, 'ColorOrder');
             % current trial position trace
             cla(obj.posAxes);
-            plot(obj.posAxes, trialTimes, data.posTrace, 'color', colors(data.absStepIndex,:));
+            plot(obj.posAxes, trialTimes, data.posTrace, 'color', colors(app.absStepIndex,:));
             if saccades.degPerV > 0                                     % plot saccade threshold
                 hold(obj.posAxes, 'on');
                 thresholdV = saccades.thresholdDeg / saccades.degPerV * data.stepSign;
                 plot(obj.posAxes, [trialTimes(1) trialTimes(end)], [thresholdV, thresholdV], ...
-                    ':', 'color', colors(data.absStepIndex,:));
+                    ':', 'color', colors(app.absStepIndex,:));
                 hold(obj.posAxes, 'off');
             end
             title(obj.posAxes, 'Most recent position trace', 'FontSize',12,'FontWeight','Bold')
@@ -58,7 +58,7 @@ classdef MetricsPosVelPlots < handle
                     obj.posAvgAxes.ColorOrderIndex = 1;
                     plot(obj.posAvgAxes, saccadeTimes, data.posAvg(:, data.numOffsets / 2 + 1:data.numOffsets), '-');
                     hold(obj.posAvgAxes, 'off');
-                    title(obj.posAvgAxes, sprintf('Average position traces (n\x2265%d)', data.blocksDone), ...
+                    title(obj.posAvgAxes, sprintf('Average position traces (n\x2265%d)', app.blocksDone), ...
                         'FontSize',12,'FontWeight','Bold')
                     % set both plots to the same y scale
                     a3 = axis(obj.posAvgAxes);
@@ -101,17 +101,17 @@ classdef MetricsPosVelPlots < handle
             plot(obj.posAxes, [data.stimTimeS * 1000.0, data.stimTimeS * 1000.0], [a1(3), a1(4)], 'k-.');
             if (startIndex > 0)
                 plot(obj.posAxes, [startIndex, startIndex] * timestepMS, [a1(3), a1(4)], 'color', ...
-                    colors(data.absStepIndex,:), 'linestyle', ':');
+                    colors(app.absStepIndex,:), 'linestyle', ':');
                 if (endIndex > 0)
                     plot(obj.posAxes, [endIndex, endIndex] * timestepMS, [a1(3), a1(4)], 'color', ...
-                    colors(data.absStepIndex,:), 'linestyle', ':');
+                    colors(app.absStepIndex,:), 'linestyle', ':');
                 end
             end
             hold(obj.posAxes, 'off');
        end
 
         %% velPlots: do the trial and average velocity plots
-        function velPlots(obj, handles, startIndex, endIndex, mustPlot)
+        function velPlots(obj, handles, app, startIndex, endIndex, mustPlot)
             data = handles.data;
             saccades = handles.saccades;
             timestepMS = 1000.0 / data.sampleRateHz;                       	% time interval of samples
@@ -120,7 +120,7 @@ classdef MetricsPosVelPlots < handle
             colors = get(obj.velAxes, 'ColorOrder');
             % plot the trial velocity trace
             cla(obj.velAxes);
-            plot(obj.velAxes, trialTimes, data.velTrace, 'color', colors(data.absStepIndex,:));
+            plot(obj.velAxes, trialTimes, data.velTrace, 'color', colors(app.absStepIndex,:));
             a = axis(obj.velAxes);                                              % center vel plot vertically
             yLim = max(abs(a(3)), abs(a(4)));
             axis(obj.velAxes, [-inf inf -yLim yLim]);
@@ -136,7 +136,7 @@ classdef MetricsPosVelPlots < handle
                     obj.velAvgAxes.ColorOrderIndex = 1;
                     plot(obj.velAvgAxes, saccadeTimes, data.velAvg(:, data.numOffsets / 2 + 1:data.numOffsets), '-');
                     hold(obj.velAvgAxes, 'off');
-                    title(obj.velAvgAxes, sprintf('Average velocity traces (n\x2265%d)', data.blocksDone), ...
+                    title(obj.velAvgAxes, sprintf('Average velocity traces (n\x2265%d)', app.blocksDone), ...
                             'fontSize', 12, 'fontWeight','Bold')
                     ylabel(obj.velAvgAxes,'Analog Input (dV/dt)', 'FontSize', 14);
                     xlabel(obj.velAvgAxes,'Time (ms)','FontSize', 14);
@@ -182,10 +182,10 @@ classdef MetricsPosVelPlots < handle
             plot(obj.velAxes, [data.stimTimeS * 1000.0, data.stimTimeS * 1000.0], [a1(3), a1(4)], 'k-.');
             if (startIndex > 0)
                 plot(obj.velAxes, [startIndex, startIndex] * timestepMS, [a1(3), a1(4)], 'color', ...
-                    colors(data.absStepIndex,:), 'linestyle', ':');
+                    colors(app.absStepIndex,:), 'linestyle', ':');
                 if (endIndex > 0)
                     plot(obj.velAxes, [endIndex, endIndex] * timestepMS, [a1(3), a1(4)], 'color', ...
-                    colors(data.absStepIndex,:), 'linestyle', ':');
+                    colors(app.absStepIndex,:), 'linestyle', ':');
                 end
             end
             hold(obj.velAxes, 'off');

@@ -3,12 +3,12 @@ classdef MetricsTaskData < handle
     %   Support for processing eye traces and detecting saccades in EOG
     
     properties
-        absStepIndex
-        blocksDone;
-        calTrialsDone;
-        centeringTrial;
-        dataState;
-        doFilter;
+%         absStepIndex
+%         blocksDone;
+%         calTrialsDone;
+%         centeringTrial;
+%         dataState;
+%         doFilter;
         doStimDisplay;
         filterLP;
         filter60Hz;
@@ -55,27 +55,27 @@ classdef MetricsTaskData < handle
             obj.numChannels = numChannels;
             obj.numOffsets = length(obj.offsetsDeg);
             obj.offsetIndex = 1;
-            obj.absStepIndex = 1;
+%             obj.absStepIndex = 1;
             obj.stepSign = 1;
             obj.stepSizeDeg = 0;
             obj.saccadeTraceS = 0.250;                              % duratoin of saccade trace
             obj.trialDurS = max(1.0, 2 * obj.saccadeTraceS);
             obj.prestimDurS = min(obj.trialDurS / 4, 0.250);
             obj.taskState = MetricsTaskState.taskStarttrial;
-            obj.dataState = MetricsDataState.dataIdle;
+%             obj.dataState = MetricsDataState.dataIdle;
             obj.trialStartTimeS = 0;
             obj.samplesRead = 0;
             obj.stimTimeS = 0;
             obj.testMode = false;                                  % testMode is set in EOG, not here
             obj.voltage = 0;
-            obj.doFilter = false;
+%             obj.doFilter = false;
             setSampleRateHz(obj, sampleRateHz);
         end
 
         %% clearAll
         function clearAll(obj)
-            obj.blocksDone = 0;
-            obj.calTrialsDone = 0;
+%             obj.blocksDone = 0;
+%             obj.calTrialsDone = 0;
             obj.numSummed = zeros(1, obj.numOffsets);
             obj.offsetsDone = zeros(1, obj.numOffsets);
             obj.posTrace = zeros(obj.trialSamples, 1);                      % trial EOG position trace
@@ -106,10 +106,10 @@ classdef MetricsTaskData < handle
             clearAll(obj);                              % clear -- and also re-size buffers
         end
        
-        %% set60HzFilter
-        function set60HzFilter(obj, state)
-            obj.doFilter = state;
-        end
+%         %% set60HzFilter
+%         function set60HzFilter(obj, state)
+%             obj.doFilter = state;
+%         end
    end   
 end
 
