@@ -11,7 +11,7 @@ classdef MetricsStimulus < handle
   properties (GetAccess = private)
     blankImage
     currentOffsetPix
-    doStimDisplay
+%     doStimDisplay
     hAxes                     % axes for drawing/erasing dots
     hFig
     pixPerMM
@@ -24,9 +24,9 @@ classdef MetricsStimulus < handle
   methods (Static)
   end
   methods
-    function obj = MetricsStimulus(app, doStimDisplay)
-      obj.doStimDisplay = doStimDisplay;
-      if obj.doStimDisplay
+    function obj = MetricsStimulus(app)
+%       obj.doStimDisplay = app.doStimDisplay;
+      if app.doStimDisplay
         imtool close all;                               % close imtool figures from Image Processing Toolbox
         obj.spotRadiusPix = 10;
 %         obj.stepSizeDeg = stepSizeDeg;

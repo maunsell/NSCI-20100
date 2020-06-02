@@ -10,8 +10,8 @@ classdef MetricsTaskData < handle
 %         dataState;
 %         doFilter;
 %         doStimDisplay;
-%         filterLP;
-%         filter60Hz;
+        filterLP;
+        filter60Hz;
 %         numChannels;
 %         numOffsets;
 %         numSummed;
@@ -38,9 +38,9 @@ classdef MetricsTaskData < handle
         taskState;
 %         testMode;
         trialStartTimeS;
-%         velTrace;
-%         velSummed;
-%         velAvg;
+        velTrace;
+        velSummed;
+        velAvg;
         voltage;
     end
     
@@ -71,16 +71,16 @@ classdef MetricsTaskData < handle
 %             obj.doFilter = false;
 %             obj.saccadeSamples = floor(obj.saccadeTraceS * app.lbj.sampleRateHz);
 %             app.trialSamples = floor(obj.trialDurS * app.lbj.sampleRateHz);
-%             nyquistHz = app.lbj.SampleRateHz / 2.0;
-%             % create a 60 Hz bandstop filter  for the sample rate
-%             obj.filter60Hz = design(fdesign.bandstop('Fp1,Fst1,Fst2,Fp2,Ap1,Ast,Ap2', ...
-%                 55 / nyquistHz, 59 / nyquistHz, 61 / nyquistHz, 65 / nyquistHz, 1, 60, 1), 'butter');
-%             obj.filter60Hz.persistentmemory = false;    % no piecemeal filtering of trace
-%             obj.filter60Hz.states = 1;                      % uses scalar expansion.
-%             % create a low pass filter for filtering the velocity trace
-%             obj.filterLP = design(fdesign.lowpass('Fp,Fst,Ap,Ast', 30 / nyquistHz, 120 / nyquistHz, 0.1, 40), 'butter');
-%             obj.filterLP.persistentmemory = false;      % no piecemeal filtering of trace
-%             obj.filterLP.states = 1;                      % uses scalar expansion.
+            nyquistHz = app.lbj.sampleRateHz / 2.0;
+            % create a 60 Hz bandstop filter  for the sample rate
+            obj.filter60Hz = design(fdesign.bandstop('Fp1,Fst1,Fst2,Fp2,Ap1,Ast,Ap2', ...
+                55 / nyquistHz, 59 / nyquistHz, 61 / nyquistHz, 65 / nyquistHz, 1, 60, 1), 'butter');
+            obj.filter60Hz.persistentmemory = false;    % no piecemeal filtering of trace
+            obj.filter60Hz.states = 1;                      % uses scalar expansion.
+            % create a low pass filter for filtering the velocity trace
+            obj.filterLP = design(fdesign.lowpass('Fp,Fst,Ap,Ast', 30 / nyquistHz, 120 / nyquistHz, 0.1, 40), 'butter');
+            obj.filterLP.persistentmemory = false;      % no piecemeal filtering of trace
+            obj.filterLP.states = 1;                      % uses scalar expansion.
 %             clearAll(obj);                              % clear -- and also re-size buffers
         end
 
