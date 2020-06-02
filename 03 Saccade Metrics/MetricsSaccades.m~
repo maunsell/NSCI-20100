@@ -3,8 +3,6 @@ classdef MetricsSaccades < handle
   %   Support for processing eye traces and detecting saccades
   
   properties
-    filterLP;             % low pass filter
-    filter60Hz;           % 60 Hz notch filter
     filterWidthMS = 0;
     thresholdDeg = 0;
     degPerSPerV = 0;
@@ -12,19 +10,10 @@ classdef MetricsSaccades < handle
   end
   
   methods
-    function obj = MetricsSaccades(app)
+    function obj = MetricsTaskData()
       
       %% Object Initialization %%
       obj = obj@handle();                                    % object initialization
-      
-      nyquistHz = app.lbj.SampleRateHz / 2.0;
-      obj.filter60Hz = design(fdesign.bandstop('Fp1,Fst1,Fst2,Fp2,Ap1,Ast,Ap2', ...
-        55 / nyquistHz, 59 / nyquistHz, 61 / nyquistHz, 65 / nyquistHz, 1, 60, 1), 'butter');
-      obj.filter60Hz.persistentmemory = false;              % no piecemeal filtering of trace
-      obj.filter60Hz.states = 1;                            % uses scalar expansion.
-      obj.filterLP = design(fdesign.lowpass('Fp,Fst,Ap,Ast', 30 / nyquistHz, 120 / nyquistHz, 0.1, 40), 'butter');
-      obj.filterLP.persistentmemory = false;                % no piecemeal filtering of trace
-      obj.filterLP.states = 1;                              % uses scalar expansion.
     end
     
     %% clearAll
@@ -108,7 +97,7 @@ classdef MetricsSaccades < handle
     function [startIndex, endIndex] = processSignals(obj, app, data)
       % remove the DC offset
       if ~app.testMode
-        app.posTrace = app.rawData - mean(app.rawData(1:floor(app.lbj.SampleRateHz * app.prestimDurS)));
+        app.posTrace = app.rawData - mean(app.rawData(1:floor(app.lbj.SampleRateHz * data.prestimDurS)));
       else
         samples = length(app.posTrace);
         app.posTrace = zeros(samples, 1);
@@ -122,7 +111,7 @@ classdef MetricsSaccades < handle
         for t = 1:time
           positions(time + t) = positions(time) + accel * time * t - 0.5 * accel * t^2;
         end
-        preStimSamples = floor((app.stimTimeS + 0.1) * app.lbj.SampleRateHz);
+        preStimSamples = floor((data.stimTimeS + 0.1) * app.lbj.SampleRateHz);
         app.posTrace(preStimSamples + 1:preStimSamples + length(positions)) = positions;
         for i = preStimSamples + length(positions) + 1:length(app.posTrace)
           app.posTrace(i) = positions(time * 2);
@@ -147,17 +136,17 @@ classdef MetricsSaccades < handle
         app.posTrace = app.posTrace + cos(2.0 * pi * 60 * t) * 0.25;
       end
       if app.Filter60Hz.Value
-        app.posTrace = filter(obj.filter60Hz, app.posTrace);
+        app.posTrace = filter(app.filter60Hz, app.posTrace);
         app.velTrace(1:end - 1) = diff(app.posTrace);
         app.velTrace(end) = app.velTrace(end - 1);
-        app.velTrace = filter(obj.filterLP, app.velTrace);
+        app.velTrace = filter(app.filterLP, app.velTrace);
       else
         app.velTrace(1:end - 1) = diff(app.posTrace);
         app.velTrace(end) = app.velTrace(end - 1);
       end
       % find a saccade and make sure we have enough samples before and after its start
-      %             sIndex = floor(app.stimTimeS * app.lbj.SampleRateHz);         % no saccades before stimon
-      sIndex = floor(app.prestimDurS * app.lbj.SampleRateHz);
+      %             sIndex = floor(data.stimTimeS * app.lbj.SampleRateHz);         % no saccades before stimon
+      sIndex = floor(data.prestimDurS * app.lbj.SampleRateHz);
       [startIndex, endIndex] = obj.findSaccade(data, app, app.posTrace, app.velTrace, data.stepSign, sIndex);
       saccadeOffset = floor(app.saccadeSamples / 2);
       firstIndex = startIndex - saccadeOffset;

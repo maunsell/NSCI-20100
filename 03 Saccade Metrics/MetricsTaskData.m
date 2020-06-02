@@ -21,7 +21,7 @@ classdef MetricsTaskData < handle
 %         posAvg;
         posSummed;
 %         posTrace;
-        prestimDurS;
+%         prestimDurS;
 %         rawData;
 %         sampleRateHz;
         samplesRead;
@@ -32,12 +32,12 @@ classdef MetricsTaskData < handle
         stepSign;
         stepSizeDeg;
         stimStartPixel;
-        stimTimeS;
+%         stimTimeS;
         trialDurS;
 %         trialSamples;
         taskState;
 %         testMode;
-        trialStartTimeS;
+%         trialStartTimeS;
 %         velTrace;
 %         velSummed;
 %         velAvg;
@@ -60,12 +60,12 @@ classdef MetricsTaskData < handle
             obj.stepSizeDeg = 0;
 %             obj.saccadeTraceS = 0.250;                              % duratoin of saccade trace
 %             obj.trialDurS = max(1.0, 2 * obj.saccadeTraceS);
-            obj.prestimDurS = min(obj.trialDurS / 4, 0.250);
+%             obj.prestimDurS = min(obj.trialDurS / 4, 0.250);
             obj.taskState = MetricsTaskState.taskStarttrial;
 %             obj.dataState = MetricsDataState.dataIdle;
-            obj.trialStartTimeS = 0;
+%             obj.trialStartTimeS = 0;
             obj.samplesRead = 0;
-            obj.stimTimeS = 0;
+%             obj.stimTimeS = 0;
 %             obj.testMode = false;                                  % testMode is set in EOG, not here
             obj.voltage = 0;
 %             obj.doFilter = false;
