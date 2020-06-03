@@ -3,7 +3,7 @@ classdef SRData < handle
     % Support for global data for StretchReceptor
     
     properties
-        contMSPerDiv;               % ms/division in continuous plot
+%         contMSPerDiv;               % ms/division in continuous plot
         contPlotRescale;            % flag for rescale needed on continuous plot
         contSamples;                % number of samples in the continuous plot
         contTimeDivs;               % number of time divisions in continuous plot
@@ -28,15 +28,15 @@ classdef SRData < handle
     
     methods
         %% SRData -- instantiate and initialize
-       function obj = SRData(handles)
+       function obj = SRData(handles, app)
              % Object Initialization %%
              obj = obj@handle();                                    % object initialization
 
              % Post Initialization %%
             obj.fH = handles;
             obj.sampleRateHz = handles.lbj.SampleRateHz;
-            contents = get(handles.contMSPerDivButton, 'string');
-            obj.contMSPerDiv = str2double(contents{get(handles.contMSPerDivButton, 'Value')});
+%             contents = get(handles.contMSPerDivButton, 'string');
+%             obj.contMSPerDiv = str2double(contents{get(handles.contMSPerDivButton, 'Value')});
             obj.contTimeDivs = 20;
             contents = cellstr(get(handles.contMSPerDivButton,'String'));
             maxMSPerDiv = str2double(contents{end});
@@ -63,7 +63,7 @@ classdef SRData < handle
             obj.rawData = zeros(obj.maxContSamples, 1);                    % raw data
             obj.rawTrace = zeros(obj.maxContSamples, 1);                   % continuous voltage trace
             obj.filteredTrace = zeros(obj.maxContSamples, 1);              % filtered voltage trace
-            setLimits(obj, handles)
+            setLimits(obj, app, handles)
         end
 
         %% clearAll
@@ -80,10 +80,10 @@ classdef SRData < handle
         end
 
         %% setLimits -- used when plot scaling changes
-        function setLimits(obj, handles)
+        function setLimits(obj, app, handles)
             obj.samplesRead = 0;
             obj.spikeIndices = [];
-            obj.contSamples = obj.contMSPerDiv / 1000.0 * obj.sampleRateHz * obj.contTimeDivs;
+            obj.contSamples = app.contMSPerDiv / 1000.0 * obj.sampleRateHz * obj.contTimeDivs;
             vLimit = obj.vPerDiv * obj.vDivs / 2.0;
             threshV = get(handles.thresholdSlider, 'value');
             threshV = max(-vLimit * 0.9, min(vLimit * 0.9, threshV));
