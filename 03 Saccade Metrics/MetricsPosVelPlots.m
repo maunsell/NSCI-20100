@@ -21,18 +21,16 @@ classdef MetricsPosVelPlots < handle
       obj.velAxes = app.velAxes;
     end
     
-    function plotPosVel(obj, handles, app, startIndex, endIndex, mustPlot)
+    function plotPosVel(obj, app, startIndex, endIndex, mustPlot)
       %doPlot Updata all plots for EOG
       mustPlot = mustPlot || (mod(sum(app.numSummed), app.numOffsets) == 0);
-      posPlots(obj, handles, app, startIndex, endIndex, mustPlot);
-      velPlots(obj, handles, app, startIndex, endIndex, mustPlot);
-      %             drawnow;
+      posPlots(obj, app, startIndex, endIndex, mustPlot);
+      velPlots(obj, app, startIndex, endIndex, mustPlot);
     end
     
     %% posPlots: do the trial and average position plots
-    function posPlots(obj, handles, app, startIndex, endIndex, mustPlot)
-      data = handles.data;
-      saccades = handles.saccades;
+    function posPlots(obj, app, startIndex, endIndex, mustPlot)
+      saccades = app.saccades;
       timestepMS = 1000.0 / app.lbj.SampleRateHz;                   	% time interval of samples
       trialTimes = (0:1:size(app.posTrace, 1) - 1) * timestepMS;	% make array of trial time points
       saccadeTimes = (-(size(app.posAvg, 1) / 2):1:(size(app.posAvg,1) / 2) - 1) * timestepMS;
@@ -42,7 +40,7 @@ classdef MetricsPosVelPlots < handle
       plot(obj.posAxes, trialTimes, app.posTrace, 'color', colors(app.absStepIndex,:));
       if saccades.degPerV > 0                                     % plot saccade threshold
         hold(obj.posAxes, 'on');
-        thresholdV = saccades.thresholdDeg / saccades.degPerV * data.stepSign;
+        thresholdV = saccades.thresholdDeg / saccades.degPerV * app.stepSign;
         plot(obj.posAxes, [trialTimes(1) trialTimes(end)], [thresholdV, thresholdV], ...
           ':', 'color', colors(app.absStepIndex,:));
         hold(obj.posAxes, 'off');
@@ -76,8 +74,8 @@ classdef MetricsPosVelPlots < handle
           % if eye position has been calibrated, change the y scaling on the average to degrees
           % rather than volts
           if saccades.degPerV > 0
-            yTicks = [fliplr(-data.offsetsDeg(1:app.numOffsets/2)), 0, ...
-              data.offsetsDeg(1:app.numOffsets/2)] / saccades.degPerV;
+            yTicks = [fliplr(-app.offsetsDeg(1:app.numOffsets/2)), 0, ...
+              app.offsetsDeg(1:app.numOffsets/2)] / saccades.degPerV;
             yLabels = cell(length(yTicks), 1);
             for i = 1:length(yTicks)
               yLabels{i} = num2str(yTicks(i) * saccades.degPerV, '%.0f');
@@ -111,9 +109,8 @@ classdef MetricsPosVelPlots < handle
     end
     
     %% velPlots: do the trial and average velocity plots
-    function velPlots(obj, handles, app, startIndex, endIndex, mustPlot)
-      data = handles.data;
-      saccades = handles.saccades;
+    function velPlots(obj, app, startIndex, endIndex, mustPlot)
+      saccades = app.saccades;
       timestepMS = 1000.0 / app.lbj.SampleRateHz;                       	% time interval of samples
       trialTimes = (0:1:size(app.posTrace, 1) - 1) * timestepMS;     % make array of trial time points
       saccadeTimes = (-(size(app.posAvg, 1) / 2):1:(size(app.posAvg,1) / 2) - 1) * timestepMS;

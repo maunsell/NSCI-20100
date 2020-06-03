@@ -1,12 +1,12 @@
 classdef MetricsAmpDur < handle
   %MetricsAmpDur Handle saccade-duration data for EOG
-  %   Accumulates the data and handles the plot
+  %   Accumulates and plots amplitude-duration relationships
   
   properties
     ampLabels
 %     offsetsDeg
 %     numOffsets
-    fHandle
+%     fHandle
     lastN
     n
     reactTimesMS
@@ -30,7 +30,7 @@ classdef MetricsAmpDur < handle
       obj = obj@handle();
       
       %% Post Initialization %%
-      obj.fHandle = app.ampDurAxes;
+%       app.ampDurAxes = app.ampDurAxes;
 %       obj.sampleRateHz = sampleRate;
 %       obj.offsetsDeg = offsetList;
 %       obj.numOffsets = length(app.offsetsDeg);
@@ -44,10 +44,10 @@ classdef MetricsAmpDur < handle
     end
 
     %% addAmpDur
-    function addAmpDur(obj, app, offsetIndex, sIndex, eIndex)
+    function addAmpDur(obj, app, sIndex, eIndex)
       if sIndex > 0 && eIndex > 0
-        obj.n(offsetIndex) = obj.n(offsetIndex) + 1;
-        obj.reactTimesMS(obj.n(offsetIndex), offsetIndex) = (eIndex - sIndex) / app.lbj.SampleRateHz * 1000.0;
+        obj.n(app.offsetIndex) = obj.n(app.offsetIndex) + 1;
+        obj.reactTimesMS(obj.n(app.offsetIndex), app.offsetIndex) = (eIndex - sIndex) / app.lbj.SampleRateHz * 1000.0;
       end
     end
     
@@ -55,9 +55,9 @@ classdef MetricsAmpDur < handle
     function clearAll(obj, app)
       obj.n = zeros(1, app.numOffsets);
       obj.lastN = 0;
-      cla(obj.fHandle);
-      axis(obj.fHandle, [0 1 0 1]);
-%       text(0.05, 0.1, '5', 'parent', obj.fHandle, 'FontSize', 24, 'FontWeight', 'Bold');
+      cla(app.ampDurAxes);
+      axis(app.ampDurAxes, [0 1 0 1]);
+%       text(0.05, 0.1, '5', 'parent', app.ampDurAxes, 'FontSize', 24, 'FontWeight', 'Bold');
     end
     
     %% plotAmpDur
@@ -66,23 +66,23 @@ classdef MetricsAmpDur < handle
       if minN < 2 || minN == obj.lastN
         return;
       end
-      cla(obj.fHandle);
-      boxplot(obj.fHandle, obj.reactTimesMS(1:minN, :), 'labels', num2str(app.offsetsDeg(:)), ...
+      cla(app.ampDurAxes);
+      boxplot(app.ampDurAxes, obj.reactTimesMS(1:minN, :), 'labels', num2str(app.offsetsDeg(:)), ...
         'notch', 'on', 'whisker', 0, 'positions', app.offsetsDeg, 'symbol', '');
-      title(obj.fHandle, sprintf('Duration v. Amplitude (n\x2265%d)', app.blocksDone), 'FontSize', 12, 'FontWeight', 'Bold');
-      xlabel(obj.fHandle, 'Saccade Amplitude (deg)','FontSize',14);
-      ylabel(obj.fHandle, 'Saccade Duration (ms)','FontSize',14);
-      a = axis(obj.fHandle);
+      title(app.ampDurAxes, sprintf('Duration v. Amplitude (n\x2265%d)', app.blocksDone), 'FontSize', 12, 'FontWeight', 'Bold');
+      xlabel(app.ampDurAxes, 'Saccade Amplitude (deg)','FontSize',14);
+      ylabel(app.ampDurAxes, 'Saccade Duration (ms)','FontSize',14);
+      a = axis(app.ampDurAxes);
       medians = median(obj.reactTimesMS(1:minN, :));
       quartiles = prctile(obj.reactTimesMS(1:minN, :), [25 75]);
       [maxQ, indexMax] = max(max(quartiles));
 %       [minQ, indexMin] = min(min(quartiles));
-%       axis(obj.fHandle, [a(1), a(2), (medians(indexMin) - 2.0 * (medians(indexMin) - minQ))...
-      axis(obj.fHandle, [a(1), a(2), 0, medians(indexMax) + 2.0 * (maxQ - medians(indexMax))]);
-%       a = axis(obj.fHandle);
-%       text(a(1) + 0.05 * (a(2) - a(1)), 0.1 * (a(4) - a(3)) + a(3), '5', 'parent', obj.fHandle, 'FontSize', 24,...
+%       axis(app.ampDurAxes, [a(1), a(2), (medians(indexMin) - 2.0 * (medians(indexMin) - minQ))...
+      axis(app.ampDurAxes, [a(1), a(2), 0, medians(indexMax) + 2.0 * (maxQ - medians(indexMax))]);
+%       a = axis(app.ampDurAxes);
+%       text(a(1) + 0.05 * (a(2) - a(1)), 0.1 * (a(4) - a(3)) + a(3), '5', 'parent', app.ampDurAxes, 'FontSize', 24,...
 %         'FontWeight', 'Bold');
-      hold(obj.fHandle, 'off');
+      hold(app.ampDurAxes, 'off');
       obj.lastN = minN;
     end
   end

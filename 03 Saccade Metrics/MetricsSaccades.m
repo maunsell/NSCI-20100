@@ -34,14 +34,14 @@ classdef MetricsSaccades < handle
     end
     
     %% findSaccade: extract the saccade timing using speed threshold
-    function [sIndex, eIndex] = findSaccade(obj, data, app, posTrace, velTrace, stepSign, startIndex)
+    function [sIndex, eIndex] = findSaccade(obj, app, posTrace, velTrace, startIndex)
       %            calSamples = floor(data.prestimDurS * app.lbj.SampleRateHz);    % use preStim for calibration
       seqLength = 5;
       if app.calTrialsDone < 4                                    % still getting a calibration
-        if (stepSign == 1)
-          DPV = abs(data.offsetsDeg(data.offsetIndex) / (max(posTrace(:)) - mean(posTrace(1:startIndex))));
+        if (app.stepSign == 1)
+          DPV = abs(app.offsetsDeg(app.offsetIndex) / (max(posTrace(:)) - mean(posTrace(1:startIndex))));
         else
-          DPV = abs(data.offsetsDeg(data.offsetIndex) / (mean(posTrace(1:startIndex) - min(posTrace(:)))));
+          DPV = abs(app.offsetsDeg(app.offsetIndex) / (mean(posTrace(1:startIndex) - min(posTrace(:)))));
         end
         obj.degPerV = (obj.degPerV * app.calTrialsDone + DPV) / (app.calTrialsDone + 1);
         obj.degPerSPerV = obj.degPerV * app.lbj.SampleRateHz;      % needed for velocity plots
@@ -53,7 +53,7 @@ classdef MetricsSaccades < handle
       seq = 0;
       thresholdV = mean(posTrace(1:startIndex)) + obj.thresholdDeg / obj.degPerV;
       while (seq < seqLength && sIndex < length(posTrace))	% find the first sequence of seqLength > than threshold
-        if posTrace(sIndex) * stepSign < thresholdV
+        if posTrace(sIndex) * app.stepSign < thresholdV
           seq = 0;
         else
           seq = seq + 1;
@@ -67,7 +67,7 @@ classdef MetricsSaccades < handle
         maxIndex = sIndex;
         eIndex = sIndex;
         while seq < seqLength && eIndex < (length(posTrace) - 1)
-          if posTrace(eIndex + 1) * stepSign < maxPos * stepSign
+          if posTrace(eIndex + 1) * app.stepSign < maxPos * app.stepSign
             seq = seq + 1;
           else
             seq = 0;
@@ -84,7 +84,7 @@ classdef MetricsSaccades < handle
         % if we have found the start and end of a saccade, walk the start from the position threshold to the
         % point where velocity turned positive at the start of the saccade
         if eIndex > sIndex
-          while sIndex > startIndex && velTrace(sIndex - 1) * stepSign > 0
+          while sIndex > startIndex && velTrace(sIndex - 1) * app.stepSign > 0
             sIndex = sIndex - 1;
           end
         end
@@ -105,7 +105,7 @@ classdef MetricsSaccades < handle
     end
     
     %% processSignals: function to process data from one trial
-    function [startIndex, endIndex] = processSignals(obj, app, data)
+    function [startIndex, endIndex] = processSignals(obj, app)
       % remove the DC offset
       if ~app.testMode
         app.posTrace = app.rawData - mean(app.rawData(1:floor(app.lbj.SampleRateHz * app.prestimDurS)));
@@ -113,9 +113,9 @@ classdef MetricsSaccades < handle
         samples = length(app.posTrace);
         app.posTrace = zeros(samples, 1);
         accel = 0.01;
-        time = floor(sqrt(2.0 * abs(data.offsetsDeg(data.offsetIndex)) / 2.0 / accel));
+        time = floor(sqrt(2.0 * abs(app.offsetsDeg(app.offsetIndex)) / 2.0 / accel));
         positions = zeros(time * 2, 1);
-        accel = accel * data.stepSign;
+        accel = accel * app.stepSign;
         for t = 1:time
           positions(t) = 0.5 * accel * t^2;
         end
@@ -158,7 +158,7 @@ classdef MetricsSaccades < handle
       % find a saccade and make sure we have enough samples before and after its start
       %             sIndex = floor(app.stimTimeS * app.lbj.SampleRateHz);         % no saccades before stimon
       sIndex = floor(app.prestimDurS * app.lbj.SampleRateHz);
-      [startIndex, endIndex] = obj.findSaccade(data, app, app.posTrace, app.velTrace, data.stepSign, sIndex);
+      [startIndex, endIndex] = obj.findSaccade(app, app.posTrace, app.velTrace, sIndex);
       saccadeOffset = floor(app.saccadeSamples / 2);
       firstIndex = startIndex - saccadeOffset;
       lastIndex = startIndex + saccadeOffset;
@@ -170,25 +170,25 @@ classdef MetricsSaccades < handle
         return;
       end
       % sum into the average pos and vel plot, inverting for negative steps
-      app.posSummed(:, data.offsetIndex) = app.posSummed(:, data.offsetIndex) + ...
+      app.posSummed(:, app.offsetIndex) = app.posSummed(:, app.offsetIndex) + ...
         app.posTrace(firstIndex:lastIndex);
-      app.velSummed(:, data.offsetIndex) = app.velSummed(:, data.offsetIndex) + app.velTrace(firstIndex:lastIndex);
+      app.velSummed(:, app.offsetIndex) = app.velSummed(:, app.offsetIndex) + app.velTrace(firstIndex:lastIndex);
       % tally the sums and compute the averages
-      app.numSummed(data.offsetIndex) = app.numSummed(data.offsetIndex) + 1;
-      app.posAvg(:, data.offsetIndex) = app.posSummed(:, data.offsetIndex) / app.numSummed(data.offsetIndex);
-      app.velAvg(:, data.offsetIndex) = app.velSummed(:, data.offsetIndex) / app.numSummed(data.offsetIndex);
-      app.offsetsDone(data.offsetIndex) = app.offsetsDone(data.offsetIndex) + 1;
+      app.numSummed(app.offsetIndex) = app.numSummed(app.offsetIndex) + 1;
+      app.posAvg(:, app.offsetIndex) = app.posSummed(:, app.offsetIndex) / app.numSummed(app.offsetIndex);
+      app.velAvg(:, app.offsetIndex) = app.velSummed(:, app.offsetIndex) / app.numSummed(app.offsetIndex);
+      app.offsetsDone(app.offsetIndex) = app.offsetsDone(app.offsetIndex) + 1;
       % now that we've updated all the traces, compute the degrees per volt if we have enough trials
       % take average peaks to get each point
       if sum(app.numSummed) > length(app.numSummed)
         endPointsV = [max(app.posAvg(:, 1:app.numOffsets / 2)) ...
           min(app.posAvg(:, app.numOffsets / 2 + 1:app.numOffsets))];
-        obj.degPerV = mean(data.offsetsDeg ./ endPointsV);
+        obj.degPerV = mean(app.offsetsDeg ./ endPointsV);
         obj.degPerSPerV = obj.degPerV * app.lbj.SampleRateHz;          % needed for velocity plots
       end
       % find the average saccade duration using the average speed trace
-      [sAvgIndex, eAvgIndex] = obj.findSaccade(data, app, app.posAvg(:, data.offsetIndex), ...
-        app.velAvg(:, data.offsetIndex), data.stepSign, length(app.posAvg(:, data.offsetIndex)) / 2);
+      [sAvgIndex, eAvgIndex] = obj.findSaccade(app, app.posAvg(:, app.offsetIndex), ...
+        app.velAvg(:, app.offsetIndex), length(app.posAvg(:, app.offsetIndex)) / 2);
       if eAvgIndex > sAvgIndex
         app.saccadeDurS(app.absStepIndex) = (eAvgIndex - sAvgIndex) / app.lbj.SampleRateHz;
       else
