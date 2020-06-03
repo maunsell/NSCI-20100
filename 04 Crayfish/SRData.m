@@ -4,18 +4,18 @@ classdef SRData < handle
     
     properties
 %         contMSPerDiv;               % ms/division in continuous plot
-        contPlotRescale;            % flag for rescale needed on continuous plot
-        contSamples;                % number of samples in the continuous plot
-        contTimeDivs;               % number of time divisions in continuous plot
+%         contPlotRescale;            % flag for rescale needed on continuous plot
+%         contSamples;                % number of samples in the continuous plot
+%         contTimeDivs;               % number of time divisions in continuous plot
         fH;                         % pointer to GUI handles
         filter;                     % pointer to filter in use
         filters;                    % pointer to all the filters we have made
-        filteredTrace;              % filtered version of samples
-        inSpike;                    % flag showing that spike finding routine is in middle of a spike
-        lastSpikeIndex;             % index of last triggered spike
-        maxContSamples;             % allocate large buffers to avoid auto-lengthening.
-        rawData;                    % most recent raw snippet of sampled data
-        rawTrace;                   % raw version of samples
+%         filteredTrace;              % filtered version of samples
+%         inSpike;                    % flag showing that spike finding routine is in middle of a spike
+%         lastSpikeIndex;             % index of last triggered spike
+%         maxContSamples;             % allocate large buffers to avoid auto-lengthening.
+%         rawData;                    % most recent raw snippet of sampled data
+%         rawTrace;                   % raw version of samples
         sampleRateHz;               % sampling rate
         samplesRead;                % number of samples read in the continuous trace
         spikeIndices;               % indices for unplotted spikes in continuous trace
@@ -37,12 +37,12 @@ classdef SRData < handle
             obj.sampleRateHz = handles.lbj.SampleRateHz;
 %             contents = get(handles.contMSPerDivButton, 'string');
 %             obj.contMSPerDiv = str2double(contents{get(handles.contMSPerDivButton, 'Value')});
-            obj.contTimeDivs = 20;
-            contents = cellstr(get(handles.contMSPerDivButton,'String'));
-            maxMSPerDiv = str2double(contents{end});
-            obj.maxContSamples = obj.contTimeDivs * maxMSPerDiv / 1000.0 * obj.sampleRateHz;
+%             obj.contTimeDivs = 20;
+%             contents = cellstr(get(handles.contMSPerDivButton,'String'));
+%             maxMSPerDiv = str2double(contents{end});
+%             obj.maxContSamples = app.contTimeDivs * maxMSPerDiv / 1000.0 * obj.sampleRateHz;
             obj.vDivs = 6;
-            obj.contPlotRescale = false;
+%             obj.contPlotRescale = false;
             % make filters, usings the values in the filter menu
             filterStrings = get(handles.filterMenu, 'string');
             obj.filters = cell(length(filterStrings), 1);
@@ -56,22 +56,22 @@ classdef SRData < handle
             end
             selectFilter(obj);
             obj.stopAtTraceEnd = false;
-            obj.inSpike = false;
+%             obj.inSpike = false;
             obj.testMode = false;                                           % testMode is set in SR, not here
             obj.thresholdV = 1.0;
             obj.vPerDiv = 1.0;
-            obj.rawData = zeros(obj.maxContSamples, 1);                    % raw data
-            obj.rawTrace = zeros(obj.maxContSamples, 1);                   % continuous voltage trace
-            obj.filteredTrace = zeros(obj.maxContSamples, 1);              % filtered voltage trace
+%             obj.rawData = zeros(app.maxContSamples, 1);                    % raw data
+%             obj.rawTrace = zeros(app.maxContSamples, 1);                   % continuous voltage trace
+%             obj.filteredTrace = zeros(app.maxContSamples, 1);              % filtered voltage trace
             setLimits(obj, app, handles)
         end
 
         %% clearAll
-        function clearAll(obj)
+        function clearAll(obj, app)
             obj.spikeIndices = [];
-            obj.inSpike = false;
+            app.inSpike = false;
             obj.samplesRead = 0;
-            obj.lastSpikeIndex = 2 * obj.maxContSamples;                    % flag start with invalid index
+            app.lastSpikeIndex = 2 * app.maxContSamples;                    % flag start with invalid index
         end
         
         %% selectFilter -- used when filter selection changes
@@ -83,7 +83,7 @@ classdef SRData < handle
         function setLimits(obj, app, handles)
             obj.samplesRead = 0;
             obj.spikeIndices = [];
-            obj.contSamples = app.contMSPerDiv / 1000.0 * obj.sampleRateHz * obj.contTimeDivs;
+            app.contSamples = app.contMSPerDiv / 1000.0 * obj.sampleRateHz * app.contTimeDivs;
             vLimit = obj.vPerDiv * obj.vDivs / 2.0;
             threshV = get(handles.thresholdSlider, 'value');
             threshV = max(-vLimit * 0.9, min(vLimit * 0.9, threshV));

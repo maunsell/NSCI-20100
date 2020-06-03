@@ -161,7 +161,7 @@ classdef SRPlots < handle
             [1.0, 0.25, 0.25]);
           obj.singleSpikeDisplayed = true;
         end
-        plot(obj.vTrigAxes, 1:obj.triggerSamples, app.filteredTrace(startIndex:endIndex), 'b');
+        plot(obj.vTrigAxes, 1:obj.triggerSamples, data.filteredTrace(startIndex:endIndex), 'b');
         dirty = true;
         if obj.singleSpike
           data.spikeIndices = [];                 % single spike, throw out any remaining
