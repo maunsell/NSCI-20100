@@ -11,8 +11,8 @@ classdef SRPlots < handle
     triggerFraction
     triggerSamples
     triggerTraceDurS
-    vContAxes
-    vTrigAxes
+%     vContAxes
+%     vTrigAxes
   end
   
   methods
@@ -21,14 +21,14 @@ classdef SRPlots < handle
       obj = obj@handle();                                            % object initialization
       % continuous plot
       obj.samplesPlotted = 0;
-      obj.vContAxes = handles.axes1;
-      obj.vContAxes.XGrid = 'on';
-      obj.vContAxes.YGrid = 'on';
+%       app.vContAxes = handles.axes1;
+%       app.vContAxes.XGrid = 'on';
+%       app.vContAxes.YGrid = 'on';
       clearContPlot(obj, app, handles);
       % triggered plot
-      obj.vTrigAxes = handles.axes2;
-      obj.vTrigAxes.XGrid = 'on';
-      obj.vTrigAxes.YGrid = 'on';
+%       app.vTrigAxes = handles.axes2;
+%       app.vTrigAxes.XGrid = 'on';
+%       app.vTrigAxes.YGrid = 'on';
       obj.lastThresholdXPlotted = 0;
       obj.singleSpike = false;
       obj.singleSpikeDisplayed = false;
@@ -48,7 +48,6 @@ classdef SRPlots < handle
     
     %% clearContPlot -- clear the continuous trace plot
     function clearContPlot(obj, app, handles)
-      data = handles.data;
       obj.samplesPlotted = 0;
       obj.lastThresholdXPlotted = 0;
       maxV = app.vPerDiv * app.vDivs / 2;
@@ -57,12 +56,12 @@ classdef SRPlots < handle
       for t = 1:app.vDivs + 1
         yTickLabels{t} = sprintf('%.1f', (t - app.vDivs/2 - 1) * app.vPerDiv);
       end
-      hold(obj.vContAxes, 'off');
-      cla(obj.vContAxes);
-      axis(obj.vContAxes, [0, app.contSamples, -maxV, maxV]);
+      hold(app.vContAxes, 'off');
+      cla(app.vContAxes);
+      axis(app.vContAxes, [0, app.contSamples, -maxV, maxV]);
       % x axis setup
       samplePerDiv = app.contMSPerDiv / 1000.0 * app.lbj.SampleRateHz;
-      xticks(obj.vContAxes, 0:samplePerDiv:app.contTimeDivs * samplePerDiv);
+      xticks(app.vContAxes, 0:samplePerDiv:app.contTimeDivs * samplePerDiv);
       xTickLabels = cell(app.contTimeDivs, 1);
       for t = 1:app.contTimeDivs + 1
         if mod(t, 2)
@@ -73,23 +72,22 @@ classdef SRPlots < handle
           end
         end
       end
-      xticklabels(obj.vContAxes, xTickLabels);
+      xticklabels(app.vContAxes, xTickLabels);
       if app.contMSPerDiv <= 50
-        xlabel(obj.vContAxes, 'Time (ms)', 'FontSize', 14,'FontWeight','Bold');
+        xlabel(app.vContAxes, 'Time (ms)', 'FontSize', 14,'FontWeight','Bold');
       else
-        xlabel(obj.vContAxes, 'Time (s)' ,'FontSize', 14,'FontWeight','Bold');
+        xlabel(app.vContAxes, 'Time (s)' ,'FontSize', 14,'FontWeight','Bold');
       end
       % y axis
-      yticks(obj.vContAxes, -vLimit:app.vPerDiv:vLimit);
-      yticklabels(obj.vContAxes, yTickLabels);
-      ylabel(obj.vContAxes, 'Analog Input (V)','FontSize', 14, 'FontWeight','Bold');
-      hold(obj.vContAxes, 'on');
+      yticks(app.vContAxes, -vLimit:app.vPerDiv:vLimit);
+      yticklabels(app.vContAxes, yTickLabels);
+      ylabel(app.vContAxes, 'Analog Input (V)','FontSize', 14, 'FontWeight','Bold');
+      hold(app.vContAxes, 'on');
     end
     
     %% clearTriggerPlot -- clear the continuous trace plot
     function clearTriggerPlot(obj, app, handles)
-      data = handles.data;
-      theAxes = obj.vTrigAxes;
+      theAxes = app.vTrigAxes;
       % set up the triggered spike plot
       triggerMSPerDiv = obj.triggerTraceDurS * 1000.0 / obj.triggerDivisions;
       samplesPerDiv = triggerMSPerDiv / 1000.0 * app.lbj.SampleRateHz;
@@ -127,16 +125,15 @@ classdef SRPlots < handle
     %% plot the continuous and triggered spike waveforms
     function doPlot(obj, app, handles)
       dirty = false;
-      data = handles.data;
       % continuous trace
       startIndex = max(1, obj.samplesPlotted + 1);  	% start from previous plotted point
       endIndex = min(length(app.rawTrace), app.samplesRead);
       % save some CPU time by not plotting the treshold line every time
       if endIndex >= app.contSamples || endIndex - obj.lastThresholdXPlotted > app.lbj.SampleRateHz / 10
-        plot(obj.vContAxes, [obj.lastThresholdXPlotted, endIndex], [app.thresholdV, app.thresholdV], ...
+        plot(app.vContAxes, [obj.lastThresholdXPlotted, endIndex], [app.thresholdV, app.thresholdV], ...
           'color', [1.0, 0.25, 0.25]);
         obj.lastThresholdXPlotted = endIndex;
-        plot(obj.vContAxes, startIndex:endIndex, app.filteredTrace(startIndex:endIndex), 'b');
+        plot(app.vContAxes, startIndex:endIndex, app.filteredTrace(startIndex:endIndex), 'b');
         obj.samplesPlotted = endIndex;
         dirty = true;
       end
@@ -157,11 +154,11 @@ classdef SRPlots < handle
           break;
         end
         if ~obj.singleSpikeDisplayed
-          plot(obj.vTrigAxes, [1, obj.triggerSamples], [app.thresholdV, app.thresholdV], 'color', ...
+          plot(app.vTrigAxes, [1, obj.triggerSamples], [app.thresholdV, app.thresholdV], 'color', ...
             [1.0, 0.25, 0.25]);
           obj.singleSpikeDisplayed = true;
         end
-        plot(obj.vTrigAxes, 1:obj.triggerSamples, app.filteredTrace(startIndex:endIndex), 'b');
+        plot(app.vTrigAxes, 1:obj.triggerSamples, app.filteredTrace(startIndex:endIndex), 'b');
         dirty = true;
         if obj.singleSpike
           app.spikeIndices = [];                 % single spike, throw out any remaining

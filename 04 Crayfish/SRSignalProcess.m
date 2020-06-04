@@ -35,7 +35,7 @@ classdef SRSignalProcess < handle
     end
     
     %% addISI: add a spike time to the spike time array
-    function addISI(obj, app, data, spikeIndex)
+    function addISI(obj, app, spikeIndex)
       if app.lastSpikeIndex > app.maxContSamples      	% first spike, no ISI, just save this index
         app.lastSpikeIndex = spikeIndex;
         return;
@@ -52,9 +52,9 @@ classdef SRSignalProcess < handle
     end
     
     %% processSignals: function to process data from one trial
-    function processSignals(obj, app, data, old, new)
+    function processSignals(obj, app, old, new)
       app.rawTrace(old + 1:old + new) = app.rawData(old + 1:old + new);
-      app.filteredTrace(old + 1:old + new) = filter(data.filter, app.rawData(old + 1:old + new));
+      app.filteredTrace(old + 1:old + new) = filter(app.filter, app.rawData(old + 1:old + new));
       inIndex = old;                              % range to read from filtered trace
       inEndIndex = old + new;
       while inIndex < inEndIndex                         % output in chunk of audioBufferSize
@@ -98,14 +98,14 @@ classdef SRSignalProcess < handle
         % If we entered this call partway through a spike, we need to get rid of any trailing parts of the spike.
         % That tail will start at index 1, so we can just eliminate from sIndices all indices that are equal to
         % their own index
-        if app.inSpike                                     % we were part way through a spike before
+        if app.inSpike                                      % we were part way through a spike before
           for i = 1:length(sIndices)
             if sIndices(i) ~= i
-              app.inSpike = false;                   % clear the inSpike flag
+              app.inSpike = false;                          % clear the inSpike flag
               break;
             end
           end
-          if app.inSpike                                 % never got out of spike, return
+          if app.inSpike                                    % never got out of spike, return
             return;
           end
           sIndices = sIndices(i:end);
@@ -113,15 +113,15 @@ classdef SRSignalProcess < handle
         numSpikes = 1;                                      % we have one spike (at least)
         lastIndex = sIndices(1);                            % used to find gaps between spikes
         spikeIndices = lastIndex;                           % save the start of this spike
-        addISI(obj, app, data, sIndices(1));              	% add this spike to the ISIs
+        addISI(obj, app, sIndices(1));                      % add this spike to the ISIs
         if length(sIndices) > 1                             % for all the remaining indices...
           for i = 2:length(sIndices)
             if sIndices(i) > lastIndex + 1 && (sIndices(i) - lastIndex) > obj.fH.plots.triggerSamples
-              numSpikes = numSpikes + 1;              % it's a new spike
-              spikeIndices(numSpikes) = sIndices(i);  % record the index for this spike
-              addISI(obj, app, data, sIndices(i));   	% add this spike to the ISIs
+              numSpikes = numSpikes + 1;                    % it's a new spike
+              spikeIndices(numSpikes) = sIndices(i);        % record the index for this spike
+              addISI(obj, app, sIndices(i));                % add this spike to the ISIs
             end
-            lastIndex = sIndices(i);                    % used to find gaps between spikes
+            lastIndex = sIndices(i);                        % used to find gaps between spikes
           end
         end
         if sIndices(end) == new                             % end of new data in middle of a spike?
