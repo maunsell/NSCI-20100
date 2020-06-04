@@ -11,24 +11,13 @@ classdef SRPlots < handle
     triggerFraction
     triggerSamples
     triggerTraceDurS
-%     vContAxes
-%     vTrigAxes
   end
   
   methods
     %% Object Initialization %%
     function obj = SRPlots(app)
       obj = obj@handle();                                            % object initialization
-      % continuous plot
       obj.samplesPlotted = 0;
-%       app.vContAxes = handles.axes1;
-%       app.vContAxes.XGrid = 'on';
-%       app.vContAxes.YGrid = 'on';
-      clearContPlot(obj, app);
-      % triggered plot
-%       app.vTrigAxes = handles.axes2;
-%       app.vTrigAxes.XGrid = 'on';
-%       app.vTrigAxes.YGrid = 'on';
       obj.lastThresholdXPlotted = 0;
       obj.singleSpike = false;
       obj.singleSpikeDisplayed = false;
@@ -36,8 +25,7 @@ classdef SRPlots < handle
       obj.triggerFraction = 0.20;
       obj.triggerTraceDurS = 0.020;
       obj.triggerSamples = floor(obj.triggerTraceDurS * app.lbj.SampleRateHz);
-      
-      clearTriggerPlot(obj, app);
+      clearAll(obj, app);
     end
     
     %% clearAll -- clear all plots

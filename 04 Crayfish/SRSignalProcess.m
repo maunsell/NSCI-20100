@@ -40,7 +40,7 @@ classdef SRSignalProcess < handle
         app.lastSpikeIndex = spikeIndex;
         return;
       end
-      addISI(app.isiPlot, (spikeIndex - app.lastSpikeIndex) / app.lbj.SampleRateHz * 1000.0);
+      addISI(app.isiPlot, app, (spikeIndex - app.lastSpikeIndex) / app.lbj.SampleRateHz * 1000.0);
       app.lastSpikeIndex = spikeIndex;                   % update the reference index
     end
     
