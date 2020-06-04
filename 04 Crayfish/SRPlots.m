@@ -35,7 +35,7 @@ classdef SRPlots < handle
       obj.triggerDivisions = 10;
       obj.triggerFraction = 0.20;
       obj.triggerTraceDurS = 0.020;
-      obj.triggerSamples = floor(obj.triggerTraceDurS * handles.lbj.SampleRateHz);
+      obj.triggerSamples = floor(obj.triggerTraceDurS * app.lbj.SampleRateHz);
       
       clearTriggerPlot(obj, app, handles);
     end
@@ -61,7 +61,7 @@ classdef SRPlots < handle
       cla(obj.vContAxes);
       axis(obj.vContAxes, [0, app.contSamples, -maxV, maxV]);
       % x axis setup
-      samplePerDiv = app.contMSPerDiv / 1000.0 * data.sampleRateHz;
+      samplePerDiv = app.contMSPerDiv / 1000.0 * app.lbj.SampleRateHz;
       xticks(obj.vContAxes, 0:samplePerDiv:app.contTimeDivs * samplePerDiv);
       xTickLabels = cell(app.contTimeDivs, 1);
       for t = 1:app.contTimeDivs + 1
@@ -92,7 +92,7 @@ classdef SRPlots < handle
       theAxes = obj.vTrigAxes;
       % set up the triggered spike plot
       triggerMSPerDiv = obj.triggerTraceDurS * 1000.0 / obj.triggerDivisions;
-      samplesPerDiv = triggerMSPerDiv / 1000.0 * data.sampleRateHz;
+      samplesPerDiv = triggerMSPerDiv / 1000.0 * app.lbj.SampleRateHz;
       triggerSample = obj.triggerSamples * obj.triggerFraction + 1;
       triggerSampleOffset = mod(triggerSample - 1, samplesPerDiv);
       negTriggerDivisions = floor(obj.triggerDivisions * obj.triggerFraction) + 1;
@@ -130,9 +130,9 @@ classdef SRPlots < handle
       data = handles.data;
       % continuous trace
       startIndex = max(1, obj.samplesPlotted + 1);  	% start from previous plotted point
-      endIndex = min(length(app.rawTrace), data.samplesRead);
+      endIndex = min(length(app.rawTrace), app.samplesRead);
       % save some CPU time by not plotting the treshold line every time
-      if endIndex >= app.contSamples || endIndex - obj.lastThresholdXPlotted > data.sampleRateHz / 10
+      if endIndex >= app.contSamples || endIndex - obj.lastThresholdXPlotted > app.lbj.SampleRateHz / 10
         plot(obj.vContAxes, [obj.lastThresholdXPlotted, endIndex], [data.thresholdV, data.thresholdV], ...
           'color', [1.0, 0.25, 0.25]);
         obj.lastThresholdXPlotted = endIndex;
@@ -153,7 +153,7 @@ classdef SRPlots < handle
           data.spikeIndices(1) = [];
           continue;
         end
-        if endIndex > data.samplesRead              % haven't read all the samples yet, wait for next pass
+        if endIndex > app.samplesRead              % haven't read all the samples yet, wait for next pass
           break;
         end
         if ~obj.singleSpikeDisplayed

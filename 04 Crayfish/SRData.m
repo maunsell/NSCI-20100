@@ -16,8 +16,8 @@ classdef SRData < handle
 %         maxContSamples;             % allocate large buffers to avoid auto-lengthening.
 %         rawData;                    % most recent raw snippet of sampled data
 %         rawTrace;                   % raw version of samples
-        sampleRateHz;               % sampling rate
-        samplesRead;                % number of samples read in the continuous trace
+%         sampleRateHz;               % sampling rate
+%         samplesRead;                % number of samples read in the continuous trace
         spikeIndices;               % indices for unplotted spikes in continuous trace
         stopAtTraceEnd;                % flag for displaying a single continous trace
         thresholdV;                 % used by signals and plots
@@ -34,7 +34,7 @@ classdef SRData < handle
 
              % Post Initialization %%
             obj.fH = handles;
-            obj.sampleRateHz = handles.lbj.SampleRateHz;
+%             obj.sampleRateHz = handles.lbj.SampleRateHz;
 %             contents = get(handles.contMSPerDivButton, 'string');
 %             obj.contMSPerDiv = str2double(contents{get(handles.contMSPerDivButton, 'Value')});
 %             obj.contTimeDivs = 20;
@@ -48,8 +48,8 @@ classdef SRData < handle
             obj.filters = cell(length(filterStrings), 1);
             for f = 1:length(filterStrings)
                 cutOffHz = str2double(filterStrings{f});
-                filter = design(fdesign.highpass('Fst,Fp,Ast,Ap', 0.5 * cutOffHz / obj.sampleRateHz, ...
-                    2 * cutOffHz / obj.sampleRateHz, 60, 1), 'butter');
+                filter = design(fdesign.highpass('Fst,Fp,Ast,Ap', 0.5 * cutOffHz / app.lbj.SampleRateHz, ...
+                    2 * cutOffHz / app.lbj.SampleRateHz, 60, 1), 'butter');
                 filter.persistentmemory = true;         % piecemeal filtering of trace
                 filter.states = 1;                      % uses scalar expansion.
                 obj.filters{f} = filter;
@@ -68,9 +68,9 @@ classdef SRData < handle
 
         %% clearAll
         function clearAll(obj, app)
-            obj.spikeIndices = [];
+            app.spikeIndices = [];
             app.inSpike = false;
-            obj.samplesRead = 0;
+            app.samplesRead = 0;
             app.lastSpikeIndex = 2 * app.maxContSamples;                    % flag start with invalid index
         end
         
@@ -81,9 +81,9 @@ classdef SRData < handle
 
         %% setLimits -- used when plot scaling changes
         function setLimits(obj, app, handles)
-            obj.samplesRead = 0;
-            obj.spikeIndices = [];
-            app.contSamples = app.contMSPerDiv / 1000.0 * obj.sampleRateHz * app.contTimeDivs;
+            app.samplesRead = 0;
+            app.spikeIndices = [];
+            app.contSamples = app.contMSPerDiv / 1000.0 * app.lbj.SampleRateHz * app.contTimeDivs;
             vLimit = obj.vPerDiv * obj.vDivs / 2.0;
             threshV = get(handles.thresholdSlider, 'value');
             threshV = max(-vLimit * 0.9, min(vLimit * 0.9, threshV));
