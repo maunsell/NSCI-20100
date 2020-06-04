@@ -1,6 +1,6 @@
-function SRControlState(handles, state, except)
+function SRControlState(app, state, except)
       
-    controls = {handles.startButton, handles.clearButton, handles.savePlotsButton, handles.maxISIMenu};   
+    controls = {app.startButton, app.clearButton, app.savePlotsButton, app.maxISIMenu};   
     for c = 1:length(controls)
         skip = false;
         for e = 1:length(except)

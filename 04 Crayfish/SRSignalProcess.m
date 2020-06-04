@@ -7,15 +7,15 @@ classdef SRSignalProcess < handle
     audioMultiplier
     audioOutDevice
     audioOutIndex
-    fH
+%     fH
     outSampleRatio
   end
   
   methods
     %% Object Initialization %%
-    function obj = SRSignalProcess(handles, app)
+    function obj = SRSignalProcess(app)
       obj = obj@handle();                                            % object initialization
-      obj.fH = handles;
+%       obj.fH = handles;
       inSampleRateHz = app.lbj.SampleRateHz;
       obj.outSampleRatio = 1;
       outSampleRateHz = inSampleRateHz;
@@ -31,16 +31,16 @@ classdef SRSignalProcess < handle
       obj.audioOutIndex = 0;
       obj.audioOutDevice = audioDeviceWriter('SampleRate', outSampleRateHz, ...
         'SupportVariableSizeInput', true, 'BufferSize', obj.audioBufferSize);
-      setVolume(obj);
+      setVolume(obj, app);
     end
     
     %% addISI: add a spike time to the spike time array
-    function addISI(obj, app, spikeIndex)
+    function addISI(~, app, spikeIndex)
       if app.lastSpikeIndex > app.maxContSamples      	% first spike, no ISI, just save this index
         app.lastSpikeIndex = spikeIndex;
         return;
       end
-      addISI(obj.fH.isiPlot, (spikeIndex - app.lastSpikeIndex) / app.lbj.SampleRateHz * 1000.0);
+      addISI(app.isiPlot, (spikeIndex - app.lastSpikeIndex) / app.lbj.SampleRateHz * 1000.0);
       app.lastSpikeIndex = spikeIndex;                   % update the reference index
     end
     
@@ -116,7 +116,7 @@ classdef SRSignalProcess < handle
         addISI(obj, app, sIndices(1));                      % add this spike to the ISIs
         if length(sIndices) > 1                             % for all the remaining indices...
           for i = 2:length(sIndices)
-            if sIndices(i) > lastIndex + 1 && (sIndices(i) - lastIndex) > obj.fH.plots.triggerSamples
+            if sIndices(i) > lastIndex + 1 && (sIndices(i) - lastIndex) > app.tracePlots.triggerSamples
               numSpikes = numSpikes + 1;                    % it's a new spike
               spikeIndices(numSpikes) = sIndices(i);        % record the index for this spike
               addISI(obj, app, sIndices(i));                % add this spike to the ISIs
@@ -133,8 +133,8 @@ classdef SRSignalProcess < handle
     end
     
     %% setVolume -- set volume based on the volume slider
-    function setVolume(obj)
-      obj.audioMultiplier = 10^get(obj.fH.volumeSlider, 'value');
+    function setVolume(obj, app)
+      obj.audioMultiplier = 10^get(app.volumeSlider, 'value');
     end
   end
 end

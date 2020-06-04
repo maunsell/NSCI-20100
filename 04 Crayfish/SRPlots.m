@@ -17,14 +17,14 @@ classdef SRPlots < handle
   
   methods
     %% Object Initialization %%
-    function obj = SRPlots(handles, app)
+    function obj = SRPlots(app)
       obj = obj@handle();                                            % object initialization
       % continuous plot
       obj.samplesPlotted = 0;
 %       app.vContAxes = handles.axes1;
 %       app.vContAxes.XGrid = 'on';
 %       app.vContAxes.YGrid = 'on';
-      clearContPlot(obj, app, handles);
+      clearContPlot(obj, app);
       % triggered plot
 %       app.vTrigAxes = handles.axes2;
 %       app.vTrigAxes.XGrid = 'on';
@@ -37,17 +37,17 @@ classdef SRPlots < handle
       obj.triggerTraceDurS = 0.020;
       obj.triggerSamples = floor(obj.triggerTraceDurS * app.lbj.SampleRateHz);
       
-      clearTriggerPlot(obj, app, handles);
+      clearTriggerPlot(obj, app);
     end
     
     %% clearAll -- clear all plots
-    function clearAll(obj, app, handles)
-      clearContPlot(obj, app, handles);
-      clearTriggerPlot(obj, app, handles);
+    function clearAll(obj, app)
+      clearContPlot(obj, app);
+      clearTriggerPlot(obj, app);
     end
     
     %% clearContPlot -- clear the continuous trace plot
-    function clearContPlot(obj, app, handles)
+    function clearContPlot(obj, app)
       obj.samplesPlotted = 0;
       obj.lastThresholdXPlotted = 0;
       maxV = app.vPerDiv * app.vDivs / 2;
@@ -86,7 +86,7 @@ classdef SRPlots < handle
     end
     
     %% clearTriggerPlot -- clear the continuous trace plot
-    function clearTriggerPlot(obj, app, handles)
+    function clearTriggerPlot(obj, app)
       theAxes = app.vTrigAxes;
       % set up the triggered spike plot
       triggerMSPerDiv = obj.triggerTraceDurS * 1000.0 / obj.triggerDivisions;
@@ -123,7 +123,7 @@ classdef SRPlots < handle
     end
     
     %% plot the continuous and triggered spike waveforms
-    function doPlot(obj, app, handles)
+    function doPlot(obj, app)
       dirty = false;
       % continuous trace
       startIndex = max(1, obj.samplesPlotted + 1);  	% start from previous plotted point
