@@ -5,7 +5,7 @@ classdef SRPlots < handle
   properties
     lastThresholdXPlotted
     samplesPlotted
-    singleSpike
+%     singleSpike
     singleSpikeDisplayed
     triggerDivisions
     triggerFraction
@@ -19,7 +19,7 @@ classdef SRPlots < handle
       obj = obj@handle();                                            % object initialization
       obj.samplesPlotted = 0;
       obj.lastThresholdXPlotted = 0;
-      obj.singleSpike = false;
+%       obj.singleSpike = false;
       obj.singleSpikeDisplayed = false;
       obj.triggerDivisions = 10;
       obj.triggerFraction = 0.20;
@@ -126,7 +126,7 @@ classdef SRPlots < handle
         dirty = true;
       end
       % triggered spikes
-      if obj.singleSpike && obj.singleSpikeDisplayed        % in single spike mode and already displayed?
+      if app.singleSpikeCheckbox.Value && obj.singleSpikeDisplayed	% in single spike mode and already displayed?
         app.spikeIndices = [];                             %   then don't plot the spikes
         return;
       end
@@ -148,7 +148,7 @@ classdef SRPlots < handle
         end
         plot(app.vTrigAxes, 1:obj.triggerSamples, app.filteredTrace(startIndex:endIndex), 'b');
         dirty = true;
-        if obj.singleSpike
+        if app.singleSpikeCheckbox.Value
           app.spikeIndices = [];                 % single spike, throw out any remaining
         else
           app.spikeIndices(1) = [];              % delete this spike time
