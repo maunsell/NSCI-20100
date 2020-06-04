@@ -51,11 +51,11 @@ classdef SRPlots < handle
       data = handles.data;
       obj.samplesPlotted = 0;
       obj.lastThresholdXPlotted = 0;
-      maxV = data.vPerDiv * data.vDivs / 2;
-      vLimit = data.vDivs / 2 * data.vPerDiv;
-      yTickLabels = cell(data.vDivs, 1);
-      for t = 1:data.vDivs + 1
-        yTickLabels{t} = sprintf('%.1f', (t - data.vDivs/2 - 1) * data.vPerDiv);
+      maxV = app.vPerDiv * app.vDivs / 2;
+      vLimit = app.vDivs / 2 * app.vPerDiv;
+      yTickLabels = cell(app.vDivs, 1);
+      for t = 1:app.vDivs + 1
+        yTickLabels{t} = sprintf('%.1f', (t - app.vDivs/2 - 1) * app.vPerDiv);
       end
       hold(obj.vContAxes, 'off');
       cla(obj.vContAxes);
@@ -80,7 +80,7 @@ classdef SRPlots < handle
         xlabel(obj.vContAxes, 'Time (s)' ,'FontSize', 14,'FontWeight','Bold');
       end
       % y axis
-      yticks(obj.vContAxes, -vLimit:data.vPerDiv:vLimit);
+      yticks(obj.vContAxes, -vLimit:app.vPerDiv:vLimit);
       yticklabels(obj.vContAxes, yTickLabels);
       ylabel(obj.vContAxes, 'Analog Input (V)','FontSize', 14, 'FontWeight','Bold');
       hold(obj.vContAxes, 'on');
@@ -108,13 +108,13 @@ classdef SRPlots < handle
       xticklabels(theAxes, xTickLabels);
       xlabel(theAxes, 'Time (ms)', 'fontsize', 14, 'fontWeight', 'bold');
       % y axis
-      maxV = data.vPerDiv * data.vDivs / 2;
-      vLimit = data.vDivs / 2 * data.vPerDiv;
-      yTickLabels = cell(data.vDivs, 1);
-      for t = 1:data.vDivs + 1
-        yTickLabels{t} = sprintf('%.1f', (t - data.vDivs/2 - 1) * data.vPerDiv);
+      maxV = app.vPerDiv * app.vDivs / 2;
+      vLimit = app.vDivs / 2 * app.vPerDiv;
+      yTickLabels = cell(app.vDivs, 1);
+      for t = 1:app.vDivs + 1
+        yTickLabels{t} = sprintf('%.1f', (t - app.vDivs/2 - 1) * app.vPerDiv);
       end
-      yticks(theAxes, -vLimit:data.vPerDiv:vLimit);
+      yticks(theAxes, -vLimit:app.vPerDiv:vLimit);
       yticklabels(theAxes, yTickLabels);
       theAxes.YGrid = 'on';
       ylabel(theAxes, 'Analog Input (V)', 'fontSize', 14, 'fontWeight', 'bold');
@@ -133,7 +133,7 @@ classdef SRPlots < handle
       endIndex = min(length(app.rawTrace), app.samplesRead);
       % save some CPU time by not plotting the treshold line every time
       if endIndex >= app.contSamples || endIndex - obj.lastThresholdXPlotted > app.lbj.SampleRateHz / 10
-        plot(obj.vContAxes, [obj.lastThresholdXPlotted, endIndex], [data.thresholdV, data.thresholdV], ...
+        plot(obj.vContAxes, [obj.lastThresholdXPlotted, endIndex], [app.thresholdV, app.thresholdV], ...
           'color', [1.0, 0.25, 0.25]);
         obj.lastThresholdXPlotted = endIndex;
         plot(obj.vContAxes, startIndex:endIndex, app.filteredTrace(startIndex:endIndex), 'b');
@@ -142,31 +142,31 @@ classdef SRPlots < handle
       end
       % triggered spikes
       if obj.singleSpike && obj.singleSpikeDisplayed        % in single spike mode and already displayed?
-        data.spikeIndices = [];                             %   then don't plot the spikes
+        app.spikeIndices = [];                             %   then don't plot the spikes
         return;
       end
-      while ~isempty(data.spikeIndices)
-        spikeIndex = data.spikeIndices(1);
+      while ~isempty(app.spikeIndices)
+        spikeIndex = app.spikeIndices(1);
         startIndex = floor(spikeIndex - obj.triggerSamples * obj.triggerFraction);
         endIndex = startIndex + obj.triggerSamples - 1;
         if startIndex < 1 || endIndex > app.contSamples  % spike too close to sweep ends, skip it
-          data.spikeIndices(1) = [];
+          app.spikeIndices(1) = [];
           continue;
         end
         if endIndex > app.samplesRead              % haven't read all the samples yet, wait for next pass
           break;
         end
         if ~obj.singleSpikeDisplayed
-          plot(obj.vTrigAxes, [1, obj.triggerSamples], [data.thresholdV, data.thresholdV], 'color', ...
+          plot(obj.vTrigAxes, [1, obj.triggerSamples], [app.thresholdV, app.thresholdV], 'color', ...
             [1.0, 0.25, 0.25]);
           obj.singleSpikeDisplayed = true;
         end
         plot(obj.vTrigAxes, 1:obj.triggerSamples, app.filteredTrace(startIndex:endIndex), 'b');
         dirty = true;
         if obj.singleSpike
-          data.spikeIndices = [];                 % single spike, throw out any remaining
+          app.spikeIndices = [];                 % single spike, throw out any remaining
         else
-          data.spikeIndices(1) = [];              % delete this spike time
+          app.spikeIndices(1) = [];              % delete this spike time
         end
       end
       if dirty

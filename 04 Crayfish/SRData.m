@@ -18,12 +18,12 @@ classdef SRData < handle
 %         rawTrace;                   % raw version of samples
 %         sampleRateHz;               % sampling rate
 %         samplesRead;                % number of samples read in the continuous trace
-        spikeIndices;               % indices for unplotted spikes in continuous trace
-        stopAtTraceEnd;                % flag for displaying a single continous trace
-        thresholdV;                 % used by signals and plots
-        testMode;                   % flag for testing mode
-        vDivs;                      % number of voltage (y) divisions
-        vPerDiv;                    % volts per division
+%         spikeIndices;               % indices for unplotted spikes in continuous trace
+%         stopAtTraceEnd;                % flag for displaying a single continous trace
+%         thresholdV;                 % used by signals and plots
+%         testMode;                   % flag for testing mode
+%         vDivs;                      % number of voltage (y) divisions
+%         vPerDiv;                    % volts per division
     end
     
     methods
@@ -41,7 +41,7 @@ classdef SRData < handle
 %             contents = cellstr(get(handles.contMSPerDivButton,'String'));
 %             maxMSPerDiv = str2double(contents{end});
 %             obj.maxContSamples = app.contTimeDivs * maxMSPerDiv / 1000.0 * obj.sampleRateHz;
-            obj.vDivs = 6;
+%             obj.vDivs = 6;
 %             obj.contPlotRescale = false;
             % make filters, usings the values in the filter menu
             filterStrings = get(handles.filterMenu, 'string');
@@ -55,11 +55,11 @@ classdef SRData < handle
                 obj.filters{f} = filter;
             end
             selectFilter(obj);
-            obj.stopAtTraceEnd = false;
+%             obj.stopAtTraceEnd = false;
 %             obj.inSpike = false;
-            obj.testMode = false;                                           % testMode is set in SR, not here
-            obj.thresholdV = 1.0;
-            obj.vPerDiv = 1.0;
+%             obj.testMode = false;                                           % testMode is set in SR, not here
+%             obj.thresholdV = 1.0;
+%             obj.vPerDiv = 1.0;
 %             obj.rawData = zeros(app.maxContSamples, 1);                    % raw data
 %             obj.rawTrace = zeros(app.maxContSamples, 1);                   % continuous voltage trace
 %             obj.filteredTrace = zeros(app.maxContSamples, 1);              % filtered voltage trace
@@ -84,11 +84,11 @@ classdef SRData < handle
             app.samplesRead = 0;
             app.spikeIndices = [];
             app.contSamples = app.contMSPerDiv / 1000.0 * app.lbj.SampleRateHz * app.contTimeDivs;
-            vLimit = obj.vPerDiv * obj.vDivs / 2.0;
+            vLimit = app.vPerDiv * app.vDivs / 2.0;
             threshV = get(handles.thresholdSlider, 'value');
             threshV = max(-vLimit * 0.9, min(vLimit * 0.9, threshV));
             set(handles.thresholdSlider, 'value', threshV);
-            obj.thresholdV = threshV;
+            app.thresholdV = threshV;
             set(handles.thresholdSlider, 'max', vLimit);
             set(handles.thresholdSlider, 'min', -vLimit);
         end

@@ -87,10 +87,10 @@ classdef SRSignalProcess < handle
       end
       
       % Find spikes
-      if data.thresholdV >= 0
-        sIndices = find(app.filteredTrace(old + 1:old + new) > data.thresholdV);
+      if app.thresholdV >= 0
+        sIndices = find(app.filteredTrace(old + 1:old + new) > app.thresholdV);
       else
-        sIndices = find(app.filteredTrace(old + 1:old + new) < data.thresholdV);
+        sIndices = find(app.filteredTrace(old + 1:old + new) < app.thresholdV);
       end
       if isempty(sIndices)                                    % nothing above threshold
         app.inSpike = false;                               % clear the inSpike flag
