@@ -1,0 +1,77 @@
+<deployment-project plugin="plugin.apptool" plugin-version="1.0">
+  <configuration build-checksum="341015415" file="/Users/labuser/Desktop/NSCI-20100 Code/01 Contrast Thresholds/contrastThresholds.prj" location="/Users/labuser/Desktop/NSCI-20100 Code/01 Contrast Thresholds" name="contrastThresholds" target="target.mlapps" target-name="Package App">
+    <param.appname>contrastThresholds</param.appname>
+    <param.authnamewatermark>John Maunsell</param.authnamewatermark>
+    <param.email>maunsell@uchicago.edu</param.email>
+    <param.company>University of Chicago</param.company>
+    <param.icon />
+    <param.icons />
+    <param.summary>Contrast increment detection threshold measurement</param.summary>
+    <param.description />
+    <param.screenshot>/private/var/folders/83/52yh8r912xqgrjtfm7qwmch00000gp/T/tp5b93946a_65f1_489d_8883_54e2afc850ab.png</param.screenshot>
+    <param.version>1.0</param.version>
+    <param.products.name />
+    <param.products.id />
+    <param.products.version />
+    <param.platforms />
+    <param.output>${PROJECT_ROOT}</param.output>
+    <param.guid>ef2d2bcc-d16e-4651-bb67-173a5b01d450</param.guid>
+    <unset>
+      <param.icon />
+      <param.icons />
+      <param.description />
+      <param.version />
+      <param.products.name />
+      <param.products.id />
+      <param.products.version />
+      <param.platforms />
+      <param.output />
+    </unset>
+    <fileset.main>
+      <file>${PROJECT_ROOT}/contrastThresholds.mlapp</file>
+    </fileset.main>
+    <fileset.depfun>
+      <file>/Users/labuser/Desktop/NSCI-20100 Code/00 Common Code/backupFile.m</file>
+      <file>/Users/labuser/Desktop/NSCI-20100 Code/00 Common Code/savePlot.m</file>
+      <file>/Users/labuser/Desktop/NSCI-20100 Code/00 Common Code/saveTable.m</file>
+      <file>${PROJECT_ROOT}/ctControlState.m</file>
+      <file>${PROJECT_ROOT}/ctDrawHitRates.m</file>
+      <file>${PROJECT_ROOT}/ctDrawStatusText.m</file>
+      <file>${PROJECT_ROOT}/ctStimuli.m</file>
+      <file>${PROJECT_ROOT}/ctTaskController.m</file>
+      <file>${PROJECT_ROOT}/ctTaskState.m</file>
+    </fileset.depfun>
+    <fileset.resources />
+    <fileset.package />
+    <build-deliverables>
+      <file location="/Users/labuser/Desktop/NSCI-20100 Code" name="01 Contrast Thresholds" optional="false">/Users/labuser/Desktop/NSCI-20100 Code/01 Contrast Thresholds</file>
+    </build-deliverables>
+    <workflow />
+    <matlab>
+      <root>/Applications/MATLAB_R2019a.app</root>
+      <toolboxes>
+        <toolbox name="neuralnetwork" />
+      </toolboxes>
+      <toolbox>
+        <neuralnetwork>
+          <enabled>true</enabled>
+        </neuralnetwork>
+      </toolbox>
+    </matlab>
+    <platform>
+      <unix>true</unix>
+      <mac>true</mac>
+      <windows>false</windows>
+      <win2k>false</win2k>
+      <winxp>false</winxp>
+      <vista>false</vista>
+      <linux>false</linux>
+      <solaris>false</solaris>
+      <osver>10.12.6</osver>
+      <os32>false</os32>
+      <os64>true</os64>
+      <arch>maci64</arch>
+      <matlab>true</matlab>
+    </platform>
+  </configuration>
+</deployment-project>

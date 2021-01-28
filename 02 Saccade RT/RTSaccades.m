@@ -28,35 +28,55 @@ methods
   end
   
   %% clearAll
-  function clearAll(obj, app)
+  function clearAll(obj, ~)
     obj.degPerV = 0;
     obj.degPerSPerV = 0;
   end
 
   %% fakeDataTrace
   function posTrace = fakeDataTrace(~, app)
-    fprintf('fakeDataTrace 0\n');
-    samples = length(app.posTrace);
+    samples = length(app.posTrace);               % samples in the fake eye position trace
     posTrace = zeros(samples, 1);
-    accel = 0.01;
-    time = floor(sqrt(2.0 * app.stepSizeDeg / 2.0 / accel));
-    positions = zeros(time * 2, 1);
-    accel = accel * app.stepDirection;
-    fprintf('fakeDataTrace 1\n');
-    for t = 1:time
+    accel = 0.01;                                 % acceleration/deceleration of saccade
+    time = floor(sqrt(2.0 * app.stepSizeDeg / 2.0 / accel));  % number of accel/decel samples
+    positions = zeros(time * 2, 1);               % positions during the saccade
+    accel = accel * app.stepDirection;            % sign of acceleration (left or right)
+    for t = 1:time                                % load the positions during the acceleartion
       positions(t) = 0.5 * accel * t^2;
     end
-    for t = 1:time
+    for t = 1:time                                % load the positions during the deceleration (second half)
       positions(time + t) = positions(time) + accel * time * t - 0.5 * accel * t^2;
     end
-    fprintf('fakeDataTrace 2\n');
-    preStimSamples = floor((app.targetTimeS + 0.095 + 0.005 * app.trialType) * app.lbj.SampleRateHz);
+    % We make gamma distributions of saccade delays, with means of 170, 210 and 275.  For all of these
+    % the shape parameter is 9.  To get a SD of 1/3 the mean, the scale parameters are set as shown.
+    % the mean of the gamma is shape*scale, the SD is sqrt(shape) * scale.  
+    % The shape is (mean/SD)^2, the scale is mean/shape
+    switch app.trialType
+      case {0, 1}             % gap condition -- mean 170 SD 57
+%         pShape = 9.0;
+%         pScale = 18.8;
+        pShape = 18.06;
+        pScale = 9.41;
+      case 2                  % step condition -- mean 210 SD 70
+        pShape = 9.0;
+        pScale = 23.3;
+      case 3                  % overlap condition -- mean 250 SD 120
+        pShape = 4.34;
+        pScale = 57.6;
+    end
+    while true                % get a random saccade latency longer than 100 ms
+     offsetMS = gamrnd(pShape, pScale);
+     preStimSamples = floor((app.targetTimeS + offsetMS / 1000.0) * app.lbj.SampleRateHz);
+     if offsetMS > 100 && preStimSamples + length(positions) <= length(posTrace)
+        break;
+      end
+    end
+    
     posTrace(preStimSamples + 1:preStimSamples + length(positions)) = positions;
     for i = preStimSamples + length(positions) + 1:length(posTrace)
       posTrace(i) = positions(time * 2);
     end
     % make the trace decay to zero
-    fprintf('fakeDataTrace 3\n');
     decayTrace = zeros(samples, 1);
     decayValue = mean(posTrace(1:floor(app.lbj.SampleRateHz * 0.250)));
     multiplier = 1.0 / (0.250 * app.lbj.SampleRateHz);                % tau of 250 ms
@@ -65,14 +85,12 @@ methods
       decayValue = decayValue * (1.0 - multiplier) + posTrace(i) * multiplier;
     end
     % add random noise
-    fprintf('fakeDataTrace 4\n');
     posTrace = posTrace - decayTrace + 2.0 * rand(size(posTrace)) - 1.0;
     % smooth with a boxcar to take out the highest frequencies
     filterSamples = max(1, floor(app.lbj.SampleRateHz * 10.0 / 1000.0));
     b = (1 / filterSamples) * ones(1, filterSamples);
     posTrace = filter(b, 1, posTrace);
     % add 60Hz noise
-    fprintf('fakeDataTrace 5\n');
     dt = 1 / app.lbj.SampleRateHz;               	% seconds per sample
     t = (0:dt:samples * dt - dt)';              % seconds
     posTrace = posTrace + cos(2.0 * pi * 60 * t) * 0.25;
@@ -185,7 +203,7 @@ methods
       startIndex = 0;
       return
     end
-    % sum into the average pos and vel plot, inverting for negative steps
+   % sum into the average pos and vel plot, inverting for negative steps
     app.posSummed = app.posSummed + app.posTrace(firstIndex:lastIndex) * app.stepDirection;
     app.velSummed = app.velSummed + app.velTrace(firstIndex:lastIndex) * app.stepDirection;
     % tally the sums and compute the averages

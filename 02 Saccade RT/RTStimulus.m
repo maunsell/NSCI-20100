@@ -127,9 +127,11 @@ classdef RTStimulus < handle
       end
       obj.images{app.kTestStim} = ones(obj.windRectPix(4), obj.stepSizePix, 'uint8'); % test image (white rect)
       % update the image position values.
-      obj.numPos = floor(obj.windRectPix(3) / obj.stepSizePix);
-      obj.numPos = obj.numPos - (1 - mod(obj.numPos, 2)); % numPos must be odd
-      centerIndex = ceil(obj.numPos / 2);
+%       obj.numPos = floor(obj.windRectPix(3) / obj.stepSizePix);
+%       obj.numPos = obj.numPos - (1 - mod(obj.numPos, 2)); % numPos must be odd
+      obj.numPos = floor(obj.windRectPix(3) / 2 / obj.stepSizePix);   % number of full steps left or right of center
+      centerIndex = obj.numPos + 1;                          % index for the center position
+      obj.numPos = obj.numPos * 2 + 1;                       % numPos must be odd
       obj.imagePosPix = zeros(1, obj.numPos);
       obj.imagePosPix(centerIndex) = floor(obj.windRectPix(3) / 2 - 0.5 * obj.stepSizePix);
       for p = 1:floor(obj.numPos / 2)

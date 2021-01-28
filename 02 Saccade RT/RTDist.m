@@ -5,10 +5,13 @@ classdef RTDist < handle
   properties
     ampLabel
     fHandle
-    index;
-    maxRT;
+    index
+    maxRT
     n
+    pValue
+    stepsN
     reactTimesMS
+    stepTimesMS
   end
   properties (Constant)
     titles = {'Gap', 'Step', 'Overlap'};
@@ -22,6 +25,7 @@ classdef RTDist < handle
       obj.fHandle = axes;
       obj.ampLabel = sprintf('%.0f', 25.3);
       obj.reactTimesMS = zeros(1, 10000);             	 % preallocate a generous buffer
+      obj.stepTimesMS = zeros(1, 10000);                 % preallocate a generous buffer
       clearAll(obj, app);
     end
 
@@ -32,8 +36,9 @@ classdef RTDist < handle
     end
 
     %% clearAll -- clear all the buffers
-    function clearAll(obj, app)
+    function clearAll(obj, ~)
       obj.n = 0;
+      obj.stepsN = 0;
       obj.maxRT = 0;
       cla(obj.fHandle, 'reset');                        % clear the figures
       setupPlot(obj);
@@ -52,6 +57,12 @@ classdef RTDist < handle
       plotY = plotY - 0.03;
     end
 
+    %% stepTimesMS -- accept the RT values for the step distribution    
+    function loadStepTimesMS(obj, reactMS, n)
+      obj.stepTimesMS(1:n) = reactMS(1:n);
+      obj.stepsN = n;
+    end
+    
     %% plot -- plot all the distributions
     function rescale = doPlots(obj)
       rescale = 0;
@@ -77,7 +88,7 @@ classdef RTDist < handle
       axis(obj.fHandle, a);
       meanRT = mean(obj.reactTimesMS(1:obj.n));           % mean RT
       stdRT = std(obj.reactTimesMS(1:obj.n));             % std for RT
-      displayText = {sprintf('n = %.0f', obj.n), sprintf('Mean = %.0f', meanRT), sprintf('SD = %.0f', stdRT)};
+      displayText = {sprintf('n = %.0f, mean = %.0f', obj.n, meanRT), sprintf('SD = %.0f', stdRT)};
       if obj.n > 10
         sem = stdRT / sqrt(obj.n);
         ci = sem * 1.96;
@@ -85,9 +96,13 @@ classdef RTDist < handle
         [displayText, plotY] = doOneInterval(obj, meanRT, stdRT, '±1 SD:', displayText, plotY);
         [displayText, plotY] = doOneInterval(obj, meanRT, sem, '±1 SEM:', displayText, plotY);
         [displayText, ~] = doOneInterval(obj, meanRT, ci, '95% CI:', displayText, plotY);
+        if obj.stepsN > 10
+          [~, obj.pValue] = ttest2(obj.reactTimesMS(1:obj.n), obj.stepTimesMS(1:obj.stepsN));
+          displayText{length(displayText) + 1} = sprintf('t-test v. steps:\n         p=%.4f\n', obj.pValue);
+        end
       end
       plot(obj.fHandle, [meanRT meanRT], [a(3) a(4)], 'k:');
-      text(0.05 * a(2), 0.95 * a(4), displayText, 'verticalAlignment', 'top', 'parent', obj.fHandle);
+      text(0.6 * a(2), 0.98 * a(4), displayText, 'verticalAlignment', 'top', 'parent', obj.fHandle);
       hold(obj.fHandle, 'off');
     end
 
@@ -97,9 +112,7 @@ classdef RTDist < handle
       if a(2) ~= newMaxRT                                 % new x limit, announce new limit
         obj.maxRT = newMaxRT;
         hold(obj.fHandle, 'on');
-        fprintf(' rescale max %f; %f %f %f %f\n', newMaxRT, a(1), a(2), a(3), a(4));
         a(2) = newMaxRT;
-        fprintf(' rescale max %f; %f %f %f %f\n', newMaxRT, a(1), a(2), a(3), a(4));
         axis(obj.fHandle, a);
         hold(obj.fHandle, 'off');
       end

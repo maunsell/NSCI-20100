@@ -16,15 +16,16 @@ properties (GetAccess = private)
   windowRectPix
 end
 properties (Constant)
-	degPerRadian = 57.2958;
+  degPerRadian = 57.2958;
   fixSpotRadiusPix = 4;
   gaborFreqPix = 35;
   gaborOriDeg = 0;
   gaborPhaseDeg = 90.0;
-	gaborRadiusPix = 100;
+  gaborRadiusPix = 100;
   gaborSigmaPix = 20;
   gaborThetaDeg = 0.0;
-	windMarginPix = 10;
+  mmPerInch = 25.40;
+  windMarginPix = 10;
   windSidePix = 600;
 end
 methods
@@ -45,7 +46,7 @@ methods
     set(obj.hFig, 'menubar', 'none', 'toolbar', 'none', 'numberTitle', 'off', 'resize', 'off');
     set(obj.hFig, 'color', [0.5, 0.5, 0.5], 'name', 'NSCI 20100 Contrast Thresholds');
     axis off;
-    obj.pixPerMM = java.awt.Toolkit.getDefaultToolkit().getScreenResolution() / RTConstants.mmPerInch;
+    obj.pixPerMM = java.awt.Toolkit.getDefaultToolkit().getScreenResolution() / obj.mmPerInch;
     obj.frameDurS = 0.016666;  % System() call to xrandr?
     clearScreen(obj);
     set(obj.hFig, 'visible', 'on');
