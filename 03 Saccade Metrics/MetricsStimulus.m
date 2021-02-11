@@ -33,7 +33,7 @@ classdef MetricsStimulus < handle
         dockPix = 75;
         windHeightPix = 60;
         screenRectPix = get(0, 'MonitorPositions');   	% get the size of the primary screen
-        windWidthPix = screenRectPix(3) - 2 * obj.marginPix;
+        windWidthPix = screenRectPix(1, 3) - 2 * obj.marginPix;
         obj.windRectPix = [obj.marginPix, obj.marginPix + dockPix, windWidthPix, windHeightPix];
         obj.hFig = figure('Renderer', 'painters', 'Position', obj.windRectPix);
         set(obj.hFig, 'menubar', 'none', 'toolbar', 'none', 'numberTitle', 'off', 'resize', 'off');

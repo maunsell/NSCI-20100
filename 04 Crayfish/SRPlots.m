@@ -5,7 +5,6 @@ classdef SRPlots < handle
   properties
     lastThresholdXPlotted
     samplesPlotted
-%     singleSpike
     singleSpikeDisplayed
     triggerDivisions
     triggerFraction

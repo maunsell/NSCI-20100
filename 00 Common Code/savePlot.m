@@ -10,9 +10,15 @@ function timeString = savePlot(axesToSave, folderPath, appString, formatString, 
   
   %exportgraphics(axesToSave, filePath, 'resolution', 300);
   
-  % Workaround until BSLC gets Matlab 2020a
+  % Workaround until BSLC gets Matlab 2020a, which has exportgraphics().
   
     % Create a temporary figure with axes.
+%   pos = axesToSave.OuterPosition;
+%   xInc = 500;
+%   yInc = 500;
+%   pos(3) = pos(3) + xInc;
+%   pos(4) = pos(4) + yInc;
+%   fig = figure('Position', pos);
   fig = figure;
   fig.Visible = 'off';
   figAxes = axes(fig);
@@ -26,9 +32,22 @@ function timeString = savePlot(axesToSave, folderPath, appString, formatString, 
   figAxes.YScale = axesToSave.YScale;
   figAxes.GridLineStyle = axesToSave.GridLineStyle;
   figAxes.Units = axesToSave.Units;
+  
+  
+%   figAxes.OuterPosition = axesToSave.OuterPosition;
+%   figAxes.InnerPosition = axesToSave.InnerPosition;
+%   
+%   
   figAxes.Position = axesToSave.Position;
+%   figAxes.Position(2) = 0;
+%   figAxes.Position(1) = 0;
+% 
   figAxes.Position(2) = 75;
-  figAxes.Position(1) = 0;
+  if axesToSave.Position(3) < 800
+    figAxes.Position(1) = 0;
+  else
+    figAxes.Position(1) = 0;
+  end
     
   figAxes.XTick = axesToSave.XTick;
   figAxes.XTickLabel = axesToSave.XTickLabel;
@@ -46,12 +65,10 @@ function timeString = savePlot(axesToSave, folderPath, appString, formatString, 
 
   
   figAxes.DataAspectRatio = axesToSave.DataAspectRatio;
-  % Save as png and fig files.
-  saveas(fig, filePath, 'png');
-  % savefig(fig, fileName);
-  % Delete the temporary figure.
-  delete(fig);
-
-  backupFile(filePath, '~/Desktop', '~/Documents/Respository');
+  
+  saveas(fig, filePath, 'png');     % save is png
+  % savefig(fig, fileName);         % save as fig
+  delete(fig);                      % delete the temporary figure.
+  backupFile(filePath, '~/Desktop', '~/Documents/Respository');     % save backup in repository directory
 end
   
