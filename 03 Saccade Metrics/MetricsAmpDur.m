@@ -10,7 +10,6 @@ classdef MetricsAmpDur < handle
   end
   
   methods
-    
     function obj = MetricsAmpDur(app)      
       %% Object Initialization %%
       % Call superclass constructor before accessing object
@@ -45,9 +44,10 @@ classdef MetricsAmpDur < handle
     end
     
     %% plotAmpDur
-    function plotAmpDur(obj, app)
+    function refresh = plotAmpDur(obj, app)
       minN = min(obj.n);
-      if minN < 2 || minN == obj.lastN
+      refresh = minN >= 2 && minN > obj.lastN;
+      if ~refresh
         return;
       end
       cla(app.ampDurAxes);
@@ -63,6 +63,35 @@ classdef MetricsAmpDur < handle
       axis(app.ampDurAxes, [a(1), a(2), 0, medians(indexMax) + 2.0 * (maxQ - medians(indexMax))]);
       hold(app.ampDurAxes, 'off');
       obj.lastN = minN;
+    end 
+
+    %% writeAmpDurData
+    % return a cell array suitable for creating an Excel spreadsheet reporting the ampDur statistics
+    function writeAmpDurData(obj, app, timeString)
+      minN = min(obj.n);
+      if minN < 3
+        return;
+      end
+      if nargin < 3
+        timeString = datestr(now, 'mmm-dd-HHMMSS');
+      end
+      c = cell(app.numOffsets + 1, 6);
+      [c{1, :}] = deal('Amp. (deg)', 'Samples', 'Dur. Median (ms)', 'Dur. Median 95% CI (ms)', ...
+        '25th Percentile Dur.', '75th Percentile Dur.');
+      for offset = 1:app.numOffsets
+        sortRT = sort(obj.reactTimesMS(1:minN, offset));
+        percentiles = prctile(sortRT, [50, 25, 75]);
+        stat = 1.96 * sqrt(minN) * 0.5;
+        c{offset + 1, 1} = app.offsetsDeg(offset);
+        c{offset + 1, 2} =  obj.n(offset);
+        c{offset + 1, 3} =  percentiles(1);
+        c{offset + 1, 4} =  sprintf('%.1f-%.1f', sortRT(ceil(0.5 * minN + [-stat, stat])));
+        c{offset + 1, 5} =  percentiles(2);
+        c{offset + 1, 6} =  percentiles(3);
+      end
+      filePath = fullfile('~/Desktop/MetricsData/AmpDur', ['MT-', timeString, '.xlsx']);
+      writecell(c, filePath, 'writeMode', 'replacefile', 'autoFitWidth', 1);
+      backupFile(filePath, '~/Desktop', '~/Documents/Respository');     % save backup in repository directory
     end
   end
 end

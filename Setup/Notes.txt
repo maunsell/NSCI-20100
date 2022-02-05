@@ -1,7 +1,3 @@
-Things to do:
-
-Need a script to launch without a big Matlab window.
-
 ============================
 
 Helpful notes about the code:
@@ -14,6 +10,11 @@ data for the entire app.  It, and most handles, are accessible through "handles"
 
 ============================
 Read the Install Instruction to get information on adding Exodriver and UsbLib to the Macs. 
+
+
+============================
+
+I don't believe any of the following is relevant:
 
 Because I am using an old version of Matlab(?), I had to do the following:
 
@@ -51,7 +52,7 @@ typedef char16_t CHAR16_T;
 typedef char16_t CHAR16_T;
 #elif defined(_MSC_VER)
 
-Apprantly my version of Matlab 2013a wasn't using C++11.
+Apparently my version of Matlab 2013a wasn't using C++11.
 
 
 

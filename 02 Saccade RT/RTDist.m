@@ -1,7 +1,7 @@
 classdef RTDist < handle
-  % RTAmpDur -- Handle saccade-duration data for RT
-  %   Accumulates the data and handles plotting RT panels in the GUI
-
+  % RTDist -- Handle saccade-duration data for RT
+  %   Accumulates the data and handles plotting RT panels in the GUI for
+  %   one condition (Step or Gap)
   properties
     ampLabel
     fHandle
@@ -9,12 +9,12 @@ classdef RTDist < handle
     maxRT
     n
     pValue
-    stepsN
     reactTimesMS
-    stepTimesMS
+    stepN                     % N transferred from step condition (for t-test)
+    stepReactMS                 % RTs transferred from step condition (for t-test)
   end
   properties (Constant)
-    titles = {'Gap', 'Step', 'Overlap'};
+    titles = {'Gap', 'Step'};
   end
 
   methods
@@ -25,7 +25,7 @@ classdef RTDist < handle
       obj.fHandle = axes;
       obj.ampLabel = sprintf('%.0f', 25.3);
       obj.reactTimesMS = zeros(1, 10000);             	 % preallocate a generous buffer
-      obj.stepTimesMS = zeros(1, 10000);                 % preallocate a generous buffer
+      obj.stepReactMS = zeros(1, 10000);                 % preallocate a generous buffer
       clearAll(obj, app);
     end
 
@@ -38,7 +38,7 @@ classdef RTDist < handle
     %% clearAll -- clear all the buffers
     function clearAll(obj, ~)
       obj.n = 0;
-      obj.stepsN = 0;
+      obj.stepN = 0;
       obj.maxRT = 0;
       cla(obj.fHandle, 'reset');                        % clear the figures
       setupPlot(obj);
@@ -46,7 +46,6 @@ classdef RTDist < handle
 
     %% doOneInterval -- plot the length of one confidence interval, and update the text to display
     function [displayText, plotY] = doOneInterval(obj, meanRT, value, valueStr, displayText, plotY)
-      
       precision = value < 2.0;
       a = axis(obj.fHandle);
       colors = get(obj.fHandle, 'colorOrder');            % get the colors for the different plots
@@ -57,12 +56,12 @@ classdef RTDist < handle
       plotY = plotY - 0.03;
     end
 
-    %% stepTimesMS -- accept the RT values for the step distribution    
+    %% stepTimesMS -- accept the RT values for the step distribution
     function loadStepTimesMS(obj, reactMS, n)
-      obj.stepTimesMS(1:n) = reactMS(1:n);
-      obj.stepsN = n;
+      obj.stepReactMS(1:n) = reactMS(1:n);
+      obj.stepN = n;
     end
-    
+
     %% plot -- plot all the distributions
     function rescale = doPlots(obj)
       rescale = 0;
@@ -70,7 +69,6 @@ classdef RTDist < handle
         return
       end
       colors = get(obj.fHandle, 'colorOrder');            % get the colors for the different plots
-%       hold(obj.fHandle, 'off');
       cla(obj.fHandle, 'reset');
       h = histogram(obj.fHandle, obj.reactTimesMS(1:obj.n), 'facecolor', colors(obj.index,:));
       set(obj.fHandle, 'tickDir', 'out');
@@ -88,22 +86,35 @@ classdef RTDist < handle
       axis(obj.fHandle, a);
       meanRT = mean(obj.reactTimesMS(1:obj.n));           % mean RT
       stdRT = std(obj.reactTimesMS(1:obj.n));             % std for RT
-      displayText = {sprintf('n = %.0f, mean = %.0f', obj.n, meanRT), sprintf('SD = %.0f', stdRT)};
-      if obj.n > 10
+      displayText = {sprintf('n = %.0f, mean = %.0f', obj.n, meanRT)};
+      if obj.n <= 10
+        displayText{length(displayText) + 1} = sprintf('SD = %.0f', stdRT);
+      else
         sem = stdRT / sqrt(obj.n);
-        ci = sem * 1.96;
-        plotY = 0.95;
-        [displayText, plotY] = doOneInterval(obj, meanRT, stdRT, '±1 SD:', displayText, plotY);
-        [displayText, plotY] = doOneInterval(obj, meanRT, sem, '±1 SEM:', displayText, plotY);
-        [displayText, ~] = doOneInterval(obj, meanRT, ci, '95% CI:', displayText, plotY);
-        if obj.stepsN > 10
-          [~, obj.pValue] = ttest2(obj.reactTimesMS(1:obj.n), obj.stepTimesMS(1:obj.stepsN));
-          displayText{length(displayText) + 1} = sprintf('t-test v. steps:\n         p=%.4f\n', obj.pValue);
+        displayText{length(displayText) + 1} = sprintf('SD = %.0f, SEM = %0.*f', stdRT, ...
+          displayPrecision(obj, sem), sem);
+%         ci = sem * 1.96;
+%         plotY = 0.95;
+%         [displayText, plotY] = doOneInterval(obj, meanRT, stdRT, '±1 SD:', displayText, plotY);
+%         [displayText, plotY] = doOneInterval(obj, meanRT, sem, '±1 SEM:', displayText, plotY);
+%         [displayText, ~] = doOneInterval(obj, meanRT, ci, '95% CI:', displayText, plotY);
+        if obj.stepN > 10
+          [~, obj.pValue] = ttest2(obj.stepReactMS(1:obj.stepN), obj.reactTimesMS(1:obj.n), 'tail', 'right');
+          displayText{length(displayText) + 1} = sprintf('t-test: p=%.3g\n', obj.pValue);
         end
       end
       plot(obj.fHandle, [meanRT meanRT], [a(3) a(4)], 'k:');
       text(0.6 * a(2), 0.98 * a(4), displayText, 'verticalAlignment', 'top', 'parent', obj.fHandle);
       hold(obj.fHandle, 'off');
+    end
+    
+    %% precision -- find the correct display precision for a value
+    function p = displayPrecision(~, value)
+      if value < 20
+        p = 2 - ceil(log10(value / 2));
+      else
+        p = 0;
+      end
     end
 
     %% rescale -- rescale the plots
@@ -117,11 +128,11 @@ classdef RTDist < handle
         hold(obj.fHandle, 'off');
       end
     end
-      
+
     %% setupPlot -- prepare a blank plot
     function setupPlot(obj)
       title(obj.fHandle, sprintf('%s Condition', obj.titles{obj.index}), 'fontSize', 12, 'fontWeight', 'bold');
-      if (obj.index == 3)                                 % label the bottom plot
+      if (obj.index == 2)                                 % label the bottom plot
         xlabel(obj.fHandle, 'Reaction Time (ms)', 'fontSize', 14);
       end
     end

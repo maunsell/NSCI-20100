@@ -53,8 +53,6 @@ methods
     % The shape is (mean/SD)^2, the scale is mean/shape
     switch app.trialType
       case {0, 1}             % gap condition -- mean 170 SD 57
-%         pShape = 9.0;
-%         pScale = 18.8;
         pShape = 18.06;
         pScale = 9.41;
       case 2                  % step condition -- mean 210 SD 70
@@ -99,7 +97,7 @@ methods
   %% findSaccade: extract the saccade timing using speed threshold
   function [sIndex, eIndex] = findSaccade(obj, app, posTrace, stepSign, startIndex)
     if app.taskMode == app.kTiming
-      stepSign = -1;                                      % photodiode always driven negative
+      stepSign = -1;                                        % photodiode always driven negative
     end
     if app.calTrialsDone < 4                              	% still getting a calibration
       if (stepSign == 1)

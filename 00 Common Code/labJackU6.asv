@@ -162,7 +162,7 @@ classdef labJackU6 < handle
 		% LabJack Exodriver mfilename (for compiled applications)
 		Exodriver_mfilename = 'Exodriver';        
 		% level of messages 
-		verbose = 1; % can't bring myself to use capital V here
+		verbose = 2; % can't bring myself to use capital V here
         % resolution level (0-8 is 16-bit, 9-12 is 24-bit)
         ResolutionADC = 0;
         % desired sample rate for Analog Input
@@ -618,7 +618,7 @@ classdef labJackU6 < handle
                     fprintf(1, 'LJU6/startStream: Stopped ongoing stream\n'); 
                     startStream(obj);
                   else
-                    fprintf(1, 'LJU6/startStream: Failed to stop ongoing stream (%d)\n', errorCode);
+                    fprintf(1, 'LJU6/startStream: Fail ongoing stream (%d)\n', errorCode);
                   end                
                 end
             end     
