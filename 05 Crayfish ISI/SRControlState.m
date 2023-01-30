@@ -1,8 +1,6 @@
-function MetricsControlState(app, state, except)
+function SRControlState(app, state, except)
       
-    controls = {app.startButton, app.clearButton, app.savePlotsButton, app.stopAfterText, ...
-            app.saveDataButton, app.loadDataButton, app.viewDistanceText, app.thresholdDegText};
-        
+    controls = {app.startButton, app.clearButton, app.maxISIMenu, app.savePlotsButton, app.stopAfterText};   
     for c = 1:length(controls)
         skip = false;
         for e = 1:length(except)
@@ -15,5 +13,5 @@ function MetricsControlState(app, state, except)
             set(controls{c}, 'enable', state);
         end
     end
-    drawnow;
+    drawnow limitrate nocallbacks;
 end

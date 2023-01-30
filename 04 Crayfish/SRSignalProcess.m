@@ -7,15 +7,25 @@ classdef SRSignalProcess < handle
     audioMultiplier
     audioOutDevice
     audioOutIndex
-%     fH
+    displaySamples
+    fakeSpike             % profile of a fakeSpike
+    fakeSpikeDrift        % drift in fake spike rate 
+    lastProcessed         % last sample processed
+    lastSpikeIndex        % index of last spike time processed
+    lastSpikeTimeMS
+    longCount
+    longStartTimeMS
+    nextFakeSpikeSample
     outSampleRatio
+    shortCount
+    shortStartTimeMS
+    tracesRead
   end
   
   methods
     %% Object Initialization %%
     function obj = SRSignalProcess(app)
       obj = obj@handle();                                            % object initialization
-%       obj.fH = handles;
       inSampleRateHz = app.lbj.SampleRateHz;
       obj.outSampleRatio = 1;
       outSampleRateHz = inSampleRateHz;
@@ -31,35 +41,100 @@ classdef SRSignalProcess < handle
       obj.audioOutIndex = 0;
       obj.audioOutDevice = audioDeviceWriter('SampleRate', outSampleRateHz, ...
         'SupportVariableSizeInput', true, 'BufferSize', obj.audioBufferSize);
+      makeFakeSpike(obj, app);
       setVolume(obj, app);
+      clearAll(obj, app);
     end
     
-    %% addISI: add a spike time to the spike time array
-    function addISI(~, app, spikeIndex)
-      if app.lastSpikeIndex > app.maxContSamples      	% first spike, no ISI, just save this index
-        app.lastSpikeIndex = spikeIndex;
+    % addISI: add a spike time to the spike time array
+    % note that obj.lastSpikeIndex is maintained relative to the end of the
+    % last read, and will frequently be negative. 
+    function addISI(obj, app, spikeIndex)
+      if obj.lastSpikeIndex > app.maxContSamples      	% first spike, no ISI, just save this index
+        obj.lastSpikeIndex = spikeIndex;
         return;
       end
-      addISI(app.isiPlot, app, (spikeIndex - app.lastSpikeIndex) / app.lbj.SampleRateHz * 1000.0);
-      app.lastSpikeIndex = spikeIndex;                   % update the reference index
+      if ~atCountLimit(app)
+        addISI(app.isiPlot, app, (spikeIndex - obj.lastSpikeIndex) / app.lbj.SampleRateHz * 1000.0);
+        obj.lastSpikeIndex = spikeIndex;                   % update the reference index
+      end
     end
     
-    %% clearAll: clear buffers and release audio output hardware
+    % addSpikeTime: add a spike time to the long and short window counts.
+    % We need to keep track of time across trace cycles. For this we use
+    % tracesRead
+    function addSpikeTime(obj, app, spikeIndex)
+      if atCountLimit(app)
+        return;
+      end
+      spikeTimeMS = (obj.lastProcessed + spikeIndex + obj.tracesRead * app.contSamples) / app.lbj.SampleRateHz * 1000.0;
+      obj.lastSpikeTimeMS = spikeTimeMS;
+      while spikeTimeMS > obj.shortStartTimeMS + app.shortWindowMS
+        addShortCount(app.countPlot, app, obj.shortCount);
+        obj.shortCount = 0;
+        obj.shortStartTimeMS = obj.shortStartTimeMS + app.shortWindowMS;
+      end
+      obj.shortCount = obj.shortCount + 1;
+      while spikeTimeMS > obj.longStartTimeMS + app.longWindowMS
+        addLongCount(app.countPlot, app, obj.longCount);
+        obj.longCount = 0;
+        obj.longStartTimeMS = obj.longStartTimeMS + app.longWindowMS;
+      end
+      obj.longCount = obj.longCount + 1;
+    end
+
+    % clearAll: clear buffers and release audio output hardware
     function clearAll(obj, app)
-      release(obj.audioOutDevice);
       obj.audioOutIndex = 0;
+      obj.lastProcessed = 0;
+      obj.lastSpikeTimeMS = 0;
+      obj.longCount = 0;
+      obj.longStartTimeMS = 0;
+      obj.lastSpikeIndex = 2 * app.maxContSamples;              % flag start of ISI sequence
+      obj.nextFakeSpikeSample = floor(app.lbj.SampleRateHz / app.fakeSpikeRateHz);
+      obj.fakeSpikeDrift = randn() * 0.0002;
+      obj.shortCount = 0;
+      obj.shortStartTimeMS = 0;
+      obj.tracesRead = 0;
       app.inSpike = false;
     end
     
-    %% processSignals: function to process data from one trial
-    function processSignals(obj, app, old, new)
-      app.rawTrace(old + 1:old + new) = app.rawData(old + 1:old + new);
-      app.filteredTrace(old + 1:old + new) = filter(app.filter, app.rawData(old + 1:old + new));
-      inIndex = old;                              % range to read from filtered trace
-      inEndIndex = old + new;
-      while inIndex < inEndIndex                         % output in chunk of audioBufferSize
-        inNum = min(inEndIndex - inIndex, ...
-          (obj.audioBufferSize - obj.audioOutIndex) / obj.outSampleRatio);
+    % insertFakeSpikes: replace the rawData with synthetic data
+    function insertFakeSpikes(obj, app)
+      app.rawData(obj.lastProcessed + 1:app.samplesRead) = zeros(1, app.samplesRead - obj.lastProcessed);
+      while obj.nextFakeSpikeSample < app.samplesRead
+        endSample = obj.nextFakeSpikeSample + length(obj.fakeSpike) - 1;
+        app.rawData(obj.nextFakeSpikeSample:endSample) = obj.fakeSpike;
+        app.samplesRead = max(app.samplesRead, endSample);
+        obj.nextFakeSpikeSample = obj.nextFakeSpikeSample + ...
+                  floor(app.lbj.SampleRateHz / app.fakeSpikeRateHz * (1 + randn() * 0.15));
+        app.fakeSpikeRateHz = max(1.0, min(35, app.fakeSpikeRateHz * (1 + obj.fakeSpikeDrift)));
+      end
+    end
+
+    % makeFakeSpike: make a trace with a spike profile for test mode
+    function makeFakeSpike(obj, app)
+      spikeDurMS = 5;
+      templateSampleRateKHz = 10;
+      templateSamples = spikeDurMS * templateSampleRateKHz;
+      templateSpike = zeros(1, templateSamples);
+      templateSpike(1:templateSamples) = [2, 5, 15, 25, 35, 50, 65, 75, 85, 98, ...
+                100, 90, 75, 60, 45, 30, 15, 5, 0, -5, ...
+                -10, -13, -15, -17, -18, -19, -19, -19, -18, -17, ...
+                -16, -15, -14, -13, -12, -11, -10, -9, -8, -7, ...
+                -6, -5, -4, -4, -3, -3, -2, -2, -1, -1];
+      spikeSamples = spikeDurMS * app.lbj.SampleRateHz / 1000;
+      peakV = app.vPerDiv * app.vDivs / 2 * 0.75;
+      obj.fakeSpike = decimate(templateSpike, length(templateSpike) / spikeSamples) * peakV / 100;
+    end
+
+    % outputAudio: output the audio signal
+    function outputAudio(obj, app)
+      inIndex = obj.lastProcessed + 1;                    % range to read from filtered trace
+      inEndIndex = app.samplesRead;
+      % output to audio output in chunks of audioBufferSize
+      while inIndex < inEndIndex
+        inNum = min(inEndIndex - inIndex, (obj.audioBufferSize - obj.audioOutIndex) / obj.outSampleRatio);
         ptr = obj.audioOutIndex + 1;
         for i = inIndex + 1:inIndex + inNum
           for rep = 1:obj.outSampleRatio
@@ -69,12 +144,13 @@ classdef SRSignalProcess < handle
         end
         if obj.audioOutIndex + inNum * obj.outSampleRatio == obj.audioBufferSize
           try                                         % full buffer, send to audio output
-            underrun = obj.audioOutDevice(obj.audioBuffer);
-            if underrun ~= 0
-              fprintf('Audio underrun (%d samples)\n', underrun / obj.outSampleRatio);
-            end
+            obj.audioOutDevice(obj.audioBuffer);
+%             underrun = obj.audioOutDevice(obj.audioBuffer);
+%             if underrun ~= 0
+%               fprintf('Audio underrun (%d samples)\n', underrun / obj.outSampleRatio);
+%             end
           catch
-            fprintf('error trying to output to audioOutDevice');
+            fprintf('error trying to output to audioOutDevice\n');
           end
           obj.audioOutIndex = 0;                      % start a new buffer
         else
@@ -85,15 +161,24 @@ classdef SRSignalProcess < handle
         end
         inIndex = inIndex + inNum;
       end
-      
+    end
+
+    %% processSignals: function to process data from one trial
+    function overRun = processSignals(obj, app)
+      if app.testMode
+        insertFakeSpikes(obj, app);
+      end
+      app.filteredTrace(obj.lastProcessed + 1:app.samplesRead) = ...
+                            filter(app.filter, app.rawData(obj.lastProcessed + 1:app.samplesRead));
+      outputAudio(obj, app);
       % Find spikes
       if app.thresholdV >= 0
-        sIndices = find(app.filteredTrace(old + 1:old + new) > app.thresholdV);
+        sIndices = find(app.filteredTrace(obj.lastProcessed + 1:app.samplesRead) > app.thresholdV);
       else
-        sIndices = find(app.filteredTrace(old + 1:old + new) < app.thresholdV);
+        sIndices = find(app.filteredTrace(obj.lastProcessed + 1:app.samplesRead) < app.thresholdV);
       end
-      if isempty(sIndices)                                    % nothing above threshold
-        app.inSpike = false;                               % clear the inSpike flag
+      if isempty(sIndices)                                  % nothing above threshold
+        app.inSpike = false;                                % clear the inSpike flag
       else
         % If we entered this call partway through a spike, we need to get rid of any trailing parts of the spike.
         % That tail will start at index 1, so we can just eliminate from sIndices all indices that are equal to
@@ -108,28 +193,42 @@ classdef SRSignalProcess < handle
           if app.inSpike                                    % never got out of spike, return
             return;
           end
-          sIndices = sIndices(i:end);
+          sIndices = sIndices(i:end);                       % work with >thresholds past any spike tail
         end
-        numSpikes = 1;                                      % we have one spike (at least)
+        % Process newly detected spikes
+        numSpikes = 1;                                      % we have at least one spike
         lastIndex = sIndices(1);                            % used to find gaps between spikes
         spikeIndices = lastIndex;                           % save the start of this spike
         addISI(obj, app, sIndices(1));                      % add this spike to the ISIs
+        addSpikeTime(obj, app, sIndices(1));
         if length(sIndices) > 1                             % for all the remaining indices...
           for i = 2:length(sIndices)
-            if sIndices(i) > lastIndex + 1 && (sIndices(i) - lastIndex) > app.tracePlots.triggerSamples
+            if sIndices(i) > lastIndex + 1 && (sIndices(i) - lastIndex) > app.spikePlots.triggerSamples
               numSpikes = numSpikes + 1;                    % it's a new spike
               spikeIndices(numSpikes) = sIndices(i);        % record the index for this spike
               addISI(obj, app, sIndices(i));                % add this spike to the ISIs
+              addSpikeTime(obj, app, sIndices(i));
             end
             lastIndex = sIndices(i);                        % used to find gaps between spikes
           end
         end
-        if sIndices(end) == new                             % end of new data in middle of a spike?
+        if sIndices(end) == app.samplesRead - obj.lastProcessed % end of new data in middle of a spike?
           app.inSpike = true;
         end
-        app.spikeIndices = [app.spikeIndices, spikeIndices + old]; % add new spikes to the list of spikes
+        app.spikeIndices = [app.spikeIndices, spikeIndices + obj.lastProcessed]; % add new spikes to the list of spikes
       end
-      app.lastSpikeIndex = app.lastSpikeIndex - new;        % save index for computing ISIs
+      obj.lastSpikeIndex = obj.lastSpikeIndex - (app.samplesRead - obj.lastProcessed);
+      % check whether we've run past the end of the continuous display
+      overRun = app.samplesRead - app.contSamples;
+      if overRun > 0
+        app.rawData(1:overRun) = app.rawData(app.contSamples + 1:app.samplesRead);
+        app.filteredTrace(1:overRun) = app.filteredTrace(app.contSamples + 1:app.samplesRead);
+        app.spikeIndices = app.spikeIndices - app.contSamples;
+        obj.nextFakeSpikeSample = obj.nextFakeSpikeSample - app.contSamples;
+        app.samplesRead = overRun;
+        obj.tracesRead = obj.tracesRead + 1;
+      end
+      obj.lastProcessed = app.samplesRead;
     end
     
     %% setVolume -- set volume based on the volume slider

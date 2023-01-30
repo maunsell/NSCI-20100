@@ -61,7 +61,6 @@ classdef MetricsPosVelPlots < handle
           % set both plots to the same y scale
           a3 = axis(obj.posAvgAxes);
           yLim = max(abs(a3(3:4)));
-          %                     text(-112, 0.8 * yLim, '2', 'parent', obj.posAvgAxes, 'FontSize', 24, 'FontWeight', 'Bold');
           axis(obj.posAvgAxes, [-inf inf -yLim yLim]);
           hold(obj.posAvgAxes, 'on');
           % averages are always aligned on onset, so draw a vertical line at that point
@@ -118,9 +117,11 @@ classdef MetricsPosVelPlots < handle
       % plot the trial velocity trace
       cla(obj.velAxes);
       plot(obj.velAxes, trialTimes, app.velTrace, 'color', colors(app.absStepIndex,:));
-      a = axis(obj.velAxes);                                              % center vel plot vertically
-      yLim = max(abs(a(3)), abs(a(4)));
-      axis(obj.velAxes, [-inf inf -yLim yLim]);
+      a1 = axis(obj.velAxes);                                              % center vel plot vertically
+      yLim = max(abs(a1(3)), abs(a1(4)));
+      if yLim < 1000
+        axis(obj.velAxes, [-inf inf -yLim yLim]);
+      end
       title(obj.velAxes, 'Most recent velocity trace', 'FontSize',12,'FontWeight','Bold');
       ylabel(obj.velAxes,'Analog Input (dV/dt)','FontSize',14);
       xlabel(obj.velAxes,'Time (ms)','FontSize',14);
@@ -138,12 +139,12 @@ classdef MetricsPosVelPlots < handle
           ylabel(obj.velAvgAxes,'Analog Input (dV/dt)', 'FontSize', 14);
           xlabel(obj.velAvgAxes,'Time (ms)','FontSize', 14);
           % put both plots on the same y scale
-          a1 = axis(obj.velAxes);
           a2 = axis(obj.velAvgAxes);
           yLim = max([abs(a1(3)), abs(a1(4)), abs(a2(3)), abs(a2(4))]);
-          %                     text(-112, 0.8 * yLim, '4', 'parent', obj.velAvgAxes, 'FontSize', 24, 'FontWeight', 'Bold');
-          axis(obj.velAxes, [-inf inf -yLim yLim]);
-          axis(obj.velAvgAxes, [-inf inf -yLim yLim]);
+          if yLim < 1000
+            axis(obj.velAxes, [-inf inf -yLim yLim]);
+            axis(obj.velAvgAxes, [-inf inf -yLim yLim]);
+          end
           % averages are always aligned on onset, so draw a vertical line at that point
           hold(obj.velAvgAxes, 'on');
           plot(obj.velAvgAxes, [0 0], [-yLim yLim], 'color', 'k', 'linestyle', ':');
@@ -172,8 +173,6 @@ classdef MetricsPosVelPlots < handle
         end
       end
       a1 = axis(obj.velAxes);
-      %             text(trialTimes(1) + 0.05 * (trialTimes(end) - trialTimes(1)), ...
-      %                 a1(3) + 0.9 * (a1(4) - a1(3)), '3', 'parent', obj.velAxes, 'FontSize', 24, 'FontWeight', 'Bold');
       % Once the y-axis scaling is set, we can draw vertical marks for stimOn and saccades
       hold(obj.velAxes, 'on');
       plot(obj.velAxes, [app.stimTimeS * 1000.0, app.stimTimeS * 1000.0], [a1(3), a1(4)], 'k-.');

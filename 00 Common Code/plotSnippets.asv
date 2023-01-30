@@ -1,0 +1,59 @@
+classdef plotSnippets < handle
+  % plotSnippets
+  % Support for plotting lines as a set of snippets
+  
+  properties
+    axes;
+    color;
+    nextIndex;
+    numSnippets = 0;
+    snippets;
+  end
+  
+  methods
+    % Object Initialization %%
+    function obj = plotSnippets(~, axes, color)
+      obj = obj@handle();                                            % object initialization
+      obj.axes = axes;
+      obj.color = color;
+    end
+    
+    function clearSnippets(obj, ~)
+      fprintf('makeSnippets\n');
+      for s = 1:obj.numSnippets
+        set(obj.snippets{segment}, 'XData', NaN, 'YData', NaN);
+      end
+      obj.nextIndex = 1;
+    end
+
+    function makeSnippets(obj, ~, numNew)
+      fprintf('makeSnippets\n');
+      numNew = max(numNew, obj.numSnippets);
+      obj.snippets = cell(1, numNew);
+      for s = 1:numNew
+        obj.snippets{s} = plot(obj.axes, NaN, NaN, obj.color);
+      end
+      obj.numSnippets = numNew;
+      obj.nextIndex = 1;
+    end
+
+    function next = nextSnippet(obj, ~)
+      if obj.nextIndex < 1
+        fprintf('plotSnippets: Error -- no snippets initialized\n');
+        return;
+      end
+      if obj.nextIndex > obj.numSnippets
+        numNew = 10;
+        fprintf('plotSnippets: adding snippets %d\n', obj.numSnippets + 10);
+        newSnippets = cell(1, numNew);
+        for s = 1:numNew
+          newSnippets{s} = plot(obj.axes, NaN, NaN, obj.snippetColor);
+        end
+        obj.snippets = [obj.snippets, newSnippets];
+        obj.numSnippets = obj.numSnippets + numNew;
+      end
+      next = obj.snippets{obj.nextIndex};
+      obj.nextIndex = obj.nextIndex + 1;
+    end
+  end
+end

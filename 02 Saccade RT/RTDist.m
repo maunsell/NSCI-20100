@@ -93,11 +93,6 @@ classdef RTDist < handle
         sem = stdRT / sqrt(obj.n);
         displayText{length(displayText) + 1} = sprintf('SD = %.0f, SEM = %0.*f', stdRT, ...
           displayPrecision(obj, sem), sem);
-%         ci = sem * 1.96;
-%         plotY = 0.95;
-%         [displayText, plotY] = doOneInterval(obj, meanRT, stdRT, '±1 SD:', displayText, plotY);
-%         [displayText, plotY] = doOneInterval(obj, meanRT, sem, '±1 SEM:', displayText, plotY);
-%         [displayText, ~] = doOneInterval(obj, meanRT, ci, '95% CI:', displayText, plotY);
         if obj.stepN > 10
           [~, obj.pValue] = ttest2(obj.stepReactMS(1:obj.stepN), obj.reactTimesMS(1:obj.n), 'tail', 'right');
           displayText{length(displayText) + 1} = sprintf('t-test: p=%.3g\n', obj.pValue);

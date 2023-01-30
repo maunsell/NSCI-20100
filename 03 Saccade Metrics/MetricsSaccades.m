@@ -110,6 +110,7 @@ classdef MetricsSaccades < handle
       if ~app.testMode
         app.posTrace = app.rawData - mean(app.rawData(1:floor(app.lbj.SampleRateHz * app.prestimDurS)));
       else
+        % test mode -- create an artificial trace
         samples = length(app.posTrace);
         app.posTrace = zeros(samples, 1);
         accel = 0.01;
@@ -177,7 +178,6 @@ classdef MetricsSaccades < handle
       app.numSummed(app.offsetIndex) = app.numSummed(app.offsetIndex) + 1;
       app.posAvg(:, app.offsetIndex) = app.posSummed(:, app.offsetIndex) / app.numSummed(app.offsetIndex);
       app.velAvg(:, app.offsetIndex) = app.velSummed(:, app.offsetIndex) / app.numSummed(app.offsetIndex);
-      app.offsetsDone(app.offsetIndex) = app.offsetsDone(app.offsetIndex) + 1;
       % now that we've updated all the traces, compute the degrees per volt if we have enough trials
       % take average peaks to get each point
       if sum(app.numSummed) > length(app.numSummed)
@@ -195,7 +195,6 @@ classdef MetricsSaccades < handle
         app.saccadeDurS(app.absStepIndex) = 0;
       end
     end
-    
   end
 end
 
