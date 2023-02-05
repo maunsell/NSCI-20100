@@ -67,14 +67,14 @@ classdef MetricsAmpDur < handle
     %% writeAmpDurData
     % return a cell array suitable for creating an Excel spreadsheet reporting the ampDur statistics
     function writeAmpDurData(obj, app, timeString)
-      if min(obj.n) < 3
+      if min(obj.n) < 3                 % need at least 3 reps to have savable data
         return;
       end
       if nargin < 3
         timeString = datestr(now, 'mmm-dd-HHMMSS');
       end
-      c = cell(app.numOffsets + 1, 6);
-      [c{1, :}] = deal('Amp. (deg)', 'Samples', 'Dur. Median (ms)', 'Dur. Median 95% CI (ms)', ...
+      c = cell(app.numOffsets + 1, 7);
+      [c{1, :}] = deal('Samples', 'Step (deg)', 'Amp. (deg)', 'Dur. Median (ms)', 'Dur. Median 95% CI (ms)', ...
         '25th Percentile Dur.', '75th Percentile Dur.');
       for offset = 1:app.numOffsets
         sortRT = sort(obj.reactTimesMS(1:obj.n(offset), offset));
@@ -83,12 +83,13 @@ classdef MetricsAmpDur < handle
         indices = ceil(0.5 * obj.n(offset) + [-stat, stat]);
         indices(indices < 1) = 1;
         indices(indices > length(sortRT)) = length(sortRT);
-        c{offset + 1, 1} = app.offsetsDeg(offset);
-        c{offset + 1, 2} =  app.blocksDone;
-        c{offset + 1, 3} =  percentiles(1);
-        c{offset + 1, 4} =  sprintf('%.1f-%.1f', sortRT(indices));
-        c{offset + 1, 5} =  percentiles(2);
-        c{offset + 1, 6} =  percentiles(3);
+        c{offset + 1, 1} = app.blocksDone;
+        c{offset + 1, 2} = app.offsetsDeg(offset);
+        c{offset + 1, 3} = abs(app.offsetsDeg(offset));
+        c{offset + 1, 4} = percentiles(1);
+        c{offset + 1, 5} = sprintf('%.1f-%.1f', sortRT(indices));
+        c{offset + 1, 6} = percentiles(2);
+        c{offset + 1, 7} = percentiles(3);
       end
       folderPath = '~/Desktop/MetricsData/AmpDur';
       if ~isfolder(folderPath)
