@@ -56,11 +56,10 @@ classdef MetricsAmpDur < handle
       title(app.ampDurAxes, sprintf('Duration v. Amplitude (n\x2265%d)', app.blocksDone), 'FontSize', 12, 'FontWeight', 'Bold');
       xlabel(app.ampDurAxes, 'Saccade Amplitude (deg)','FontSize',14);
       ylabel(app.ampDurAxes, 'Saccade Duration (ms)','FontSize',14);
-      a = axis(app.ampDurAxes);
-      medians = median(obj.reactTimesMS(1:minN, :));
+      app.medians = median(obj.reactTimesMS(1:minN, :));
       quartiles = prctile(obj.reactTimesMS(1:minN, :), [25 75]);
       [maxQ, indexMax] = max(max(quartiles));
-      axis(app.ampDurAxes, [a(1), a(2), 0, medians(indexMax) + 2.0 * (maxQ - medians(indexMax))]);
+      axis(app.ampDurAxes, [xlim(app.ampDurAxes), 0, app.medians(indexMax) + 2.0 * (maxQ - app.medians(indexMax))]);
       hold(app.ampDurAxes, 'off');
       obj.lastN = minN;
     end 

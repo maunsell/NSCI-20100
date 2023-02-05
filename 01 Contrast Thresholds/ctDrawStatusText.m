@@ -17,6 +17,6 @@ function ctDrawStatusText(app, status)
   blocksDone = min(app.trialsDone(app.baseIndex, :));
   undone = find(app.trialsDone(app.baseIndex, :) == blocksDone);
   app.statusText.Text = {runString, statusString, ...
-    sprintf('     Trial %d of %d in this repeat', trialsPerBlock - length(undone) + 1, trialsPerBlock)};
+    sprintf('     Stimulus %d of %d in this set', trialsPerBlock - length(undone) + 1, trialsPerBlock)};
   drawnow;
 end

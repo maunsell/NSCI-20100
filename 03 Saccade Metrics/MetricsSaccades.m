@@ -190,9 +190,9 @@ classdef MetricsSaccades < handle
       [sAvgIndex, eAvgIndex] = obj.findSaccade(app, app.posAvg(:, app.offsetIndex), ...
         app.velAvg(:, app.offsetIndex), length(app.posAvg(:, app.offsetIndex)) / 2);
       if eAvgIndex > sAvgIndex
-        app.saccadeDurS(app.absStepIndex) = (eAvgIndex - sAvgIndex) / app.lbj.SampleRateHz;
+        app.saccadeDurS(app.offsetIndex) = (eAvgIndex - sAvgIndex) / app.lbj.SampleRateHz;
       else
-        app.saccadeDurS(app.absStepIndex) = 0;
+        app.saccadeDurS(app.offsetIndex) = 0;
       end
     end
   end

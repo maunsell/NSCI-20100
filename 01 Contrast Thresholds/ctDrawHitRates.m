@@ -8,7 +8,7 @@ function ctDrawHitRates(app, doAllBaseContrasts)
     [hitRate(i,:), pci(i,:,:)] = binofit(app.hits(i, :), app.trialsDone(i, :));
     errNeg(i, :) = hitRate(i, :) - pci(i, :, 1);
     errPos(i, :) = pci(i, :, 2) - hitRate(i, :);
-    if doAllBaseContrasts || i == app.baseIndex      	% for current block (or when all are requested
+    if doAllBaseContrasts || i == app.baseIndex      	% for current block (or when all are requested)
       blocksDone = floor(mean(app.trialsDone(i, :)));
       tableData = get(app.resultsTable, 'Data');      % update table, regardless
       tableData{1, i} = sprintf('%.0f', blocksDone);
@@ -25,8 +25,6 @@ function ctDrawHitRates(app, doAllBaseContrasts)
         app.curveFits(i, :) = 0.5 + 0.5 ./ (1.0 + exp(-params(2) * (xData(1:end) - params(1))));
         app.blocksFit(i) = blocksDone;                          % update block count and table
         tableData{2, i} = sprintf('%.1f%%', params(1) * 100.0); % threshold contrast
-        %                 tableData{3, i} = sprintf('%.1f%%', (params(1) - handles.data.baseContrasts(i)) * 100.0); % difference
-        %                 tableData{4, i} = sprintf('%.2f', params(1) / handles.data.baseContrasts(i) - 1); % Weber fraction
       elseif blocksDone == 0
         tableData{2, i} = '';
       end
@@ -34,20 +32,16 @@ function ctDrawHitRates(app, doAllBaseContrasts)
     end
   end
   % plot points and CIs (using errorbar), then fit curves and marker lines if enough blocks have been done
-  vStr = version('-release');
-  post2015 = str2double(vStr(1:4)) >= 2014;
+%   vStr = version('-release');
   x = app.testContrasts';                             % test values for all base contrasts
   errorbar(app.axes1, x, hitRate', errNeg', errPos', 'o', 'markerfacecolor', [0.5, 0.5, 0.5], 'markersize', 8);
   hold(app.axes1, 'on');
-  if (post2015)
-    set(app.axes1, 'ColorOrderIndex', 1)                % reset the color order post 2014 version
-  end
-  newx = [app.baseContrasts' app.testContrasts]'; % include the base contrasts
+  plot(app.axes1, [0.02, 1.0], [0.75, 0.75], 'color', [0.75, 0.75, 0.75]);  % mark the threshold level
+  plot(app.axes1, [0.02, 1.0], [0.5, 0.5], 'color', [0.75, 0.75, 0.75]);    % mark the threshold level
+  set(app.axes1, 'ColorOrderIndex', 1)                % reset the color order post 2014 version
+  newx = [app.baseContrasts' app.testContrasts]';     % include the base contrasts
   plot(app.axes1, newx, app.curveFits', '-');
-  sprintf('set');
-  if (post2015)
-    set(app.axes1, 'ColorOrderIndex', 1);               % reset the color order post 2014 version
-  end
+  set(app.axes1, 'ColorOrderIndex', 1);               % reset the color order post 2014 version
   % plot vertical lines marking the base contrasts
   plot(app.axes1, repmat(app.baseContrasts, 2, 1), repmat([0; 1], 1, app.numBases));
   %                             repmat([0; 1], 1, size(handles.data.baseContrasts, 2)));

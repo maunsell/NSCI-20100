@@ -43,18 +43,12 @@ classdef RTPosVelPlots < handle
       xLimit = (size(app.posTrace, 1) - 1) * timestepMS;
       trialTimes = 0:timestepMS:xLimit;                           % make array of trial time points
       % current trial position trace
-      
-      %             cla(app.posAxes);
-      %             title(app.posAxes, 'Most recent position trace', 'FontSize',12,'FontWeight','Bold')
-      %             a1 = axis(app.posAxes);                             % label the pos plot "1"
-      %             text(trialTimes(1) + 0.05 * (trialTimes(end) - trialTimes(1)), ...
-      %                 a1(3) + 0.9 * (a1(4) - a1(3)), '1', 'parent', app.posAxes, 'FontSize', 24, 'FontWeight', 'Bold');
+      cla(app.posAxes, 'reset');
       plot(app.posAxes, [0, xLimit], [0, 0], 'k', trialTimes, app.posTrace, 'b');
-      a = axis(app.posAxes);                                              % center vel plot vertically
-      yLim = max(abs(a(3)), abs(a(4)));
-      axis(app.posAxes, [-inf inf -yLim yLim]);
+      yLim = max(abs(ylim(app.posAxes)));
+      axis(app.posAxes, [-inf, inf, -yLim, yLim]);
+      hold(app.posAxes, 'on');                            % mark fixOff and targetOn
       if saccades.degPerV > 0                                     % plot saccade threshold
-        hold(app.posAxes, 'on');
         thresholdV = saccades.thresholdDeg / saccades.degPerV * app.stepDirection;
         plot(app.posAxes, [trialTimes(1) trialTimes(end)], [thresholdV, thresholdV], 'b:');
         calibratedLabels(obj, app.posAxes, saccades.degPerV, 2)
@@ -62,7 +56,6 @@ classdef RTPosVelPlots < handle
       else
         ylabel(app.posAxes,'Analog Input (V)','FontSize',14);
       end
-      hold(app.posAxes, 'on');                            % mark fixOff and targetOn
       title(app.posAxes, 'Most recent position trace', 'fontSize', 12, 'fontWeight', 'bold')
       a1 = axis(app.posAxes);
       plot(app.posAxes, [app.targetTimeS, app.targetTimeS] * 1000, [a1(3), a1(4)], 'k-.');
@@ -84,14 +77,10 @@ classdef RTPosVelPlots < handle
       xLimit = (size(app.posTrace, 1) - 1) * timestepMS;
       trialTimes = 0:timestepMS:xLimit;                               % make array of trial time points
       % plot the trial velocity trace
-      %             cla(app.velAxes);
-      %             title(app.velAxes, 'Most recent velocity trace', 'FontSize',12,'FontWeight','Bold');
-      %             text(trialTimes(1) + 0.05 * (trialTimes(end) - trialTimes(1)), ...
-      %                 a1(3) + 0.9 * (a1(4) - a1(3)), '2', 'parent', app.velAxes, 'FontSize', 24, 'FontWeight', 'Bold');
+      cla(app.velAxes, 'reset');                                      % we need 'reset' to clear axis scaling
       plot(app.velAxes, [0, xLimit], [0, 0], 'k', trialTimes, app.velTrace, 'b');
-      a = axis(app.velAxes);                                              % center vel plot vertically
-      yLim = max(abs(a(3)), abs(a(4)));
-      axis(app.velAxes, [-inf inf -yLim yLim]);
+      yLim = max(abs(ylim(app.velAxes)));
+      axis(app.velAxes, [-inf, inf, -yLim, yLim,]);
       xlabel(app.velAxes,'Time (ms)','FontSize',14);
       % if eye position has been calibrated, change the y scaling on the average to degrees rather than volts
       if app.saccades.degPerV > 0
