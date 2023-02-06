@@ -95,11 +95,12 @@ methods
   end
 
   %% findSaccade: extract the saccade timing using speed threshold
-  function [sIndex, eIndex] = findSaccade(obj, app, posTrace, stepSign, startIndex)
+  function [sIndex, eIndex] = findSaccade(obj, app, posTrace, stepSign)
+    startIndex = floor(app.targetTimeS * app.lbj.SampleRateHz); % no saccades before stimon
     if app.taskMode == app.kTiming
-      stepSign = -1;                                        % photodiode always driven negative
+      stepSign = -1;                                            % photodiode always driven negative
     end
-    if app.calTrialsDone < 4                              	% still getting a calibration
+    if app.calTrialsDone < 4                                   % still getting a calibration
       if (stepSign == 1)
         DPV = abs(app.stepSizeDeg / (max(posTrace(:)) - mean(posTrace(1:startIndex))));
         %                     range = (max(posTrace(:)) - mean(posTrace(1:startIndex)));
@@ -189,8 +190,7 @@ methods
       app.velTrace(end) = app.velTrace(end - 1);
     end
     % find a saccade and make sure we have enough samples before and after its start
-    sIndex = floor(app.targetTimeS * app.lbj.SampleRateHz); 	% no saccades before stimon
-    [startIndex, endIndex] = obj.findSaccade(app, app.posTrace, app.stepDirection, sIndex);
+    [startIndex, endIndex] = obj.findSaccade(app, app.posTrace, app.stepDirection);
     saccadeOffset = floor(app.saccadeSamples / 2);
     firstIndex = startIndex - saccadeOffset;
     lastIndex = startIndex + saccadeOffset;

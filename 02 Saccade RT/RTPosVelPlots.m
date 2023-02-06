@@ -8,8 +8,8 @@ classdef RTPosVelPlots < handle
       %% Post Initialization %%
       cla(app.posAxes);
       cla(app.velAxes);
-      title(app.posAxes, 'Most recent position trace', 'fontSize', 12, 'fontWeight', 'bold')
-      title(app.velAxes, 'Most recent velocity trace', 'fontSize', 12, 'fontWeight', 'bold')
+      title(app.posAxes, 'Single position trace', 'fontSize', 12, 'fontWeight', 'bold')
+      title(app.velAxes, 'Single velocity trace', 'fontSize', 12, 'fontWeight', 'bold')
     end
     
     %%
