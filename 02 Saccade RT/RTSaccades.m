@@ -16,12 +16,12 @@ methods
     %% Object Initialization %%
     obj = obj@handle();                                    % object initialization
     nyquistHz = app.lbj.SampleRateHz / 2.0;
-%     create a 60 Hz bandstop filter  for the sample rate
+    % create a 60 Hz bandstop filter  for the sample rate
     obj.filter60Hz = design(fdesign.bandstop('Fp1,Fst1,Fst2,Fp2,Ap1,Ast,Ap2', ...
       55 / nyquistHz, 59 / nyquistHz, 61 / nyquistHz, 65 / nyquistHz, 1, 60, 1), 'butter');
     obj.filter60Hz.persistentmemory = false;    % no piecemeal filtering of trace
     obj.filter60Hz.states = 1;                      % uses scalar expansion.
-%     create a lowpass filter for velocity trace
+    % create a lowpass filter for velocity trace
     obj.filterLP = design(fdesign.lowpass('Fp,Fst,Ap,Ast', 30 / nyquistHz, 120 / nyquistHz, 0.1, 40), 'butter');
     obj.filterLP.persistentmemory = false;          % no piecemeal filtering of trace
     obj.filterLP.states = 1;                        % uses scalar expansion.
@@ -103,10 +103,8 @@ methods
     if app.calTrialsDone < 4                                   % still getting a calibration
       if (stepSign == 1)
         DPV = abs(app.stepSizeDeg / (max(posTrace(:)) - mean(posTrace(1:startIndex))));
-        %                     range = (max(posTrace(:)) - mean(posTrace(1:startIndex)));
       else
         DPV = abs(app.stepSizeDeg / (mean(posTrace(1:startIndex) - min(posTrace(:)))));
-        %                     range = (mean(posTrace(1:startIndex) - min(posTrace(:))));
       end
       obj.degPerV = (obj.degPerV * app.calTrialsDone + DPV) / (app.calTrialsDone + 1);
       obj.degPerSPerV = obj.degPerV * app.lbj.SampleRateHz;	% needed for velocity plots
