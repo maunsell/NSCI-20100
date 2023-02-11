@@ -9,20 +9,20 @@ function ctTaskController(~, ~, app)
     case ctTaskState.taskStartRunning
       set(app.runButton, 'text', 'Stop','backgroundColor', 'red');
       ctControlState(app, 'off', {app.runButton});
-      app.trialStartTimeS = 0;
-      app.stimStartTimeS = 0;
+      app.trialStartTime = [];
+      app.stimStartTime = [];
       app.taskState = ctTaskState.taskStartTrial;
     case ctTaskState.taskStartTrial
-      if app.trialStartTimeS == 0                                   % start the trial
+      if isempty(app.trialStartTime)                                % start the trial
         ctDrawStatusText(app, 'intertrial');
-        app.trialStartTimeS = clock;
+        app.trialStartTime = datetime('now');
         app.stimParams.stimReps = str2double(app.stimRepsText.Value);
         app.stimParams.prestimDurS = str2double(app.prestimDurText.Value);
         app.stimParams.stimDurS = str2double(app.stimDurText.Value);
         app.stimParams.intertrialDurS = str2double(app.intertrialDurText.Value);
         %                 baseIndex = contains(app.baseContrastMenu.Items, app.baseContrastMenu.Value);
         app.stimParams.changeSide = floor(2 * rand(1, 1));
-      elseif (etime(clock, app.trialStartTimeS) > app.stimParams.intertrialDurS) || ~app.doStim
+      elseif (seconds(datetime('now') - app.trialStartTime) > app.stimParams.intertrialDurS) || ~app.doStim
         sound(app.tones(3, :), app.sampFreqHz);
         if app.doStim
           drawFixSpot(app.stimuli, [0.65, 0.65, 0.65]);             % dark gray fixspot
@@ -37,23 +37,25 @@ function ctTaskController(~, ~, app)
     case ctTaskState.taskWaitGoKey                                  % just wait for user to hit the down arrow
     case ctTaskState.taskDoStim
       % start of the stimulus presentation
-      if app.stimStartTimeS == 0
+      if isempty(app.stimStartTime)
         blocksDone = min(app.trialsDone(app.baseIndex, :));
         undone = find(app.trialsDone(app.baseIndex, :) == blocksDone);
         app.testIndex = undone(ceil(length(undone) * (rand(1, 1))));
-        app.stimStartTimeS = clock;
+        app.stimStartTime = datetime('now');
         if app.doStim                                               % draw the base stimuli with a white fixspot
           drawFixSpot(app.stimuli, [0.9, 0.9, 0.9]);
           drawStimuli(app.stimuli, app.baseIndex, 0, 0);            % display the base stimulus
           ctDrawStatusText(app, 'run')
         end
       % after the increment stimulus has finished
-      elseif etime(clock, app.stimStartTimeS) > app.stimParams.prestimDurS + app.stimParams.stimDurS
+%       elseif etime(clock, app.stimStartTimeS) > app.stimParams.prestimDurS + app.stimParams.stimDurS
+      elseif seconds(datetime('now') - app.stimStartTime) > app.stimParams.prestimDurS + app.stimParams.stimDurS
         clearScreen(app.stimuli);
         ctDrawStatusText(app, 'response');
         app.taskState = ctTaskState.taskWaitResponse;
       % after base contrast, start of increment stimulus
-      elseif etime(clock, app.stimStartTimeS) > app.stimParams.prestimDurS
+      elseif seconds(datetime('now') - app.stimStartTime) > app.stimParams.prestimDurS
+%       elseif etime(clock, app.stimStartTimeS) > app.stimParams.prestimDurS
         if app.doStim
           if (app.stimParams.changeSide == 0)
               drawStimuli(app.stimuli, app.baseIndex, app.testIndex, 0);          % increment on dleft
@@ -88,8 +90,8 @@ function ctTaskController(~, ~, app)
         sound(app.tones(1, :), app.sampFreqHz);
       end
       app.trialsDone(app.baseIndex, app.testIndex) = app.trialsDone(app.baseIndex, app.testIndex) + 1;
-      app.trialStartTimeS = 0;
-      app.stimStartTimeS = 0;
+      app.trialStartTime = [];
+      app.stimStartTime = [];
       app.taskState = ctTaskState.taskStartTrial;
       if app.doStim
         clearScreen(app.stimuli);
@@ -111,7 +113,7 @@ function ctTaskController(~, ~, app)
         end
       end
     case ctTaskState.taskStopRunning
-      if app.doStim
+     if app.doStim
         clearScreen(app.stimuli);
       end
       ctDrawStatusText(app, 'idle');

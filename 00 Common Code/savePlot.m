@@ -1,13 +1,13 @@
-function timeString = savePlot(axesToSave, folderPath, appString, extString, timeString)
+function timeChar = savePlot(axesToSave, folderPath, appString, extString, timeChar)
 
   if nargin < 5
-    timeString = datestr(now, 'mmm-dd-HHMMSS');
+    timeChar = char(string(datetime('now', 'format', 'MMM-dd-HHmmss')));
   end
   if ~isfolder(folderPath)
       fprintf(' savePlot: making folder\n');
       mkdir(folderPath);
   end
-  filePath = fullfile(folderPath, [appString, '-', timeString, '.', extString]);
+  filePath = fullfile(folderPath, [appString, '-', timeChar, '.', extString]);
   fprintf(' savePlot: about to export %s\n', filePath);
   tic
   exportgraphics(axesToSave, filePath, 'resolution', 300);
