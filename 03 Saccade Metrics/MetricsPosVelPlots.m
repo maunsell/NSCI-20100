@@ -46,7 +46,7 @@ classdef MetricsPosVelPlots < handle
         hold(obj.posAxes, 'off');
         ylabel(obj.posAxes, 'Avg Eye Position (deg)','FontSize', 14);
       else
-        ylabel(obj.posAxes,'Analog Input (V)','FontSize', 14);
+        ylabel(obj.posAxes,'Analog Input (V)','FontSize', 14); 
       end
       title(obj.posAxes, 'Most recent position trace', 'FontSize', 12,'FontWeight','Bold')
       % average position traces every complete block
@@ -65,11 +65,6 @@ classdef MetricsPosVelPlots < handle
           axis(obj.posAvgAxes, [-inf inf -yLim yLim]);
           hold(obj.posAvgAxes, 'on');
           plot(obj.posAvgAxes, [0 0], [-yLim yLim], 'color', 'k', 'linestyle', ':'); % saccade start, t = 0
-%           for i = 1:length(app.saccadeDurS)          % draw saccade durations for average traces
-%             yEnd = yLim - floor((i - 1) / (app.numOffsets / 2)) * 2 * yLim;
-%             plot(obj.posAvgAxes, [app.saccadeDurS(i), app.saccadeDurS(i)] * 1000.0, ...
-%               [0, yEnd], ':', 'color', colors(mod(i - 1, app.numOffsets / 2) + 1, :));
-%           end          
           for i = 1:length(app.medians)          % draw saccade median for each average trace
             yEnd = yLim - floor((i - 1) / (app.numOffsets / 2)) * 2 * yLim;
             plot(obj.posAvgAxes, [app.medians(i), app.medians(i)], ...

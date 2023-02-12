@@ -155,7 +155,7 @@ classdef RTStimulus < handle
         obj.gapStim = app.kLeftStim;
         obj.finalStim = obj.gapStim;
       else
-        if app.stepDirection == app.kLeft                           % going to step left
+        if app.stepSign == app.kLeft                                    % going to step left
           if obj.currentImageIndex == app.kLeftStim
             obj.currentOffsetIndex = obj.currentOffsetIndex - 1;	% shift one position leftward
           end
