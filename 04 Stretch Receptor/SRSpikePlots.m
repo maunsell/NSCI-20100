@@ -3,7 +3,7 @@ classdef SRSpikePlots < handle
   % Support for plotting of spike waveforms in StretchReceptor
   
   properties
-
+    clearingTrig
     contSnippets
     threshSnippets
     samplesPlotted
@@ -20,6 +20,7 @@ classdef SRSpikePlots < handle
     % Object Initialization %%
     function obj = SRSpikePlots(app)
       obj = obj@handle();                                            % object initialization
+      obj.clearingTrig = false;
       obj.samplesPlotted = 0;
       obj.singleSpikeDisplayed = false;
       obj.triggerDivisions = 10;
@@ -84,6 +85,10 @@ classdef SRSpikePlots < handle
     
     % clearTriggerPlot -- clear the continuous trace plot
     function clearTriggerPlot(obj, app)
+      if obj.clearingTrig               % can't access handles during clear
+        return;
+      end
+      obj.clearingTrig = true;
       theAxes = app.vTrigAxes;
       % set up the triggered spike plot
       triggerMSPerDiv = obj.triggerTraceDurS * 1000.0 / obj.triggerDivisions;
@@ -118,6 +123,7 @@ classdef SRSpikePlots < handle
       makeSnippets(obj.triggerSnippets, app, 100);
       obj.triggerThresholdLine = plot(app.vTrigAxes, NaN, NaN, 'r');
       obj.singleSpikeDisplayed = false;
+      obj.clearingTrig = false;
     end
 
     % plot the continuous spike waveforms
@@ -144,11 +150,14 @@ classdef SRSpikePlots < handle
       set(nextSnippet(obj.contSnippets, app), 'XData', startIndex:endIndex, ...
                 'YData', app.filteredTrace(startIndex:endIndex));
       obj.samplesPlotted = endIndex;
-      drawnow;
+%       drawnow;
     end
 
     % plot the triggered spike waveforms
     function doTriggerPlot(obj, app)
+      if obj.clearingTrig               % can't access handles during clear
+        return;
+      end
       if app.singleSpikeCheckbox.Value && obj.singleSpikeDisplayed	% in single spike mode and already displayed?
         app.spikeIndices = [];                                      %   then don't plot the spikes
         return;

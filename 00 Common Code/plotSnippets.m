@@ -53,7 +53,6 @@ classdef plotSnippets < handle
       end
       if obj.nextIndex > obj.numSnippets
         numNew = 10;
-        fprintf('plotSnippets: adding snippets %d\n', obj.numSnippets + 10);
         newSnippets = cell(1, numNew);
         for s = 1:numNew
           newSnippets{s} = plot(obj.axes, NaN, NaN, obj.color);

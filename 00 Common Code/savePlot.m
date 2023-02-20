@@ -8,14 +8,10 @@ function timeChar = savePlot(axesToSave, folderPath, appString, extString, timeC
       mkdir(folderPath);
   end
   filePath = fullfile(folderPath, [appString, '-', timeChar, '.', extString]);
-  fprintf(' savePlot: about to export %s\n', filePath);
+  fprintf('savePlot: exporting to %s: ', folderPath);
   tic
   exportgraphics(axesToSave, filePath, 'resolution', 300);
   toc
-  fprintf(' savePlot: about to backup %s\n', filePath);
-  tic
   backupFile(filePath, '~/Desktop', '~/Documents/Respository');     % save backup in repository directory
-  toc
-  fprintf(' savePlot: all done\n');
 end
   

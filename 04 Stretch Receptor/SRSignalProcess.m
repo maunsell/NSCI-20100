@@ -75,13 +75,13 @@ classdef SRSignalProcess < handle
         obj.shortStartTimeMS = obj.shortStartTimeMS + app.shortWindowMS;
       end
       obj.shortCount = obj.shortCount + 1;
-      while spikeTimeMS > obj.longStartTimeMS + app.longWindowMS
-        addLongCount(app.countPlot, app, obj.longCount);
-        obj.longCount = 0;
-        obj.longStartTimeMS = obj.longStartTimeMS + app.longWindowMS;
+     while spikeTimeMS > obj.longStartTimeMS + app.longWindowMS
+       addLongCount(app.countPlot, app, obj.longCount);
+       obj.longCount = 0;
+       obj.longStartTimeMS = obj.longStartTimeMS + app.longWindowMS;
       end
       obj.longCount = obj.longCount + 1;
-    end
+   end
 
     % clearAll: clear buffers and release audio output hardware
     function clearAll(obj, app)
@@ -172,52 +172,58 @@ classdef SRSignalProcess < handle
                             filter(app.filter, app.rawData(obj.lastProcessed + 1:app.samplesRead));
       outputAudio(obj, app);
       % Find spikes
-      if app.thresholdV >= 0
-        sIndices = find(app.filteredTrace(obj.lastProcessed + 1:app.samplesRead) > app.thresholdV);
-      else
-        sIndices = find(app.filteredTrace(obj.lastProcessed + 1:app.samplesRead) < app.thresholdV);
-      end
-      if isempty(sIndices)                                  % nothing above threshold
-        app.inSpike = false;                                % clear the inSpike flag
-      else
-        % If we entered this call partway through a spike, we need to get rid of any trailing parts of the spike.
-        % That tail will start at index 1, so we can just eliminate from sIndices all indices that are equal to
-        % their own index
-        if app.inSpike                                      % we were part way through a spike before
-          for i = 1:length(sIndices)
-            if sIndices(i) ~= i
-              app.inSpike = false;                          % clear the inSpike flag
-              break;
+      spikesEnabled = ~any((app.thresholdSlider.Limits - app.thresholdSlider.Value) == 0);            
+      if spikesEnabled
+        if app.thresholdV >= 0
+          sIndices = find(app.filteredTrace(obj.lastProcessed + 1:app.samplesRead) > app.thresholdV);
+        else
+          sIndices = find(app.filteredTrace(obj.lastProcessed + 1:app.samplesRead) < app.thresholdV);
+        end
+        if isempty(sIndices)                                  % nothing above threshold
+          app.inSpike = false;                                % clear the inSpike flag
+        else
+          % If we entered this call partway through a spike, we need to get rid of any trailing parts of the spike.
+          % That tail will start at index 1, so we can just eliminate from sIndices all indices that are equal to
+          % their own index
+          if app.inSpike                                      % we were part way through a spike before
+            for i = 1:length(sIndices)
+              if sIndices(i) ~= i
+                app.inSpike = false;                          % clear the inSpike flag
+                break;
+              end
+            end
+            if app.inSpike                                    % never got out of spike, return
+             overRun = false;
+              return;
+            end
+            sIndices = sIndices(i:end);                       % work with >thresholds past any spike tail
+          end
+          % Process newly detected spikes
+          numSpikes = 1;                                      % we have at least one spike
+          lastIndex = sIndices(1);                            % used to find gaps between spikes
+          spikeIndices = lastIndex;                           % save the start of this spike
+          addISI(obj, app, sIndices(1));                      % add this spike to the ISIs
+          addSpikeTime(obj, app, sIndices(1));
+          if length(sIndices) > 1                             % for all the remaining indices...
+            for i = 2:length(sIndices)
+              % we only allow one trigger per trigger cycle, but a bit more
+              % so we can see 60 Hz noise triggering
+              if sIndices(i) > lastIndex + 1 && (sIndices(i) - lastIndex) > app.spikePlots.triggerSamples - 25
+                numSpikes = numSpikes + 1;                    % it's a new spike
+                spikeIndices(numSpikes) = sIndices(i);        % record the index for this spike
+               addISI(obj, app, sIndices(i));                % add this spike to the ISIs
+                addSpikeTime(obj, app, sIndices(i));
+              end
+              lastIndex = sIndices(i);                        % used to find gaps between spikes
             end
           end
-          if app.inSpike                                    % never got out of spike, return
-            return;
+          if sIndices(end) == app.samplesRead - obj.lastProcessed % end of new data in middle of a spike?
+            app.inSpike = true;
           end
-          sIndices = sIndices(i:end);                       % work with >thresholds past any spike tail
+          app.spikeIndices = [app.spikeIndices, spikeIndices + obj.lastProcessed]; % add new spikes to the list of spikes
         end
-        % Process newly detected spikes
-        numSpikes = 1;                                      % we have at least one spike
-        lastIndex = sIndices(1);                            % used to find gaps between spikes
-        spikeIndices = lastIndex;                           % save the start of this spike
-        addISI(obj, app, sIndices(1));                      % add this spike to the ISIs
-        addSpikeTime(obj, app, sIndices(1));
-        if length(sIndices) > 1                             % for all the remaining indices...
-          for i = 2:length(sIndices)
-            if sIndices(i) > lastIndex + 1 && (sIndices(i) - lastIndex) > app.spikePlots.triggerSamples
-              numSpikes = numSpikes + 1;                    % it's a new spike
-              spikeIndices(numSpikes) = sIndices(i);        % record the index for this spike
-              addISI(obj, app, sIndices(i));                % add this spike to the ISIs
-              addSpikeTime(obj, app, sIndices(i));
-            end
-            lastIndex = sIndices(i);                        % used to find gaps between spikes
-          end
-        end
-        if sIndices(end) == app.samplesRead - obj.lastProcessed % end of new data in middle of a spike?
-          app.inSpike = true;
-        end
-        app.spikeIndices = [app.spikeIndices, spikeIndices + obj.lastProcessed]; % add new spikes to the list of spikes
+        obj.lastSpikeIndex = obj.lastSpikeIndex - (app.samplesRead - obj.lastProcessed);
       end
-      obj.lastSpikeIndex = obj.lastSpikeIndex - (app.samplesRead - obj.lastProcessed);
       % check whether we've run past the end of the continuous display
       overRun = app.samplesRead - app.contSamples;
       if overRun > 0

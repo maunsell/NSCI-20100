@@ -7,6 +7,7 @@ classdef SRCountPlot < handle
   % clear values on demand
   
   properties
+    clearingNow;    % flag for clearing underway
     countBins;      % number bins in spike count histograms
     countMaxX;      % last count histogram bin to plot
     countMaxY;      % limit on count histogram y axis
@@ -27,6 +28,7 @@ classdef SRCountPlot < handle
     % SRISIPlot Initialization %%
     function obj = SRCountPlot(app)
       obj = obj@handle();
+      obj.clearingNow = false;
       obj.countBins = 100;
       obj.longCounts = zeros(1000, 1);
       obj.longHist = zeros(obj.countBins, 1);
@@ -42,6 +44,9 @@ classdef SRCountPlot < handle
 
     % addLongCount -- add a new long count to the distribution
     function addLongCount(obj, app, longCount)
+      if obj.clearingNow
+        return;
+      end
       obj.numLongCounts = obj.numLongCounts + 1;                         % increment count of spike counts
       obj.sumLongCounts = obj.sumLongCounts + longCount;
       if obj.numLongCounts > length(obj.longCounts)                      % need to lengthen isi buffer?
@@ -71,6 +76,9 @@ classdef SRCountPlot < handle
 
     %% addShortCount -- add a new short count to the distribution
     function addShortCount(obj, app, shortCount)
+      if obj.clearingNow
+        return;
+      end
       obj.numShortCounts = obj.numShortCounts + 1;                        % increment count of spike counts
       if obj.numShortCounts > length(obj.shortCounts)                     % need to lengthen isi buffer?
         obj.shortCounts = [obj.shortCounts; zeros(1000, 1)];
@@ -83,6 +91,7 @@ classdef SRCountPlot < handle
     
     % clearAll -- clear all values
     function clearAll(obj, app)
+      obj.clearingNow = true;
       obj.countMaxX = 10;             % last bin to plot
       obj.countMaxY = 10;             % count in most filled bin
       obj.longMaxCount = 0;
@@ -94,24 +103,27 @@ classdef SRCountPlot < handle
       cla(app.countAxes);
       a = axis(app.countAxes);
       axis(app.countAxes, [a(1), a(2), 0, obj.countMaxY]);
+      hold(app.countAxes, 'on');
       makeCountHistograms(obj, app);
-      hold on;
       edges = -0.5:obj.countMaxX + 0.5;
       obj.longPlot = histogram(app.countAxes, 'binedges', edges, 'bincounts', obj.longHist(1:obj.countMaxX + 1), ...
         'faceColor', [0.75, 0.75, 0]);
       obj.shortPlot = histogram(app.countAxes, 'binedges', edges, 'bincounts', obj.shortHist(1:obj.countMaxX + 1), ...
         'faceColor', [0.8500, 0.3250, 0.0980]);
-    end
+       obj.clearingNow = false;
+   end
 
     % loadCountData
-    %  load the data table with values for one count window
+    % load the data table with values for one count window
     function tableData = loadCountData(obj, app, tableData, counts, windowMS, row)
-      meanRate = mean(counts / (windowMS / 1000));
-      quartileRate = std(counts / (windowMS / 1000)) * 1.15035;
+      rates = counts / (windowMS / 1000);
+      meanRate = mean(rates);
+      sdRate = std(rates);                                        % SD of rate
+      jndRate = sdRate * 1.34;                                    % JND for 75% performance
       tableData{row, 2} = sprintf('%.0f', length(counts));
-      tableData{row, 3} = validString(obj, app, meanRate - quartileRate);
-      tableData{row, 4} = validString(obj, app, obj.sumLongCounts / obj.numLongCounts / (app.longWindowMS / 1000));
-      tableData{row, 5} = validString(obj, app, meanRate + quartileRate);
+      tableData{row, 3} = validString(obj, app, meanRate);
+      tableData{row, 4} = validString(obj, app, sdRate);
+      tableData{row, 5} = validString(obj, app, jndRate);
     end
     
     % makeCountHistograms
@@ -128,22 +140,15 @@ classdef SRCountPlot < handle
         obj.shortHist(bin) = obj.shortHist(bin) + 1;
       end
       axis(app.countAxes, [-0.5, obj.countMaxX + 0.5, 0, obj.countMaxY]);
-      % We need to rescale the counts histogram plot whenever we remake
-%       hold(app.countAxes, 'off');
-%       hold(app.countAxes, 'on');
-%       set(obj.shortPlot, 'BinCounts', obj.shortHist(1:obj.countMaxX + 1));
-%       set(obj.longPlot, 'BinCounts', obj.longHist(1:obj.countMaxX + 1));
     end
 
     % plotCounts
     % plot histograms of spike counts
     function plotCounts(obj, ~)
-%       cla(app.countAxes);
+      if obj.clearingNow
+        return;
+      end
       edges = -0.5:obj.countMaxX + 0.5;
-%       histogram(app.countAxes, 'binedges', edges, 'bincounts', obj.longHist(1:obj.countMaxX + 1), ...
-%         'faceColor', [0.75, 0.75, 0]);
-%       histogram(app.countAxes, 'binedges', edges, 'bincounts', obj.shortHist(1:obj.countMaxX + 1), ...
-%         'faceColor', [0.8500, 0.3250, 0.0980]);
       set(obj.shortPlot, 'BinEdges', edges, 'BinCounts', obj.shortHist(1:obj.countMaxX + 1)');
       set(obj.longPlot, 'BinEdges', edges, 'BinCounts', obj.longHist(1:obj.countMaxX + 1)');
     end

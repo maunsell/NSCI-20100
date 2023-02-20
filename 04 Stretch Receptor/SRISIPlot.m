@@ -9,6 +9,7 @@ classdef SRISIPlot < handle
   properties
     countMaxX;      % last count histogram bin to plot
     countMaxY;      % limit on count histogram y axis
+    hText;          % handle to text displayed on the plot
     isiLastPlot;    % countt of the last ISI plot
     isiMS;          % array of all isi in ms
     isiPlotXLimit;  % maximum displayed point in the ISI plot
@@ -34,7 +35,6 @@ classdef SRISIPlot < handle
       obj.isiSnippets = plotSnippets(app, app.isiAxes, 'bo');
       clearAll(obj, app);
       app.isiAxes.YGrid = 'on';
-
       xlabel(app.isiAxes, 'ISI Ordered in Time', 'fontsize', 14, 'fontWeight', 'bold');
       ylabel(app.isiAxes, 'ISI (ms)', 'fontsize', 14, 'fontWeight', 'bold');
     end
@@ -54,6 +54,7 @@ classdef SRISIPlot < handle
       obj.isiPlotYLimit = 10;
       obj.numISIs = 0;
       obj.maxISIMS = 10;
+      obj.hText = [];
       hold(app.isiAxes, 'off');
       cla(app.isiAxes);
       axis(app.isiAxes, [0, str2double(app.longWindowLimitText.Value), 0, max(10, obj.maxISIMS * 1.1)]);
@@ -76,7 +77,10 @@ classdef SRISIPlot < handle
         displayText{i + 1} = sprintf('%s half: mean %.0f, SD %.0f', halfLabels{i}, ...
                   mean(obj.isiMS(startIndex:endIndex)), std(obj.isiMS(startIndex:endIndex)));
       end
-      text(app.isiAxes, 0.025, 0.95, displayText, 'units', 'normalized', 'VerticalAlignment', 'top');
+      if ~isempty(obj.hText)
+        delete(obj.hText);
+      end
+      obj.hText = text(app.isiAxes, 0.025, 0.95, displayText, 'units', 'normalized', 'VerticalAlignment', 'top');
     end
 
     % plotISI - plot the ISIs as a function of time
