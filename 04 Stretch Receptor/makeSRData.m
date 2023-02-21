@@ -6,12 +6,10 @@
       fprintf('This operation requires a LabJack U6 with DAC0 connected to ANI0\n')
       app = StretchReceptor('test');                % launch in test mode
       testCase.addTeardown(@delete, app);           % delete app after testing is done
-%       app.volumeSlider.Value = 2;                   % 2 is the minimum (for some reason I don't remember)
-%       setVolume(app.signals, app);                  % update the volume setting using the changed value
       testCase.type(app.longWindowLimitText, '20');
       testCase.type(app.longWindowMSText, '1000');
       testCase.type(app.shortWindowMSText, '250');
-      rates = [25];
+      rates = 25;
       for i = 1:length(rates)
         app.fakeSpikeRateHz = rates(i);
         testCase.press(app.startButton);                % start data collection

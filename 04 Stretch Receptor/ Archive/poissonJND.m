@@ -5,7 +5,7 @@ function poissonJND
     for l = 1:length(lamda)
       counts = poissrnd(lamda(l) * countPeriodS, 1, 100000);
       histogram(counts);
-      pc = prctile(counts, [25, 50, 75]) ./ countPeriodS;
+%       pc = prctile(counts, [25, 50, 75]) ./ countPeriodS;
       meanRate = mean(counts) / countPeriodS;
       quartileRate = std(counts) / countPeriodS * 0.674;   % 0.25 probablity
 

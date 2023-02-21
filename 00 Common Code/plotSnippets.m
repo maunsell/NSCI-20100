@@ -3,14 +3,14 @@ classdef plotSnippets < handle
   % Support for plotting lines as a set of snippets
   % Matlab does not perform well at the job of incrementally advancing a
   % plot a frequent intervals.  Functions like plot and loglog work by
-  % creating a new line object for each call, which has considerable overhead.  So if
-  % you use these to add a bit of line, they perform poorly.  plotSnippets
+  % creating a new line object for each call, which has considerable overhead.
+  % Using these to add a bit of line gives poor performance. plotSnippets()
   % improves performance considerably by creating a lot of line objects up
-  % front, and then doling them out as needed. You set the lines to display
-  % by changing their 'XData' and 'YData' values.  clearSnippets will blank
-  % all lines.  Not that all the lines are destroyed by a cla or clf call.
-  % If you use those calls you must call makeSnippets again. Note that
-  % "hold on" must be used while snippets are used, or each the display
+  % front, and doling them out as needed. You set the lines to display
+  % by changing their 'XData' and 'YData' values. clearSnippets blanks
+  % all lines.  Note that all the lines are destroyed by a cla or clf call.
+  % If you use those calls you must call makeSnippets again. Note also that
+  % "hold on" must be used while snippets are used, or the display
   % of each snippet will erase all previous snippets.
   
   properties

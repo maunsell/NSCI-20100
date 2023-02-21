@@ -646,9 +646,6 @@ classdef labJackU6 < handle
         % get streaming data
         function [data, errorCode] = getStreamData(obj)
             if obj.isStreamConfig
-
-                totalSamples = 0;
-
                 % number of bytes to read ("5.2.14 - StreamData"):
                 %  14 bytes of packet header info (12 + 2)
                 %  2 bytes per sample
@@ -663,9 +660,6 @@ classdef labJackU6 < handle
                 end
                 [in3, ~, obj.bytesIn] =  calllib('liblabjackusb', 'LJUSB_Stream', obj.handle, obj.bytesIn, count);
                 numSamples = double(obj.bytesIn(3))-4;  % number of samples (from samplesPerPacket)
-
-                totalSamples = numSamples;
-
                 packetNumber = obj.bytesIn(11);         % packet counter, 0-255 (8-bit)
                 backlog = obj.bytesIn(end - 1);         % 0-255 indicates space remaining in buffer
                 errorCode = obj.bytesIn(12);
@@ -693,9 +687,6 @@ classdef labJackU6 < handle
                   m = m + 1;               
                   [in3, ~, obj.bytesIn] = calllib('liblabjackusb', 'LJUSB_Stream', obj.handle, obj.bytesIn, count);
                   numSamples=double(obj.bytesIn(3))-4;  % number of samples (from samplesPerPacket)
-
-                  totalSamples = totalSamples + numSamples;
-
                   packetNumber=obj.bytesIn(11); % packet counter, 0-255 (8-bit)
                   backlog = obj.bytesIn(end - 1);   % 0-255 indicates space remaining in buffer
                   errorCode = max(errorCode, obj.bytesIn(12));    % report biggest error
@@ -773,8 +764,6 @@ classdef labJackU6 < handle
                 data = [];
             end
             if obj.verbose >= 2, fprintf(1,'  completed: %.4f ms\n', toc * 1000.0); end
-%             
-%             fprintf('  LabJack samples read %d\n', totalSamples);
         end
 
         %% DAC analogOut

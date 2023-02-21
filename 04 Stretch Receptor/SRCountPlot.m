@@ -25,7 +25,7 @@ classdef SRCountPlot < handle
   end
   
   methods
-    % SRISIPlot Initialization %%
+    % SRCountPlot Initialization %%
     function obj = SRCountPlot(app)
       obj = obj@handle();
       obj.clearingNow = false;
@@ -33,7 +33,6 @@ classdef SRCountPlot < handle
       obj.longCounts = zeros(1000, 1);
       obj.longHist = zeros(obj.countBins, 1);
       obj.shortHist = zeros(obj.countBins, 1);
-
       clearAll(obj, app);
       app.countAxes.YGrid = 'on';
       xlabel(app.countAxes, 'Spike Counts', 'fontsize', 14, 'fontWeight', 'bold');
@@ -111,7 +110,12 @@ classdef SRCountPlot < handle
       obj.shortPlot = histogram(app.countAxes, 'binedges', edges, 'bincounts', obj.shortHist(1:obj.countMaxX + 1), ...
         'faceColor', [0.8500, 0.3250, 0.0980]);
        obj.clearingNow = false;
-   end
+      % clear the contents of the count table
+      tableData = cell(2, 5);
+      tableData{1, 1} = app.longWindowMSText.Value;
+      tableData{2, 1} = app.shortWindowMSText.Value;
+      set(app.resultsTable, 'Data', tableData);
+    end
 
     % loadCountData
     % load the data table with values for one count window
