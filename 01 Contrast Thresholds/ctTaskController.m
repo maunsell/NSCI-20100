@@ -70,8 +70,6 @@ function ctTaskController(~, ~, app)
       end
       drawFixSpot(app.stimuli, [0.0, 0.0, 0.0]);
     case ctTaskState.taskProcessResponse
-      %             blocksDone = min(app.trialsDone(app.baseIndex, :));
-      %             undone = find(app.trialsDone(app.baseIndex, :) == blocksDone);
       if app.testMode
         prob = 0.5 + 0.5 / (1.0 + exp(-10.0 * (app.testContrasts(app.baseIndex, app.testIndex) - ...
           app.testContrasts(app.baseIndex, 3)) / app.baseContrasts(app.baseIndex)));
@@ -111,6 +109,10 @@ function ctTaskController(~, ~, app)
             app.baseContrastMenu.Value = app.baseContrastMenu.Items{app.baseIndex};
           end
         end
+        doSaveData(app, true);
+      %automatically save data every block
+      elseif ~mod(sum(app.trialsDone(app.baseIndex, :)), app.numIncrements) 
+        doSaveData(app, true);
       end
     case ctTaskState.taskStopRunning
      if app.doStim

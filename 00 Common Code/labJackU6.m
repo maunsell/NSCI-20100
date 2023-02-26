@@ -244,8 +244,14 @@ classdef labJackU6 < handle
       obj.deviceCount = calllib('liblabjackusb','LJUSB_GetDevCount', obj.deviceID);
       if obj.verbose >= 2, fprintf(1,'LJU6/open: %d LabJack U6 devices found.\n',obj.deviceCount); end
       % open the connection
-      obj.handle = calllib('liblabjackusb', 'LJUSB_OpenDevice', deviceNum, 0, obj.deviceID);
-      obj.validHandle
+      % For some reason, the open typically fails the first try immediately
+      % after a cold start. Always works on the second try.
+      tries = 0;
+      while ~obj.isValidHandle && tries < 3
+        obj.handle = calllib('liblabjackusb', 'LJUSB_OpenDevice', deviceNum, 0, obj.deviceID);
+        validHandle(obj);
+        tries = tries + 1;
+      end
       if obj.isValidHandle
         obj.isOpen = 1;
         if obj.verbose >= 2, fprintf(1,'LJU6/open: Device successfully opened.\n'); end
