@@ -8,14 +8,15 @@ classdef SRSignalProcess < handle
     audioOutDevice
     audioOutIndex
     displaySamples
+    fakeNoise
     fakeSpike             % profile of a fakeSpike
-    fakeSpikeDrift        % drift in fake spike rate 
+    fakeSpike0Drift        % drift in fake spike rate 
     lastProcessed         % last sample processed
     lastSpikeIndex        % index of last spike time processed
     lastSpikeTimeMS
     longCount
     longStartTimeMS
-    nextFakeSpikeSample
+    nextFakeSpike0Sample
     outSampleRatio
     shortCount
     shortStartTimeMS
@@ -91,8 +92,8 @@ classdef SRSignalProcess < handle
       obj.longCount = 0;
       obj.longStartTimeMS = 0;
       obj.lastSpikeIndex = 2 * app.maxContSamples;              % flag start of ISI sequence
-      obj.nextFakeSpikeSample = floor(app.lbj.SampleRateHz / app.fakeSpikeRateHz);
-      obj.fakeSpikeDrift = randn() * 0.0002;
+      obj.nextFakeSpike0Sample = floor(app.lbj.SampleRateHz / app.fakeSpikeRateHz);
+      obj.fakeSpike0Drift = randn() * 0.0002;
       obj.shortCount = 0;
       obj.shortStartTimeMS = 0;
       obj.tracesRead = 0;
@@ -101,14 +102,16 @@ classdef SRSignalProcess < handle
     
     % insertFakeSpikes: replace the rawData with synthetic data
     function insertFakeSpikes(obj, app)
-      app.rawData(obj.lastProcessed + 1:app.samplesRead) = zeros(1, app.samplesRead - obj.lastProcessed);
-      while obj.nextFakeSpikeSample < app.samplesRead
-        endSample = obj.nextFakeSpikeSample + length(obj.fakeSpike) - 1;
-        app.rawData(obj.nextFakeSpikeSample:endSample) = obj.fakeSpike;
+      app.rawData(obj.lastProcessed + 1:app.samplesRead) = ...
+                          rand(1, app.samplesRead - obj.lastProcessed) * obj.fakeNoise;
+      while obj.nextFakeSpike0Sample < app.samplesRead
+        endSample = obj.nextFakeSpike0Sample + length(obj.fakeSpike) - 1;
+        app.rawData(obj.nextFakeSpike0Sample:endSample) = obj.fakeSpike + ...
+                          rand(1, length(obj.fakeSpike)) * obj.fakeNoise - obj.fakeNoise / 2.0;
         app.samplesRead = max(app.samplesRead, endSample);
-        obj.nextFakeSpikeSample = obj.nextFakeSpikeSample + ...
-                  floor(app.lbj.SampleRateHz / app.fakeSpikeRateHz * (1 + randn() * 0.15));
-        app.fakeSpikeRateHz = max(1.0, min(35, app.fakeSpikeRateHz * (1 + obj.fakeSpikeDrift)));
+        obj.nextFakeSpike0Sample = obj.nextFakeSpike0Sample + ...
+                  floor(app.lbj.SampleRateHz / app.fakeSpikeRateHz * (1 + randn() * 0.1));
+        app.fakeSpikeRateHz = max(1.0, min(35, app.fakeSpikeRateHz * (1 + obj.fakeSpike0Drift)));
       end
     end
 
@@ -126,6 +129,7 @@ classdef SRSignalProcess < handle
       spikeSamples = spikeDurMS * app.lbj.SampleRateHz / 1000;
       peakV = app.vPerDiv * app.vDivs / 2 * 0.75;
       obj.fakeSpike = decimate(templateSpike, length(templateSpike) / spikeSamples) * peakV / 100;
+      obj.fakeNoise = 0.2;
     end
 
     % outputAudio: output the audio signal
@@ -230,7 +234,7 @@ classdef SRSignalProcess < handle
         app.rawData(1:overRun) = app.rawData(app.contSamples + 1:app.samplesRead);
         app.filteredTrace(1:overRun) = app.filteredTrace(app.contSamples + 1:app.samplesRead);
         app.spikeIndices = app.spikeIndices - app.contSamples;
-        obj.nextFakeSpikeSample = obj.nextFakeSpikeSample - app.contSamples;
+        obj.nextFakeSpike0Sample = obj.nextFakeSpike0Sample - app.contSamples;
         app.samplesRead = overRun;
         obj.tracesRead = obj.tracesRead + 1;
       end

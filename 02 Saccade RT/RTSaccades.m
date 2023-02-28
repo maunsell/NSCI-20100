@@ -40,7 +40,7 @@ methods
     accel = 0.01;                                 % acceleration/deceleration of saccade
     time = floor(sqrt(2.0 * app.stepSizeDeg / 2.0 / accel));  % number of accel/decel samples
     positions = zeros(time * 2, 1);               % positions during the saccade
-    accel = accel * app.stepSign;            % sign of acceleration (left or right)
+    accel = accel * app.stepSign;                 % sign of acceleration (left or right)
     for t = 1:time                                % load the positions during the acceleartion
       positions(t) = 0.5 * accel * t^2;
     end

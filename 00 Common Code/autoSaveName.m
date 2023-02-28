@@ -21,7 +21,6 @@ function fileName = autoSaveName(taskName, timeString)
         maxName = name;
       elseif fileTime >= maxTime
           delete([dirName, maxName]);
-          fprintf('deleted %s\n', [dirName, maxName]);
           maxTime = fileTime;
           maxName = name;
       end
