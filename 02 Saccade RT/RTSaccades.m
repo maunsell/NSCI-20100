@@ -66,12 +66,17 @@ methods
     while true                % get a random saccade latency longer than 100 ms
       offsetMS = gamrnd(pShape, pScale);
       preStimSamples = floor((app.targetTimeS + offsetMS / 1000.0) * app.lbj.SampleRateHz);
+      if preStimSamples + length(positions) > length(posTrace)
+        preStimSamples = length(posTrace) - length(positions) - 100;
+        break;
+      end
       if offsetMS > 100 && preStimSamples + length(positions) <= length(posTrace)
         break;
       end
-      fprintf('offsetMS %.2f needed %d avail %d\n', offsetMS, preStimSamples + length(positions), length(posTrace));
+      fprintf('app.targetTimeS %.2f sampleRateHz %.1f, preStimSamples %d\n', ...
+        app.targetTimeS, app.lbj.SampleRateHz, preStimSamples);
+      fprintf(' offsetMS %.2f length(positions) %d avail %d\n', offsetMS, length(positions), length(posTrace));
     end
-    
     posTrace(preStimSamples + 1:preStimSamples + length(positions)) = positions;
     for i = preStimSamples + length(positions) + 1:length(posTrace)
       posTrace(i) = positions(time * 2);
@@ -117,11 +122,10 @@ methods
     end
     % find a saccade and make sure we have enough samples before and after its start
 
-    startIndex = floor(app.targetTimeS * app.lbj.SampleRateHz); % no saccades before stimon
+    startIndex = floor(app.targetTimeS * app.lbj.SampleRateHz);   % no saccades before stimon
     if app.taskMode == app.kTiming
       app.stepSign = -1;                                          % photodiode always driven negative
     end
-    fprintf('threshDeg %.2f threshDPS %.2f\n', obj.thresholdDeg, obj.thresholdDPS);
     [startIndex, endIndex] = findSaccade(obj, app, startIndex);
     saccadeOffset = floor(app.saccadeSamples / 2);
     firstIndex = startIndex - saccadeOffset;

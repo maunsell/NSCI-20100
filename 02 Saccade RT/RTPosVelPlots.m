@@ -38,7 +38,6 @@ classdef RTPosVelPlots < handle
     
     %% posPlots: do the trial and average position plots
     function posPlots(obj, app, startIndex, endIndex)
-      saccades = app.saccades;
       timestepMS = 1000.0 / app.lbj.SampleRateHz;                 % time interval of samples
       xLimit = (size(app.posTrace, 1) - 1) * timestepMS;
       trialTimes = 0:timestepMS:xLimit;                           % make array of trial time points
@@ -47,10 +46,13 @@ classdef RTPosVelPlots < handle
       plot(app.posAxes, [0, xLimit], [0, 0], 'k', trialTimes, app.posTrace, 'b');
       yLim = max(abs(ylim(app.posAxes)));
       axis(app.posAxes, [-inf, inf, -yLim, yLim]);
-      hold(app.posAxes, 'on');                            % mark fixOff and targetOn
+      hold(app.posAxes, 'on');                                    % mark fixOff and targetOn
+      saccades = app.saccades;
       if saccades.degPerV > 0                                     % plot saccade threshold
-        thresholdV = saccades.thresholdDeg / saccades.degPerV * app.stepSign;
-        plot(app.posAxes, [trialTimes(1) trialTimes(end)], [thresholdV, thresholdV], 'b:');
+        if strcmp(app.ThresholdType.SelectedObject.Text, 'Position')
+          thresholdV = saccades.thresholdDeg / saccades.degPerV * app.stepSign;
+          plot(app.posAxes, [trialTimes(1) trialTimes(end)], [thresholdV, thresholdV], 'r:');
+        end
         calibratedLabels(obj, app.posAxes, saccades.degPerV, 2)
         ylabel(app.posAxes,'Eye Position (deg)','FontSize',14);
       else
@@ -83,7 +85,13 @@ classdef RTPosVelPlots < handle
       axis(app.velAxes, [-inf, inf, -yLim, yLim,]);
       xlabel(app.velAxes,'Time (ms)','FontSize',14);
       % if eye position has been calibrated, change the y scaling on the average to degrees rather than volts
-      if app.saccades.degPerV > 0
+      hold(app.velAxes, 'on');                                    % mark fixOff and targetOn
+      saccades = app.saccades;
+      if saccades.degPerV > 0
+        if strcmp(app.ThresholdType.SelectedObject.Text, 'Speed')
+          thresholdV = saccades.thresholdDPS / saccades.degPerSPerV * app.stepSign;
+          plot(app.velAxes, [trialTimes(1) trialTimes(end)], [thresholdV, thresholdV], 'r:');
+        end
         calibratedLabels(obj, app.velAxes, app.saccades.degPerSPerV, 100)
         ylabel(app.velAxes,'Eye Speed (deg/s)','FontSize',14);
       else
