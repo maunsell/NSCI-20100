@@ -7,6 +7,7 @@ properties
   filterLP;             % low pass filter
   filterWidthMS = 0;
   thresholdDeg = 0;
+  thresholdDPS = 0;
   degPerSPerV = 0;
   degPerV = 0;
 end
@@ -63,11 +64,12 @@ methods
         pScale = 57.6;
     end
     while true                % get a random saccade latency longer than 100 ms
-     offsetMS = gamrnd(pShape, pScale);
-     preStimSamples = floor((app.targetTimeS + offsetMS / 1000.0) * app.lbj.SampleRateHz);
-     if offsetMS > 100 && preStimSamples + length(positions) <= length(posTrace)
+      offsetMS = gamrnd(pShape, pScale);
+      preStimSamples = floor((app.targetTimeS + offsetMS / 1000.0) * app.lbj.SampleRateHz);
+      if offsetMS > 100 && preStimSamples + length(positions) <= length(posTrace)
         break;
       end
+      fprintf('offsetMS %.2f needed %d avail %d\n', offsetMS, preStimSamples + length(positions), length(posTrace));
     end
     
     posTrace(preStimSamples + 1:preStimSamples + length(positions)) = positions;
@@ -119,6 +121,7 @@ methods
     if app.taskMode == app.kTiming
       app.stepSign = -1;                                          % photodiode always driven negative
     end
+    fprintf('threshDeg %.2f threshDPS %.2f\n', obj.thresholdDeg, obj.thresholdDPS);
     [startIndex, endIndex] = findSaccade(obj, app, startIndex);
     saccadeOffset = floor(app.saccadeSamples / 2);
     firstIndex = startIndex - saccadeOffset;

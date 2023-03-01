@@ -11,12 +11,20 @@ function [sIndex, eIndex] = findSaccade(obj, app, startIndex)
     sIndex = 0; eIndex = 0;
     return;                                                   % no saccades until we have a calibration
   end
-  seq = 0;
-  seqLength = 5;                                              % number seq. samples used for saccade detection
-  thresholdV = mean(app.posTrace(1:startIndex)) + obj.thresholdDeg / obj.degPerV;
+  switch app.ThresholdType.SelectedObject.Value
+    case app.kPosition
+      thresholdV = mean(app.posTrace(1:startIndex)) + obj.thresholdDeg / obj.degPerV;
+      trace = app.posTrace;
+    case app.kSpeed
+      thresholdV = mean(app.velTrace(1:startIndex)) + obj.thresholdDPS / obj.degPerSPerV;
+      trace = app.velTrace;
+  end
   sIndex = startIndex;
-  while (seq < seqLength && sIndex < length(app.posTrace))	      % find the first sequence of seqLength > than threshold
-    if app.posTrace(sIndex) * app.stepSign < thresholdV
+  seq = 0;
+  seqLength = 5;                                        % number seq. samples needed above threshold
+  limit = length(trace);
+  while (seq < seqLength && sIndex < limit)	            % find the first sequence of seqLength > than threshold
+    if trace(sIndex) * app.stepSign < thresholdV
       seq = 0;
     else
       seq = seq + 1;
@@ -24,22 +32,25 @@ function [sIndex, eIndex] = findSaccade(obj, app, startIndex)
     sIndex = sIndex + 1;
   end
   % if we found a saccade start, look for the saccade end, consisting of seqLength samples below the peak
-  if sIndex < length(app.posTrace)
+  if sIndex >= limit
+    sIndex = 0;
+    eIndex = 0;
+  else
     seq = 0;
-    maxPos = app.posTrace(sIndex);
+    maxPos = trace(sIndex);
     maxIndex = sIndex;
     eIndex = sIndex;
-    while seq < seqLength && eIndex < (length(app.posTrace) - 1)
-      if app.posTrace(eIndex + 1) * app.stepSign < maxPos * app.stepSign
+    while seq < seqLength && eIndex < (limit - 1)
+      if trace(eIndex + 1) * app.stepSign < maxPos * app.stepSign
         seq = seq + 1;
       else
         seq = 0;
-        maxPos = app.posTrace(eIndex + 1);
+        maxPos = trace(eIndex + 1);
         maxIndex = eIndex + 1;
       end
       eIndex = eIndex + 1;
     end
-    if eIndex >= length(app.posTrace) - 1
+    if eIndex >= limit - 1
       eIndex = 0;
     else
       eIndex =  maxIndex;
@@ -55,9 +66,6 @@ function [sIndex, eIndex] = findSaccade(obj, app, startIndex)
       sIndex = 0;
       eIndex = 0;
     end
-  else
-    sIndex = 0;
-    eIndex = 0;
   end
   % add some jitter to reduce alignment on noise
   if sIndex > 0 && eIndex > 0
@@ -66,3 +74,30 @@ function [sIndex, eIndex] = findSaccade(obj, app, startIndex)
     eIndex = eIndex - offset;
   end
 end
+
+% function sIndex = findSaccadeStart(obj, app, startIndex)
+%   switch app.ThresholdType.SelectedObject.Value
+%     case app.kPosition
+%       thresholdV = mean(app.posTrace(1:startIndex)) + obj.thresholdDeg / obj.degPerV;
+%       trace = app.posTrace;
+%     case app.kSpeed
+%       thresholdV = mean(app.velTrace(1:startIndex)) + obj.thresholdDPS / obj.degPerSPerV;
+%       trace = app.velTrace;
+%   end
+%   sIndex = startIndex;
+%   seq = 0;
+%   seqLength = 5;                                        % number seq. samples needed above threshold
+%   limit = length(trace);
+%   while (seq < seqLength && sIndex < limit)	            % find the first sequence of seqLength > than threshold
+%     if trace(sIndex) * app.stepSign < thresholdV
+%       seq = 0;
+%     else
+%       seq = seq + 1;
+%     end
+%     sIndex = sIndex + 1;
+%   end
+%   if sIndex >= limit
+%     sIndex = [];
+%   end
+% end
+% 
