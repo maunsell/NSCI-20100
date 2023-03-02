@@ -7,6 +7,7 @@ properties
   filterLP;             % low pass filter
   filterWidthMS = 0;
   thresholdDeg = 0;
+  thresholdDPS = 0;
   degPerSPerV = 0;
   degPerV = 0;
 end

@@ -121,7 +121,6 @@ methods
       app.velTrace(end) = app.velTrace(end - 1);
     end
     % find a saccade and make sure we have enough samples before and after its start
-
     startIndex = floor(app.targetTimeS * app.lbj.SampleRateHz);   % no saccades before stimon
     if app.taskMode == app.kTiming
       app.stepSign = -1;                                          % photodiode always driven negative

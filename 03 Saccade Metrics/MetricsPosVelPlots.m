@@ -11,18 +11,34 @@ classdef MetricsPosVelPlots < handle
   
   methods
     function obj = MetricsPosVelPlots(app)
-      %% Object Initialization %%
+      % Object Initialization
       obj = obj@handle();                                            % object initialization
       
-      %% Post Initialization %%
+      % Post Initialization
       obj.posAvgAxes = app.avgPosAxes;
       obj.posAxes = app.posAxes;
       obj.velAvgAxes = app.avgVelAxes;
       obj.velAxes = app.velAxes;
     end
+
+    function calibratedLabels(~, theAxes, conversion, unit)
+      yLim = max(abs(ylim(theAxes)));
+      maxCalValue = ceil((yLim * conversion) / unit) * unit;  % rounded to nearest unit
+      increment = unit;
+      while maxCalValue / increment > 5
+        increment = increment * 2;
+      end
+      yTicks = (-maxCalValue:increment:maxCalValue) / conversion;
+      yLabels = cell(length(yTicks), 1);
+      for i = 1:length(yTicks)
+        yLabels{i} = num2str(yTicks(i) * conversion, '%.0f');
+      end
+      set(theAxes, 'YTick', yTicks);
+      set(theAxes, 'YTickLabel', yLabels);
+    end
     
     function plotPosVel(obj, app, startIndex, endIndex, mustPlot)
-      %doPlot Updata all plots for EOG
+      %doPlot Update all plots for EOG
       mustPlot = mustPlot || (mod(sum(app.numSummed), app.numOffsets) == 0);
       posPlots(obj, app, startIndex, endIndex, mustPlot);
       velPlots(obj, app, startIndex, endIndex, mustPlot);
@@ -30,7 +46,6 @@ classdef MetricsPosVelPlots < handle
     
     %% posPlots: do the trial and average position plots
     function posPlots(obj, app, startIndex, endIndex, mustPlot)
-      saccades = app.saccades;
       timestepMS = 1000.0 / app.lbj.SampleRateHz;                   	% time interval of samples
       trialTimes = (0:1:size(app.posTrace, 1) - 1) * timestepMS;	% make array of trial time points
       saccadeTimes = (-(size(app.posAvg, 1) / 2):1:(size(app.posAvg,1) / 2) - 1) * timestepMS;
@@ -38,11 +53,14 @@ classdef MetricsPosVelPlots < handle
       % current trial position trace
       cla(obj.posAxes, 'reset');                                  % need 'reset' to clear axis scaling
       plot(obj.posAxes, trialTimes, app.posTrace, 'color', colors(app.absStepIndex,:));
+      saccades = app.saccades;
       if saccades.degPerV > 0                                     % plot saccade threshold
         hold(obj.posAxes, 'on');
-        thresholdV = saccades.thresholdDeg / saccades.degPerV * app.stepSign;
-        plot(obj.posAxes, [trialTimes(1) trialTimes(end)], [thresholdV, thresholdV], ...
-          ':', 'color', colors(app.absStepIndex,:));
+        if strcmp(app.ThresholdType.SelectedObject.Text, 'Position')
+          thresholdV = saccades.thresholdDeg / saccades.degPerV * app.stepSign;
+        plot(obj.posAxes, [trialTimes(1) trialTimes(end)], [thresholdV, thresholdV], ':r');
+%           ':', 'color', colors(app.absStepIndex,:));
+        end
         hold(obj.posAxes, 'off');
         ylabel(obj.posAxes, 'Avg Eye Position (deg)','FontSize', 14);
       else
@@ -107,7 +125,6 @@ classdef MetricsPosVelPlots < handle
     
     %% velPlots: do the trial and average velocity plots
     function velPlots(obj, app, startIndex, endIndex, mustPlot)
-      saccades = app.saccades;
       timestepMS = 1000.0 / app.lbj.SampleRateHz;                       	% time interval of samples
       trialTimes = (0:1:size(app.posTrace, 1) - 1) * timestepMS;     % make array of trial time points
       saccadeTimes = (-(size(app.posAvg, 1) / 2):1:(size(app.posAvg,1) / 2) - 1) * timestepMS;
@@ -120,6 +137,19 @@ classdef MetricsPosVelPlots < handle
       title(obj.velAxes, 'Most recent velocity trace', 'FontSize',12,'FontWeight','Bold');
       ylabel(obj.velAxes,'Analog Input (dV/dt)','FontSize',14);
       xlabel(obj.velAxes,'Time (ms)','FontSize',14);
+      hold(app.velAxes, 'on');                                    % mark fixOff and targetOn
+      saccades = app.saccades;
+      % if eye position has been calibrated, change the y scaling on the average to degrees rather than volts
+      if saccades.degPerSPerV > 0
+        if strcmp(app.ThresholdType.SelectedObject.Text, 'Speed')
+          thresholdV = saccades.thresholdDPS / saccades.degPerSPerV * app.stepSign;
+          plot(app.velAxes, [trialTimes(1) trialTimes(end)], [thresholdV, thresholdV], 'r:');
+        end
+        calibratedLabels(obj, app.velAxes, app.saccades.degPerSPerV, 100)
+        ylabel(app.velAxes,'Eye Speed (deg/s)','FontSize',14);
+      else
+        ylabel(app.velAxes,'Analog Input (dV/dt)','FontSize',14);
+      end
       % plot the average velocity traces every time a set of step sizes is completed
       if mustPlot
         cla(obj.velAvgAxes, 'reset');

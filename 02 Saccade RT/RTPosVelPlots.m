@@ -84,10 +84,10 @@ classdef RTPosVelPlots < handle
       yLim = max(abs(ylim(app.velAxes)));
       axis(app.velAxes, [-inf, inf, -yLim, yLim,]);
       xlabel(app.velAxes,'Time (ms)','FontSize',14);
-      % if eye position has been calibrated, change the y scaling on the average to degrees rather than volts
       hold(app.velAxes, 'on');                                    % mark fixOff and targetOn
       saccades = app.saccades;
-      if saccades.degPerV > 0
+      % if eye position has been calibrated, change the y scaling on the average to degrees rather than volts
+      if saccades.degPerSPerV > 0
         if strcmp(app.ThresholdType.SelectedObject.Text, 'Speed')
           thresholdV = saccades.thresholdDPS / saccades.degPerSPerV * app.stepSign;
           plot(app.velAxes, [trialTimes(1) trialTimes(end)], [thresholdV, thresholdV], 'r:');
