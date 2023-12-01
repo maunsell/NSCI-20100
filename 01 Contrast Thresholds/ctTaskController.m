@@ -1,8 +1,6 @@
 
 %% taskController: function to handle transition of task state.
 function ctTaskController(~, ~, app)
-%     handles = obj.UserData;
-%     data = handles.data;
   switch app.taskState
     case ctTaskState.taskStopped
       % do nothing
@@ -48,14 +46,12 @@ function ctTaskController(~, ~, app)
           ctDrawStatusText(app, 'run')
         end
       % after the increment stimulus has finished
-%       elseif etime(clock, app.stimStartTimeS) > app.stimParams.prestimDurS + app.stimParams.stimDurS
       elseif seconds(datetime('now') - app.stimStartTime) > app.stimParams.prestimDurS + app.stimParams.stimDurS
         clearScreen(app.stimuli);
         ctDrawStatusText(app, 'response');
         app.taskState = ctTaskState.taskWaitResponse;
       % after base contrast, start of increment stimulus
       elseif seconds(datetime('now') - app.stimStartTime) > app.stimParams.prestimDurS
-%       elseif etime(clock, app.stimStartTimeS) > app.stimParams.prestimDurS
         if app.doStim
           if (app.stimParams.changeSide == 0)
               drawStimuli(app.stimuli, app.baseIndex, app.testIndex, 0);          % increment on dleft

@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.apptool" plugin-version="1.0">
-  <configuration build-checksum="341015415" file="/Users/labuser/Desktop/NSCI-20100 Code/01 Contrast Thresholds/contrastThresholds.prj" location="/Users/labuser/Desktop/NSCI-20100 Code/01 Contrast Thresholds" name="contrastThresholds" target="target.mlapps" target-name="Package App">
+  <configuration build-checksum="341015415" file="/Users/maunsell/Desktop/NSCI-20100 Code/01 Contrast Thresholds/contrastThresholds.prj" location="/Users/maunsell/Desktop/NSCI-20100 Code/01 Contrast Thresholds" name="contrastThresholds" target="target.mlapps" target-name="Package App">
     <param.appname>contrastThresholds</param.appname>
     <param.authnamewatermark>John Maunsell</param.authnamewatermark>
     <param.email>maunsell@uchicago.edu</param.email>
@@ -8,7 +8,7 @@
     <param.icons />
     <param.summary>Contrast increment detection threshold measurement</param.summary>
     <param.description />
-    <param.screenshot>/private/var/folders/83/52yh8r912xqgrjtfm7qwmch00000gp/T/tp5b93946a_65f1_489d_8883_54e2afc850ab.png</param.screenshot>
+    <param.screenshot />
     <param.version>1.0</param.version>
     <param.products.name />
     <param.products.id />
@@ -20,6 +20,7 @@
       <param.icon />
       <param.icons />
       <param.description />
+      <param.screenshot />
       <param.version />
       <param.products.name />
       <param.products.id />
@@ -44,18 +45,18 @@
     <fileset.resources />
     <fileset.package />
     <build-deliverables>
-      <file location="/Users/labuser/Desktop/NSCI-20100 Code" name="01 Contrast Thresholds" optional="false">/Users/labuser/Desktop/NSCI-20100 Code/01 Contrast Thresholds</file>
+      <file location="/Users/maunsell/Desktop/NSCI-20100 Code" name="01 Contrast Thresholds" optional="false">/Users/maunsell/Desktop/NSCI-20100 Code/01 Contrast Thresholds</file>
     </build-deliverables>
     <workflow />
     <matlab>
-      <root>/Applications/MATLAB_R2019a.app</root>
+      <root>/Applications/MATLAB_R2023b.app</root>
       <toolboxes>
-        <toolbox name="neuralnetwork" />
+        <toolbox name="fixedpoint" />
       </toolboxes>
       <toolbox>
-        <neuralnetwork>
+        <fixedpoint>
           <enabled>true</enabled>
-        </neuralnetwork>
+        </fixedpoint>
       </toolbox>
     </matlab>
     <platform>
@@ -67,7 +68,7 @@
       <vista>false</vista>
       <linux>false</linux>
       <solaris>false</solaris>
-      <osver>10.12.6</osver>
+      <osver>14.1.1</osver>
       <os32>false</os32>
       <os64>true</os64>
       <arch>maci64</arch>

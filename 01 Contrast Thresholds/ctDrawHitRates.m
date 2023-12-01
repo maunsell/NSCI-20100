@@ -4,29 +4,22 @@ function ctDrawHitRates(app, doAllBaseContrasts)
   errNeg = zeros(size(app.trialsDone));              % for all neg CIs
   errPos = zeros(size(app.trialsDone));              % for all pos CIs
   pci = zeros(size(app.trialsDone, 1), size(app.trialsDone, 2), 2);
-  for i = 1:(size(app.trialsDone, 1))                % for each base
+  for i = 1:(size(app.trialsDone, 1))                % for each base contrast
     [hitRate(i,:), pci(i,:,:)] = binofit(app.hits(i, :), app.trialsDone(i, :));
     errNeg(i, :) = hitRate(i, :) - pci(i, :, 1);
     errPos(i, :) = pci(i, :, 2) - hitRate(i, :);
-    if doAllBaseContrasts || i == app.baseIndex      	% for current block (or when all are requested)
+    if doAllBaseContrasts || i == app.baseIndex      	% for current block (or all when requested)
       blocksDone = floor(mean(app.trialsDone(i, :)));
       tableData = get(app.resultsTable, 'Data');      % update table, regardless
       tableData{1, i} = sprintf('%.0f', blocksDone);
       % If we've just finished a block, and we have enough blocks, fit a logistic function.
       % We force 0.5 performance at the base contrast.
       if (doAllBaseContrasts || (blocksDone > app.blocksFit(i))) && blocksDone > 3
-        fun = @(params, xData) 0.5 + 0.5 ./ (1.0 + exp(-params(2) * (xData - params(1))));
-        xData = [app.baseContrasts(i) app.testContrasts(i, :)];
-        yData = [0.5 hitRate(i,:)];
-        x0 = [xData(ceil(length(xData) / 2)); 5];
-        OLS = @(params) sum((fun(params, xData) - yData).^2);
-        opts = optimset('Display', 'off', 'MaxFunEvals', 10000, 'MaxIter', 5000);
-        params = fminsearch(OLS, x0, opts);
-        app.curveFits(i, :) = 0.5 + 0.5 ./ (1.0 + exp(-params(2) * (xData(1:end) - params(1))));
-        app.blocksFit(i) = blocksDone;                          % update block count and table
-        tableData{2, i} = sprintf('%.1f%%', params(1) * 100.0); % threshold contrast
+        tableData{2, i} = sprintf('%.1f%%', ctSigmoidFit(app, i, hitRate(i, :)));
+        tableData{3, i} = sprintf('%.1f%% - %.1f%%', ctConfidenceInterval(app, i));
       elseif blocksDone == 0
         tableData{2, i} = '';
+        tableData{3, i} = '';
       end
       set(app.resultsTable, 'Data', tableData);
     end
