@@ -64,7 +64,7 @@ function [sIndex, eIndex] = findSaccade(obj, app, startIndex)
       eIndex =  maxIndex;
     end
     % if we are using a speed threshold, we've only just reach the peak
-    % speed. We continue on to find when the speed changes drops to zero
+    % speed. We continue on to find when the speed change drops to zero
     if eIndex > sIndex && strcmp(app.ThresholdType.SelectedObject.Text, 'Speed')
       while eIndex < (limit - 1) && app.velTrace(eIndex + 1) * app.stepSign > 0
         eIndex = eIndex + 1;

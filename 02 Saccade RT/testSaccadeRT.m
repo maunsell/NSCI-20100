@@ -13,9 +13,12 @@ classdef testSaccadeRT < matlab.uitest.TestCase
 %       fprintf('  Or, to proceed without user interaction, enter:\n');
 %       fprintf('  dbcont\n');
 %       keyboard;
-      blockInc = 2;
-      blockLimit = 10;
+      blockInc = 10;
+      blockLimit = 50;
+      speedThresholdDPS = 150;
       testCase.type(app.stopAfterText, sprintf('%d', blockInc));
+      testCase.type(app.thresholdDPSText, sprintf('%d', speedThresholdDPS));
+      testCase.press(app.SpeedButton);
       testCase.press(app.startButton);                % start data collection
 %       blocksToSave = str2double(app.stopAfterText.Value);
       while true

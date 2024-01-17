@@ -50,19 +50,34 @@ classdef MetricsAmpDur < handle
       if ~refresh
         return;
       end
-      cla(app.ampDurAxes);
-      boxplot(app.ampDurAxes, obj.reactTimesMS(1:minN, :), 'labels', num2str(app.offsetsDeg(:)), ...
-        'notch', 'on', 'whisker', 0, 'positions', app.offsetsDeg, 'symbol', '');
-      title(app.ampDurAxes, sprintf('Duration v. Amplitude (n\x2265%d)', app.blocksDone), 'FontSize', 12, 'FontWeight', 'Bold');
-      xlabel(app.ampDurAxes, 'Saccade Amplitude (deg)','FontSize',14);
-      ylabel(app.ampDurAxes, 'Saccade Duration (ms)','FontSize',14);
       app.medians = median(obj.reactTimesMS(1:minN, :));
       quartiles = prctile(obj.reactTimesMS(1:minN, :), [25 75]);
-      [maxQ, indexMax] = max(max(quartiles));
+      [maxQ, indexMax] = max(max(quartiles));      cla(app.ampDurAxes);
+      boxplot(app.ampDurAxes, obj.reactTimesMS(1:minN, :), 'labels', num2str(app.offsetsDeg(:)), ...
+            'notch', 'on', 'whisker', 0, 'positions', app.offsetsDeg, 'symbol', '');
+      title(app.ampDurAxes, sprintf('Duration v. Amplitude (n\x2265%d)', app.blocksDone), 'FontSize', 12, ...
+            'FontWeight', 'Bold');
+      xlabel(app.ampDurAxes, 'Saccade Amplitude (deg)', 'FontSize', 14);
+      ylabel(app.ampDurAxes, 'Saccade Duration (ms)', 'FontSize', 14);
       axis(app.ampDurAxes, [xlim(app.ampDurAxes), 0, app.medians(indexMax) + 2.0 * (maxQ - app.medians(indexMax))]);
       hold(app.ampDurAxes, 'off');
       obj.lastN = minN;
     end 
+
+    %% plotFits -- add fit functions to the amplitude/duration plot
+    function plotFits(~, app, speedSlope, accSlope)
+      hold(app.ampDurAxes, 'on');
+      posX = 0:max(app.offsetsDeg);
+      negX = min(app.offsetsDeg):0;
+      posY = polyval([1000.0 / speedSlope, 0], posX);
+      negY = -polyval([1000.0 / speedSlope, 0], negX);
+      plot(app.ampDurAxes, [negX, posX], [negY, posY], ':r');      
+      posY = sqrt(polyval([4.0 / (accSlope / 1000000), 0], posX));
+      negY = sqrt(-polyval([4.0 / (accSlope / 1000000), 0], negX));
+      plot(app.ampDurAxes, [negX, posX], [negY, posY], ':b');
+      legend(app.ampDurAxes, {'const. speed', 'const. accel.'}, 'location', 'north', 'box', 'off');
+      hold(app.ampDurAxes, 'off');
+    end
 
     %% writeAmpDurData
     % return a cell array suitable for creating an Excel spreadsheet reporting the ampDur statistics
@@ -71,7 +86,7 @@ classdef MetricsAmpDur < handle
         return;
       end
       if nargin < 3
-        timeString = datestr(now, 'mmm-dd-HHMMSS');
+        timeString = string(datetime('now', 'Format', 'MMM-dd-HHmmss'));
       end
       c = cell(app.numOffsets + 1, 7);
       [c{1, :}] = deal('Samples', 'Step (deg)', 'Amp. (deg)', 'Dur. Median (ms)', 'Dur. Median 95% CI (ms)', ...
@@ -91,12 +106,11 @@ classdef MetricsAmpDur < handle
         c{offset + 1, 6} = percentiles(2);
         c{offset + 1, 7} = percentiles(3);
       end
-      folderPath = '~/Desktop/MetricsData/AmpDur';
-      if ~isfolder(folderPath)
-        fprintf(' MetricsAmpDur: making folder %s\n', folderPath);
-        mkdir(folderPath);
+      fPath = [app.folderPath, 'AmpDur'];
+      if ~isfolder(fPath)
+        mkdir(fPath);
       end
-      filePath = fullfile(folderPath, ['MT-', timeString, '.xlsx']);
+      filePath = fullfile(fPath, ['MT-', timeString, '.xlsx']);
       writecell(c, filePath, 'writeMode', 'replacefile', 'autoFitWidth', 1);
       backupFile(filePath, '~/Desktop', '~/Documents/Respository');     % save backup in repository directory
     end

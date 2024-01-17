@@ -6,8 +6,8 @@ classdef RTPosVelPlots < handle
       obj = obj@handle();                                            % object initialization
       
       %% Post Initialization %%
-      cla(app.posAxes);
-      cla(app.velAxes);
+      cla(app.posAxes, 'reset');
+      cla(app.velAxes, 'reset');
       title(app.posAxes, 'Single position trace', 'fontSize', 12, 'fontWeight', 'bold')
       title(app.velAxes, 'Single velocity trace', 'fontSize', 12, 'fontWeight', 'bold')
     end
@@ -44,8 +44,9 @@ classdef RTPosVelPlots < handle
       % current trial position trace
       cla(app.posAxes, 'reset');
       plot(app.posAxes, [0, xLimit], [0, 0], 'k', trialTimes, app.posTrace, 'b');
-      yLim = max(abs(ylim(app.posAxes)));
-      axis(app.posAxes, [-inf, inf, -yLim, yLim]);
+      yLimit = max(abs(ylim(app.posAxes)));
+      % axis(app.posAxes, [-inf, inf, -yLim, yLim]);
+      ylim([-yLimit, yLimit]);
       hold(app.posAxes, 'on');                                    % mark fixOff and targetOn
       saccades = app.saccades;
       if saccades.degPerV > 0                                     % plot saccade threshold
@@ -81,8 +82,9 @@ classdef RTPosVelPlots < handle
       % plot the trial velocity trace
       cla(app.velAxes, 'reset');                                      % we need 'reset' to clear axis scaling
       plot(app.velAxes, [0, xLimit], [0, 0], 'k', trialTimes, app.velTrace, 'b');
-      yLim = max(abs(ylim(app.velAxes)));
-      axis(app.velAxes, [-inf, inf, -yLim, yLim,]);
+      yLimit = max(abs(ylim(app.velAxes)));
+      ylim([-yLimit, yLimit]);
+      % axis(app.velAxes, [-inf, inf, -yLimit, yLimit,]);
       xlabel(app.velAxes,'Time (ms)','FontSize',14);
       hold(app.velAxes, 'on');                                    % mark fixOff and targetOn
       saccades = app.saccades;

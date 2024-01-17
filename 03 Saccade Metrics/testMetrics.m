@@ -5,9 +5,22 @@
     function test_Metrics(testCase)
       app = Metrics('test');                % launch in test mode
       testCase.addTeardown(@delete, app);   % delete app after testing is done
+
+      fprintf('\n==================================================================\n');
+      fprintf('===================================================================\n');
+      fprintf('testSaccadeRT: This test script exercises SaccadeRT\n');
+      fprintf('  To enable user interactions while test is running you must enter:\n');
+      fprintf('  matlab.uitest.unlock(app.figure1), dbcont\n');
+      fprintf('  Or, to proceed without user interaction, enter:\n');
+      fprintf('  dbcont\n');
+      keyboard; %#ok<*KEYBOARDFUN>
+
       blockInc = 5;
-      blockLimit = 1000;
+      blockLimit = 100;
+      speedThresholdDPS = 150;
       testCase.type(app.stopAfterText, sprintf('%d', blockInc));
+      testCase.type(app.thresholdDPSText, sprintf('%d', speedThresholdDPS));
+      testCase.press(app.SpeedButton);
       testCase.press(app.startButton);                % start data collection
       while true
         while strcmp(app.startButton.Text, 'Stop')
@@ -21,7 +34,7 @@
         end
         testCase.press(app.startButton);              % start data collection
       end 
+      keyboard;
     end
-
   end
 end

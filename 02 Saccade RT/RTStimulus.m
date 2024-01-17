@@ -1,6 +1,5 @@
 classdef RTStimulus < handle
-  % Contrast threshold stimuli controller
-  % This is the first stimulus for which we've cut loose from Psychtoolbox
+  % SaccadeRT stimuli controller
   properties
     finalStim
     gapStim
@@ -77,12 +76,14 @@ classdef RTStimulus < handle
     
     %%
     function drawCenterStimulus(obj, app)
+      fprintf('RTStimulus: drawCenterStimulus\n');
       obj.currentOffsetIndex = ceil(obj.numPos / 2);
       drawImage(obj, app.kLeftStim);
     end
     
     %% drawImage -- draw the dot at the currently specified pixel offset
     function drawImage(obj, imageIndex)
+      fprintf('RTStimulus: drawImage index %d\n', imageIndex);
       obj.hAxes.Position(1) = obj.imagePosPix(obj.currentOffsetIndex);
       imshow(obj.images{imageIndex}, [0.5, 0.5, 0.5; 1.0, 1.0, 1.0], 'parent', obj.hAxes);
       drawnow;
@@ -127,8 +128,6 @@ classdef RTStimulus < handle
       end
       obj.images{app.kTestStim} = ones(obj.windRectPix(4), obj.stepSizePix, 'uint8'); % test image (white rect)
       % update the image position values.
-%       obj.numPos = floor(obj.windRectPix(3) / obj.stepSizePix);
-%       obj.numPos = obj.numPos - (1 - mod(obj.numPos, 2)); % numPos must be odd
       obj.numPos = floor(obj.windRectPix(3) / 2 / obj.stepSizePix);   % number of full steps left or right of center
       centerIndex = obj.numPos + 1;                          % index for the center position
       obj.numPos = obj.numPos * 2 + 1;                       % numPos must be odd
@@ -150,32 +149,39 @@ classdef RTStimulus < handle
     function prepareImages(obj, app)
       % first offset the image position if the current position won't accommodate the left or right step.
       % we don't need to do anything for a centering trial because that will be a different image location
+      fprintf('RTStimulus: prepareImages\n');
       if app.trialType == app.kCenteringTrial
-        drawImage(obj, obj.currentImageIndex);                          % draw for trial equivalence
+        fprintf('  prepareImages drawing center stimulus: gapStim and finalStim both %d\n', app.kLeftStim);
+        drawImage(obj, obj.currentImageIndex);                    % draw for trial equivalence
         obj.gapStim = app.kLeftStim;
         obj.finalStim = obj.gapStim;
       else
-        if app.stepSign == app.kLeft                                    % going to step left
+        if app.stepSign == app.kLeft                              % going to step left
           if obj.currentImageIndex == app.kLeftStim
             obj.currentOffsetIndex = obj.currentOffsetIndex - 1;	% shift one position leftward
           end
-          drawImage(obj, app.kRightStim);                  	% draw same spot with new image
+          fprintf ('  prepareImages drawing image with spot on right make a left step, finalStim %d\n', app.kLeftStim);
+          drawImage(obj, app.kRightStim);                  	      % draw same spot with new image
           obj.finalStim = app.kLeftStim;
         else
-          if obj.currentImageIndex == app.kRightStim          % going to step right
-            obj.currentOffsetIndex = obj.currentOffsetIndex + 1; % shift one position leftward
+          if obj.currentImageIndex == app.kRightStim              % going to step right
+            obj.currentOffsetIndex = obj.currentOffsetIndex + 1;  % shift one position leftward
           end
+          fprintf ('  prepareImages drawing image with spot on left make a right step, finalStim %d\n', app.kRightStim);
           drawImage(obj, app.kLeftStim);
           obj.finalStim = app.kRightStim;
         end
         % set up the gap stimuli
         switch app.trialType
           case app.kStepTrial
+            fprintf ('  prepareImages step trial: gapStim = finalStim\n');
             obj.gapStim = obj.finalStim;
           case app.kGapTrial
             obj.gapStim = app.kBlankStim;
+            fprintf ('  prepareImages gap trial: gapStim = kBlankStim\n');
           case app.kOverlapTrial
             obj.gapStim = app.kBothStim;
+            fprintf ('  prepareImages gap trial: overlap = kBothStim\n');
         end
       end
     end

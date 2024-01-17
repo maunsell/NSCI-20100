@@ -1,5 +1,7 @@
-classdef testContrastThresholds < matlab.uitest.TestCase
- % Matlab App Testing Framework approach to testing SaccadeRT
+classdef ctTestCase < matlab.uitest.TestCase
+ % Matlab App Testing Framework approach to testing ContrastThreholds
+ % This test is initiated by selecting this file in the editor pane of Matlab and then
+ % pressing the "Run Tests" button in the Matlab Editor toolbar
   methods (Test)
 
     function test_SampleSize(testCase)
@@ -13,24 +15,32 @@ classdef testContrastThresholds < matlab.uitest.TestCase
       % fprintf('  Or, to proceed without user interaction, enter:\n');
       % fprintf('  dbcont\n');
       % keyboard;
+      matlab.uitest.unlock(app.figure1);            % allow user interaction during run
       repsInc = 5;
-      repsLimit = 10;
+      repsLimit = 50;
+      intertrialDurS = 0.25;
+      prestimDurS = 0.25;
+      stimDurS = 0.25;
       testCase.type(app.stimRepsText, sprintf('%d', repsInc));
+      testCase.type(app.intertrialDurText, sprintf('%.1f', intertrialDurS));
+      testCase.type(app.prestimDurText, sprintf('%.1f', prestimDurS));
+      testCase.type(app.stimDurText, sprintf('%.1f', stimDurS));
       testCase.press(app.runButton);                % start data collection
-%       blocksToSave = str2double(app.stopAfterText.Value);
+      while ~strcmp(app.runButton.Text, 'Stop')     % wait for run to start
+      end
       while true
-%         blocksDone = min([app.rtDists{app.kStepTrial}.n, app.rtDists{app.kGapTrial}.n]);
-        while strcmp(app.runButton.Text, 'Stop')
+        while strcmp(app.runButton.Text, 'Stop')    % wait for end of a block
           pause(1);
-%           fprintf('%d blocks done\n', blocksDone);
         end
-        testCase.press(app.savePlotsButton);          % save the samples
+        testCase.press(app.savePlotsButton);        % save the data
         repsDone = str2double(app.stimRepsText.Value);
         testCase.type(app.stimRepsText, sprintf('%d', repsDone + repsInc))
         if (repsDone >= repsLimit)
           break;
         end
-        testCase.press(app.runButton);              % start data collection
+        testCase.press(app.runButton);                % start data collection
+        while ~strcmp(app.runButton.Text, 'Stop')     % wait for run to start
+        end
       end 
     end
 

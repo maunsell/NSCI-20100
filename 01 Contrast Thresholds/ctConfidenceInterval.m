@@ -10,5 +10,4 @@ function CIs = ctConfidenceInterval(app, i)
     thresholds(rep) = ctSigmoidFit(app, i, bootRate);
   end
   CIs = prctile(thresholds, [2.5, 97.5]);
-  fprintf('elapsed bootstrap time: %.6f\n', toc(tstart));
 end

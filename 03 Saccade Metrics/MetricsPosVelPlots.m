@@ -58,9 +58,8 @@ classdef MetricsPosVelPlots < handle
         hold(obj.posAxes, 'on');
         if strcmp(app.ThresholdType.SelectedObject.Text, 'Position')
           thresholdV = saccades.thresholdDeg / saccades.degPerV * app.stepSign;
-        plot(obj.posAxes, [trialTimes(1) trialTimes(end)], [thresholdV, thresholdV], ':r');
-%           ':', 'color', colors(app.absStepIndex,:));
-        end
+          plot(obj.posAxes, [trialTimes(1) trialTimes(end)], [thresholdV, thresholdV], ':r');
+        end        
         hold(obj.posAxes, 'off');
         ylabel(obj.posAxes, 'Avg Eye Position (deg)','FontSize', 14);
       else
@@ -112,6 +111,7 @@ classdef MetricsPosVelPlots < handle
       % Once the y-axis scaling is set, we can draw vertical marks for stimOn and saccades
       hold(obj.posAxes, 'on');
       plot(obj.posAxes, [app.stimTimeS, app.stimTimeS] * 1000.0, yLim, 'k-.');
+      plot(obj.posAxes, [0, trialTimes(end)], [0, 0], 'linewidth', 0.025, 'linestyle', '-.', 'color', 'k');
       if (startIndex > 0)
         plot(obj.posAxes, [startIndex, startIndex] * timestepMS, yLim, 'color', ...
           colors(app.absStepIndex,:), 'linestyle', ':');
@@ -198,6 +198,7 @@ classdef MetricsPosVelPlots < handle
       % Once the y-axis scaling is set, we can draw vertical marks for stimOn and saccades
       hold(obj.velAxes, 'on');
       plot(obj.velAxes, [app.stimTimeS * 1000.0, app.stimTimeS * 1000.0], yLim, 'k-.');
+      plot(obj.velAxes, [0, trialTimes(end)], [0, 0], 'linewidth', 0.25, 'linestyle', '-.', 'color', 'k');
       if (startIndex > 0)
         plot(obj.velAxes, [startIndex, startIndex] * timestepMS, yLim, 'color', ...
           colors(app.absStepIndex,:), 'linestyle', ':');

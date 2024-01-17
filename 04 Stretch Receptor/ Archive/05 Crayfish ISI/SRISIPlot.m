@@ -166,8 +166,8 @@ classdef SRISIPlot < handle
       if ~isfolder(folderPath)                      % folder exist?
         mkdir(folderPath);
       end
-      timeString = datestr(now, 'mmm-dd-HH:MM:SS');
-      dateString = datestr(now, 'mmm-dd');
+      timeString = string(datetime('now', 'Format', 'MMM-dd-HH:mm:ss'));
+      dateString = string(datetime('now', 'Format', 'MMM-dd'));
       fileName = sprintf('SR-%s.xlsx', dateString);
       if isfile([folderPath fileName])
         system(sprintf('cp %s%s %stemp.xlsx', folderPath, fileName, folderPath));

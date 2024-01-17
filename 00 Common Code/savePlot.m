@@ -4,14 +4,13 @@ function timeChar = savePlot(axesToSave, folderPath, appString, extString, timeC
     timeChar = char(string(datetime('now', 'format', 'MMM-dd-HHmmss')));
   end
   if ~isfolder(folderPath)
-      fprintf(' savePlot: making folder\n');
       mkdir(folderPath);
   end
   filePath = fullfile(folderPath, [appString, '-', timeChar, '.', extString]);
-  fprintf('savePlot: exporting to %s: ', folderPath);
+  fprintf('savePlot: writing to %s', filePath);
   tic
-  exportgraphics(axesToSave, filePath, 'resolution', 300);
-  toc
+  exportgraphics(axesToSave, filePath);
+  fprintf(' (%.1f s)\n', toc);
   backupFile(filePath, '~/Desktop', '~/Documents/Respository');     % save backup in repository directory
 end
   
