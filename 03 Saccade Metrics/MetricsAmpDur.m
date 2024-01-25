@@ -3,10 +3,12 @@ classdef MetricsAmpDur < handle
   %   Accumulates and plots amplitude-duration relationships
   
   properties
+    accFit;
     ampLabels
     lastN
     n
     reactTimesMS
+    speedFit;
   end
   
   methods
@@ -21,6 +23,8 @@ classdef MetricsAmpDur < handle
       obj.reactTimesMS = zeros(10000, app.numOffsets);                  % preallocate a generous buffer
       obj.n = zeros(1, app.numOffsets);
       obj.lastN = 0;
+      obj.accFit = -1;
+      obj.speedFit = -1;
       obj.ampLabels = cell(1, app.numOffsets);
       for i = 1:app.numOffsets
         obj.ampLabels{i} = sprintf('%.0f', app.offsetsDeg(i));
@@ -39,6 +43,8 @@ classdef MetricsAmpDur < handle
     function clearAll(obj, app)
       obj.n = zeros(1, app.numOffsets);
       obj.lastN = 0;
+      obj.accFit = -1;
+      obj.speedFit = -1;
       cla(app.ampDurAxes);
       axis(app.ampDurAxes, [0 1 0 1]);
     end
@@ -61,19 +67,23 @@ classdef MetricsAmpDur < handle
       ylabel(app.ampDurAxes, 'Saccade Duration (ms)', 'FontSize', 14);
       axis(app.ampDurAxes, [xlim(app.ampDurAxes), 0, app.medians(indexMax) + 2.0 * (maxQ - app.medians(indexMax))]);
       hold(app.ampDurAxes, 'off');
+      plotFits(obj, app);
       obj.lastN = minN;
     end 
 
     %% plotFits -- add fit functions to the amplitude/duration plot
-    function plotFits(~, app, speedSlope, accSlope)
+    function plotFits(obj, app)
+      if (obj.accFit == -1) || (obj.speedFit == -1)
+        return;
+      end
       hold(app.ampDurAxes, 'on');
       posX = 0:max(app.offsetsDeg);
       negX = min(app.offsetsDeg):0;
-      posY = polyval([1000.0 / speedSlope, 0], posX);
-      negY = -polyval([1000.0 / speedSlope, 0], negX);
+      posY = polyval([1000.0 / obj.speedFit, 0], posX);
+      negY = -polyval([1000.0 / obj.speedFit, 0], negX);
       plot(app.ampDurAxes, [negX, posX], [negY, posY], ':r');      
-      posY = sqrt(polyval([4.0 / (accSlope / 1000000), 0], posX));
-      negY = sqrt(-polyval([4.0 / (accSlope / 1000000), 0], negX));
+      posY = sqrt(polyval([4.0 / (obj.accFit / 1000000), 0], posX));
+      negY = sqrt(-polyval([4.0 / (obj.accFit / 1000000), 0], negX));
       plot(app.ampDurAxes, [negX, posX], [negY, posY], ':b');
       legend(app.ampDurAxes, {'const. speed', 'const. accel.'}, 'location', 'north', 'box', 'off');
       hold(app.ampDurAxes, 'off');
@@ -83,6 +93,7 @@ classdef MetricsAmpDur < handle
     % return a cell array suitable for creating an Excel spreadsheet reporting the ampDur statistics
     function writeAmpDurData(obj, app, timeString)
       if min(obj.n) < 3                 % need at least 3 reps to have savable data
+        fprintf('writeAmpDurData -- not writing, too few\n');
         return;
       end
       if nargin < 3
@@ -111,6 +122,7 @@ classdef MetricsAmpDur < handle
         mkdir(fPath);
       end
       filePath = fullfile(fPath, ['MT-', timeString, '.xlsx']);
+      fprintf('writeAmpDurData -- writing, %s\n', filePath);
       writecell(c, filePath, 'writeMode', 'replacefile', 'autoFitWidth', 1);
       backupFile(filePath, '~/Desktop', '~/Documents/Respository');     % save backup in repository directory
     end

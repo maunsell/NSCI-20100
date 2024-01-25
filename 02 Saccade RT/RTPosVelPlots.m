@@ -95,9 +95,9 @@ classdef RTPosVelPlots < handle
           plot(app.velAxes, [trialTimes(1) trialTimes(end)], [thresholdV, thresholdV], 'r:');
         end
         calibratedLabels(obj, app.velAxes, app.saccades.degPerSPerV, 100)
-        ylabel(app.velAxes,'Eye Speed (deg/s)','FontSize',14);
+        ylabel(app.velAxes, 'Eye Speed (deg/s)', 'FontSize', 14);
       else
-        ylabel(app.velAxes,'Analog Input (dV/dt)','FontSize',14);
+        ylabel(app.velAxes, 'Analog Input (dV/dt)', 'FontSize', 14);
       end
       a1 = axis(app.velAxes);
       % Once the y-axis scaling is set, we can draw vertical marks for stimOn and saccades

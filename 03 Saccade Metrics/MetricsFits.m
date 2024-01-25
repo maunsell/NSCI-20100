@@ -36,7 +36,6 @@ classdef MetricsFits < handle
       end
       x = abs(app.offsetsDeg);
       y = app.medians;
-      % dur = [37, 42, 49, 58, 59, 34, 43, 48.5, 52.5, 61.0];
 
       p = polyfit([x, -x], [y, -y], 1);
       speedSlope = 1000.0 / p(1);
@@ -60,7 +59,7 @@ classdef MetricsFits < handle
       obj.tableData{2, 4} = sprintf('%.0f', accSS);
       set(app.fitTable, 'Data', obj.tableData);
 
-      F = speedSS / accSS;
+      F = accSS / speedSS;
       df = app.numOffsets - 1;
       prob = 1.0 - fcdf(F, df, df);
       obj.statsData = cell(1, 2);
@@ -78,11 +77,10 @@ classdef MetricsFits < handle
       end
       obj.fitData{2, 6} = obj.statsData{1};
       obj.fitData{2, 7} = obj.statsData{2};
-
       obj.fitsValid = true;
-
-      plotFits(app.ampDur, app, speedSlope, accSlope);
-
+      app.ampDur.accFit = accSlope;
+      app.ampDur.speedFit = speedSlope;
+      plotFits(app.ampDur, app);
     end
 
     %% clearAll
@@ -94,12 +92,15 @@ classdef MetricsFits < handle
       set(app.fitTable, 'Data', obj.tableData);
       obj.statsData = {'', ''};
       set(app.statsTable, 'Data', obj.statsData);
+      app.ampDur.accFit = -1;
+      app.ampDur.speedFit = -1;
     end
     
     %% writeFitData
     % return a cell array suitable for creating an Excel spreadsheet reporting the ampDur statistics
     function writeFitData(obj, app, timeString)
       if ~obj.fitsValid
+          fprintf('writeFitData -- not writing because fit is not valid\n');
         return;
       end
       if nargin < 3
@@ -110,6 +111,7 @@ classdef MetricsFits < handle
         mkdir(fPath);
       end
       filePath = fullfile(fPath, ['MT-', timeString, '.xlsx']);
+      fprintf('writeFitData -- writing fit %s\n', filePath);
       writecell(obj.fitData, filePath, 'writeMode', 'replacefile', 'autoFitWidth', 1);
       backupFile(filePath, '~/Desktop', '~/Documents/Respository');     % save backup in repository directory
     end

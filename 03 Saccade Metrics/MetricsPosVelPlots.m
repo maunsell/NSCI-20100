@@ -61,9 +61,9 @@ classdef MetricsPosVelPlots < handle
           plot(obj.posAxes, [trialTimes(1) trialTimes(end)], [thresholdV, thresholdV], ':r');
         end        
         hold(obj.posAxes, 'off');
-        ylabel(obj.posAxes, 'Avg Eye Position (deg)','FontSize', 14);
+        ylabel(obj.posAxes, 'Eye Position (deg)', 'FontSize', 14);
       else
-        ylabel(obj.posAxes,'Analog Input (V)','FontSize', 14); 
+        ylabel(obj.posAxes, 'Analog Input (V)', 'FontSize', 14); 
       end
       title(obj.posAxes, 'Most recent position trace', 'FontSize', 12,'FontWeight','Bold')
       % average position traces every complete block
@@ -99,7 +99,7 @@ classdef MetricsPosVelPlots < handle
             end
             set(obj.posAvgAxes, 'YTick', yTicks);
             set(obj.posAvgAxes, 'YTickLabel', yLabels);
-            ylabel(obj.posAvgAxes,'Avg Eye Position (deg)','FontSize',14);
+            ylabel(obj.posAvgAxes, 'Avg Eye Position (deg)', 'FontSize', 14);
           end
         end
       end
@@ -146,7 +146,7 @@ classdef MetricsPosVelPlots < handle
           plot(app.velAxes, [trialTimes(1) trialTimes(end)], [thresholdV, thresholdV], 'r:');
         end
         calibratedLabels(obj, app.velAxes, app.saccades.degPerSPerV, 100)
-        ylabel(app.velAxes,'Eye Speed (deg/s)','FontSize',14);
+        ylabel(app.velAxes, 'Eye Speed (deg/s)', 'FontSize', 14);
       else
         ylabel(app.velAxes,'Analog Input (dV/dt)','FontSize',14);
       end
@@ -187,7 +187,7 @@ classdef MetricsPosVelPlots < handle
         end
         set(obj.velAxes, 'YTick', yTicks);
         set(obj.velAxes, 'YTickLabel', yLabels);
-        ylabel(obj.velAxes,'Avg Eye Speed (deg/s)','FontSize',14);
+        ylabel(obj.velAxes, 'Eye Speed (deg/s)', 'FontSize',14);
         if mustPlot
           set(obj.velAvgAxes, 'YTick', yTicks);
           set(obj.velAvgAxes, 'YTickLabel', yLabels);
