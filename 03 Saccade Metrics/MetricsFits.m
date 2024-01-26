@@ -19,7 +19,6 @@ classdef MetricsFits < handle
       obj = obj@handle();
       
       %% Post Initialization %%
-      % app.fitTable.Data = app.fitTableData;               % must have a data cell for row name to show
       app.fitTable.ColumnName = {'Fit Value'; 'Intercept'; sprintf('r%c', 178); 'Res. Sum Sq.'};
       app.fitTable.RowName = {'Speed'; 'Accel.'};
 
@@ -57,7 +56,7 @@ classdef MetricsFits < handle
       obj.tableData{2, 2} = sprintf('%.0f ms', accIntercept);
       obj.tableData{2, 3} = sprintf('%.2f', accR2);
       obj.tableData{2, 4} = sprintf('%.0f', accSS);
-      set(app.fitTable, 'Data', obj.tableData);
+      app.fitTable.Data = obj.tableData;
 
       F = accSS / speedSS;
       df = app.numOffsets - 1;
@@ -89,9 +88,11 @@ classdef MetricsFits < handle
       obj.fitData = cell(3, 7);
       [obj.fitData{1, :}] = deal(' ', 'Fit Value', 'Intercept', 'r^2', 'Sum Squares', 'F', 'p');
       obj.tableData = {'', '', '', ''; '', '', '', ''};      % contents of fit table
-      set(app.fitTable, 'Data', obj.tableData);
+      app.fitTable.Data = obj.tableData;
+      % set(app.fitTable, 'Data', obj.tableData);
       obj.statsData = {'', ''};
-      set(app.statsTable, 'Data', obj.statsData);
+      app.statsTable.Data = obj.statsData;
+      % set(app.statsTable, 'Data', obj.statsData);
       app.ampDur.accFit = -1;
       app.ampDur.speedFit = -1;
     end

@@ -87,7 +87,8 @@ methods
       app.velTrace(end) = app.velTrace(end - 1);
     end
     % find a saccade and make sure we have enough samples before and after its start
-    sIndex = floor(app.prestimDurS * app.lbj.SampleRateHz);
+    % sIndex = floor(app.prestimDurS * app.lbj.SampleRateHz);
+    sIndex = floor(app.stimTimeS * app.lbj.SampleRateHz);
     [startIndex, endIndex] = findSaccade(obj, app, sIndex);
     saccadeOffset = floor(app.saccadeSamples / 2);
     firstIndex = startIndex - saccadeOffset;

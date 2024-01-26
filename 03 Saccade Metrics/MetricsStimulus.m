@@ -27,9 +27,8 @@ classdef MetricsStimulus < handle
     function obj = MetricsStimulus(app)
 %       obj.doStimDisplay = app.doStimDisplay;
       if app.doStimDisplay
-        imtool close all;                               % close imtool figures from Image Processing Toolbox
+        % imtool close all;                               % close imtool figures from Image Processing Toolbox
         obj.spotRadiusPix = 10;
-%         obj.stepSizeDeg = stepSizeDeg;
         dockPix = 75;
         windHeightPix = 60;
         screenRectPix = get(0, 'MonitorPositions');   	% get the size of the primary screen
@@ -56,13 +55,7 @@ classdef MetricsStimulus < handle
       obj.currentOffsetPix = 0;
       drawImage(obj, obj.spotImage);
     end
-    
-%     %%
-%     function pix = degToPix(obj, app, deg)
-%       assert(obj.viewDistanceMM > 0, 'Metrics degToPix: viewDistanceMM has not yet been set');
-%       pix = round(tan(deg / app.degPerRadian) * obj.viewDistanceMM * obj.pixPerMM);
-%     end   
-    
+        
     %% delete the window
     function delete(obj)
       delete(obj.hFig);

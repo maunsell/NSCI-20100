@@ -40,15 +40,17 @@ classdef MetricsPosVelPlots < handle
     function plotPosVel(obj, app, startIndex, endIndex, mustPlot)
       %doPlot Update all plots for EOG
       mustPlot = mustPlot || (mod(sum(app.numSummed), app.numOffsets) == 0);
+%       fprintf('  plotPosVel: start posPlots\n');
       posPlots(obj, app, startIndex, endIndex, mustPlot);
-      velPlots(obj, app, startIndex, endIndex, mustPlot);
+%        fprintf('  plotPosVel: start velPlots\n');
+     velPlots(obj, app, startIndex, endIndex, mustPlot);
     end
     
     %% posPlots: do the trial and average position plots
     function posPlots(obj, app, startIndex, endIndex, mustPlot)
-      timestepMS = 1000.0 / app.lbj.SampleRateHz;                   	% time interval of samples
+
+      timestepMS = 1000.0 / app.lbj.SampleRateHz;                 % time interval of samples
       trialTimes = (0:1:size(app.posTrace, 1) - 1) * timestepMS;	% make array of trial time points
-      saccadeTimes = (-(size(app.posAvg, 1) / 2):1:(size(app.posAvg,1) / 2) - 1) * timestepMS;
       colors = get(obj.posAxes, 'ColorOrder');
       % current trial position trace
       cla(obj.posAxes, 'reset');                                  % need 'reset' to clear axis scaling
@@ -66,9 +68,11 @@ classdef MetricsPosVelPlots < handle
         ylabel(obj.posAxes, 'Analog Input (V)', 'FontSize', 14); 
       end
       title(obj.posAxes, 'Most recent position trace', 'FontSize', 12,'FontWeight','Bold')
+      
       % average position traces every complete block
       if mustPlot
         cla(obj.posAvgAxes, 'reset');
+        saccadeTimes = (-(size(app.posAvg, 1) / 2):1:(size(app.posAvg, 1) / 2) - 1) * timestepMS;
         if sum(app.numSummed) > 0
           plot(obj.posAvgAxes, saccadeTimes, app.posAvg(:, 1:app.numOffsets / 2), '-');
           hold(obj.posAvgAxes, 'on');
@@ -132,13 +136,17 @@ classdef MetricsPosVelPlots < handle
       % plot the trial velocity trace
       cla(obj.velAxes, 'reset');
       plot(obj.velAxes, trialTimes, app.velTrace, 'color', colors(app.absStepIndex,:));
-      yLim = max(abs(ylim(obj.velAxes)));
-      axis(obj.velAxes, [-inf, inf, -yLim, yLim]);
+%         fprintf('  velPlots: finish plot\n');
+     yLim = max(abs(ylim(obj.velAxes)));
+%          fprintf('  velPlots: got Ylim\n');
+     axis(obj.velAxes, [-inf, inf, -yLim, yLim]);
       title(obj.velAxes, 'Most recent velocity trace', 'FontSize',12,'FontWeight','Bold');
-      ylabel(obj.velAxes,'Analog Input (dV/dt)','FontSize',14);
+%          fprintf('  velPlots: finish title\n');
+     ylabel(obj.velAxes,'Analog Input (dV/dt)','FontSize',14);
       xlabel(obj.velAxes,'Time (ms)','FontSize',14);
       hold(app.velAxes, 'on');                                    % mark fixOff and targetOn
-      saccades = app.saccades;
+%         fprintf('  velPlots: all done plot\n');
+     saccades = app.saccades;
       % if eye position has been calibrated, change the y scaling on the average to degrees rather than volts
       if saccades.degPerSPerV > 0
         if strcmp(app.ThresholdType.SelectedObject.Text, 'Speed')
@@ -152,6 +160,8 @@ classdef MetricsPosVelPlots < handle
       end
       % plot the average velocity traces every time a set of step sizes is completed
       if mustPlot
+%         fprintf('    velPlots: plotting averages\n');
+
         cla(obj.velAvgAxes, 'reset');
         if sum(app.numSummed) > 0                  % make sure there is at least one set of steps
           plot(obj.velAvgAxes, saccadeTimes, app.velAvg(:, 1:app.numOffsets / 2), '-');
@@ -175,6 +185,8 @@ classdef MetricsPosVelPlots < handle
       end
       % if eye position has been calibrated, change the y scaling on the average to degrees rather than volts
       if saccades.degPerV > 0
+%                   fprintf('    velPlots: change yscaling\n');
+
         maxSpeedDPS = ceil((yLim * saccades.degPerSPerV) / 100.0) * 100;
         increment = 100;
         while maxSpeedDPS / increment > 5
@@ -208,6 +220,7 @@ classdef MetricsPosVelPlots < handle
         end
       end
       hold(obj.velAxes, 'off');
-    end
+%         fprintf('    velPlots: done\n');
+   end
   end
 end
