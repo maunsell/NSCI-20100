@@ -1,4 +1,9 @@
 function [sIndex, eIndex] = findSaccade(obj, app, startIndex)
+  if startIndex <= 0
+    sIndex = 0;
+    eIndex = 0;
+    return;
+  end
   if app.calTrialsDone < 4                                    % still getting a calibration
     if (app.stepSign == 1)
       DPV = abs(app.stepSizeDeg / (max(app.posTrace(:)) - mean(app.posTrace(1:startIndex))));
