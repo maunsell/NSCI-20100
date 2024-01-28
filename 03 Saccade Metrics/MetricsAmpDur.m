@@ -32,10 +32,15 @@ classdef MetricsAmpDur < handle
     end
 
     %% addAmpDur
-    function addAmpDur(obj, app, sIndex, eIndex)
+    function blockDone = addAmpDur(obj, app, sIndex, eIndex)
       if sIndex > 0 && eIndex > 0
         obj.n(app.offsetIndex) = obj.n(app.offsetIndex) + 1;
         obj.reactTimesMS(obj.n(app.offsetIndex), app.offsetIndex) = (eIndex - sIndex) / app.lbj.SampleRateHz * 1000.0;
+      end
+      minN = min(obj.n);
+      blockDone = minN > obj.lastN;
+      if blockDone
+        obj.lastN = minN;
       end
     end
     
@@ -50,16 +55,14 @@ classdef MetricsAmpDur < handle
     end
     
     %% plotAmpDur
-    function refresh = plotAmpDur(obj, app)
-      minN = min(obj.n);
-      refresh = minN >= 2 && minN > obj.lastN;
-      if ~refresh
+    function plotAmpDur(obj, app)
+      if obj.lastN <= 2             % we need enough data for the boxplot
         return;
       end
-      app.medians = median(obj.reactTimesMS(1:minN, :));
-      quartiles = prctile(obj.reactTimesMS(1:minN, :), [25 75]);
+      app.medians = median(obj.reactTimesMS(1:obj.lastN, :));
+      quartiles = prctile(obj.reactTimesMS(1:obj.lastN, :), [25 75]);
       [maxQ, indexMax] = max(max(quartiles));      cla(app.ampDurAxes);
-      boxplot(app.ampDurAxes, obj.reactTimesMS(1:minN, :), 'labels', num2str(app.offsetsDeg(:)), ...
+      boxplot(app.ampDurAxes, obj.reactTimesMS(1:obj.lastN, :), 'labels', num2str(app.offsetsDeg(:)), ...
             'notch', 'on', 'whisker', 0, 'positions', app.offsetsDeg, 'symbol', '');
       title(app.ampDurAxes, sprintf('Duration v. Amplitude (n\x2265%d)', app.blocksDone), 'FontSize', 12, ...
             'FontWeight', 'Bold');
@@ -68,7 +71,6 @@ classdef MetricsAmpDur < handle
       axis(app.ampDurAxes, [xlim(app.ampDurAxes), 0, app.medians(indexMax) + 2.0 * (maxQ - app.medians(indexMax))]);
       hold(app.ampDurAxes, 'off');
       plotFits(obj, app);
-      obj.lastN = minN;
     end 
 
     %% plotFits -- add fit functions to the amplitude/duration plot

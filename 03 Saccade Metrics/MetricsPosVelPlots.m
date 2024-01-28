@@ -3,22 +3,14 @@ classdef MetricsPosVelPlots < handle
   %   Support for processing eye traces and detecting saccades
   
   properties
-    posAvgAxes
-    posAxes
-    velAvgAxes
-    velAxes
   end
   
   methods
-    function obj = MetricsPosVelPlots(app)
+    function obj = MetricsPosVelPlots(~)
       % Object Initialization
       obj = obj@handle();                                            % object initialization
       
       % Post Initialization
-      obj.posAvgAxes = app.avgPosAxes;
-      obj.posAxes = app.posAxes;
-      obj.velAvgAxes = app.avgVelAxes;
-      obj.velAxes = app.velAxes;
     end
 
     function calibratedLabels(~, theAxes, conversion, unit)
@@ -51,47 +43,47 @@ classdef MetricsPosVelPlots < handle
 
       timestepMS = 1000.0 / app.lbj.SampleRateHz;                 % time interval of samples
       trialTimes = (0:1:size(app.posTrace, 1) - 1) * timestepMS;	% make array of trial time points
-      colors = get(obj.posAxes, 'ColorOrder');
+      colors = get(app.posAxes, 'ColorOrder');
       % current trial position trace
-      cla(obj.posAxes, 'reset');                                  % need 'reset' to clear axis scaling
-      plot(obj.posAxes, trialTimes, app.posTrace, 'color', colors(app.absStepIndex,:));
+      cla(app.posAxes, 'reset');                                  % need 'reset' to clear axis scaling
+      plot(app.posAxes, trialTimes, app.posTrace, 'color', colors(app.absStepIndex,:));
       saccades = app.saccades;
       if saccades.degPerV > 0                                     % plot saccade threshold
-        hold(obj.posAxes, 'on');
+        hold(app.posAxes, 'on');
         if strcmp(app.ThresholdType.SelectedObject.Text, 'Position')
           thresholdV = saccades.thresholdDeg / saccades.degPerV * app.stepSign;
-          plot(obj.posAxes, [trialTimes(1) trialTimes(end)], [thresholdV, thresholdV], ':r');
+          plot(app.posAxes, [trialTimes(1) trialTimes(end)], [thresholdV, thresholdV], ':r');
         end        
-        hold(obj.posAxes, 'off');
-        ylabel(obj.posAxes, 'Eye Position (deg)', 'FontSize', 14);
+        hold(app.posAxes, 'off');
+        ylabel(app.posAxes, 'Eye Position (deg)', 'FontSize', 14);
       else
-        ylabel(obj.posAxes, 'Analog Input (V)', 'FontSize', 14); 
+        ylabel(app.posAxes, 'Analog Input (V)', 'FontSize', 14); 
       end
-      title(obj.posAxes, 'Most recent position trace', 'FontSize', 12,'FontWeight','Bold')
+      title(app.posAxes, 'Most recent position trace', 'FontSize', 12,'FontWeight','Bold')
       
       % average position traces every complete block
       if mustPlot
-        cla(obj.posAvgAxes, 'reset');
+        cla(app.avgPosAxes, 'reset');
         saccadeTimes = (-(size(app.posAvg, 1) / 2):1:(size(app.posAvg, 1) / 2) - 1) * timestepMS;
         if sum(app.numSummed) > 0
-          plot(obj.posAvgAxes, saccadeTimes, app.posAvg(:, 1:app.numOffsets / 2), '-');
-          hold(obj.posAvgAxes, 'on');
-          obj.posAvgAxes.ColorOrderIndex = 1;
-          plot(obj.posAvgAxes, saccadeTimes, app.posAvg(:, app.numOffsets / 2 + 1:app.numOffsets), '-');
-          hold(obj.posAvgAxes, 'off');
-          title(obj.posAvgAxes, sprintf('Average position traces (n\x2265%d)', app.blocksDone), ...
+          plot(app.avgPosAxes, saccadeTimes, app.posAvg(:, 1:app.numOffsets / 2), '-');
+          hold(app.avgPosAxes, 'on');
+          app.avgPosAxes.ColorOrderIndex = 1;
+          plot(app.avgPosAxes, saccadeTimes, app.posAvg(:, app.numOffsets / 2 + 1:app.numOffsets), '-');
+          hold(app.avgPosAxes, 'off');
+          title(app.avgPosAxes, sprintf('Average position traces (n\x2265%d)', app.blocksDone), ...
             'FontSize',12,'FontWeight','Bold')
           % set both plots to the same y scale
-          yLim = max(abs(ylim(obj.posAvgAxes)));
-          axis(obj.posAvgAxes, [-inf inf -yLim yLim]);
-          hold(obj.posAvgAxes, 'on');
-          plot(obj.posAvgAxes, [0 0], [-yLim yLim], 'color', 'k', 'linestyle', ':'); % saccade start, t = 0
+          yLim = max(abs(ylim(app.avgPosAxes)));
+          axis(app.avgPosAxes, [-inf inf -yLim yLim]);
+          hold(app.avgPosAxes, 'on');
+          plot(app.avgPosAxes, [0 0], [-yLim yLim], 'color', 'k', 'linestyle', ':'); % saccade start, t = 0
           for i = 1:length(app.medians)          % draw saccade median for each average trace
             yEnd = yLim - floor((i - 1) / (app.numOffsets / 2)) * 2 * yLim;
-            plot(obj.posAvgAxes, [app.medians(i), app.medians(i)], ...
+            plot(app.avgPosAxes, [app.medians(i), app.medians(i)], ...
               [0, yEnd], ':', 'color', colors(mod(i - 1, app.numOffsets / 2) + 1, :));
           end
-          hold(obj.posAvgAxes, 'off');
+          hold(app.avgPosAxes, 'off');
           % if eye position has been calibrated, change the y scaling on the average to degrees
           % rather than volts
           if saccades.degPerV > 0
@@ -101,30 +93,32 @@ classdef MetricsPosVelPlots < handle
             for i = 1:length(yTicks)
               yLabels{i} = num2str(yTicks(i) * saccades.degPerV, '%.0f');
             end
-            set(obj.posAvgAxes, 'YTick', yTicks);
-            set(obj.posAvgAxes, 'YTickLabel', yLabels);
-            ylabel(obj.posAvgAxes, 'Avg Eye Position (deg)', 'FontSize', 14);
+            set(app.avgPosAxes, 'YTick', yTicks);
+            set(app.avgPosAxes, 'YTickLabel', yLabels);
+            ylabel(app.avgPosAxes, 'Avg Eye Position (deg)', 'FontSize', 14);
           end
         end
       end
       if sum(app.numSummed) > app.numOffsets
-        yLim = max(abs(ylim(obj.posAvgAxes)));
-        axis(obj.posAxes, [-inf inf -yLim yLim]);         % scale pos plot to avgPos plot y-axis
+        yLim = max(abs(ylim(app.avgPosAxes)));
+        axis(app.posAxes, [-inf inf -yLim yLim]);         % scale pos plot to avgPos plot y-axis
       end
-      yLim = ylim(obj.posAxes);
+      yLim = ylim(app.posAxes);
       % Once the y-axis scaling is set, we can draw vertical marks for stimOn and saccades
-      hold(obj.posAxes, 'on');
-      plot(obj.posAxes, [app.stimTimeS, app.stimTimeS] * 1000.0, yLim, 'k-.');
-      plot(obj.posAxes, [0, trialTimes(end)], [0, 0], 'linewidth', 0.025, 'linestyle', '-.', 'color', 'k');
+      hold(app.posAxes, 'on');
+      plot(app.posAxes, [app.stimTimeS, app.stimTimeS] * 1000.0, yLim, 'k-.');
+      plot(app.posAxes, [0, trialTimes(end)], [0, 0], 'linewidth', 0.025, 'linestyle', '-.', 'color', 'k');
       if (startIndex > 0)
-        plot(obj.posAxes, [startIndex, startIndex] * timestepMS, yLim, 'color', ...
+        plot(app.posAxes, [startIndex, startIndex] * timestepMS, yLim, 'color', ...
           colors(app.absStepIndex,:), 'linestyle', ':');
         if (endIndex > 0)
-          plot(obj.posAxes, [endIndex, endIndex] * timestepMS, yLim, 'color', ...
+          plot(app.posAxes, [endIndex, endIndex] * timestepMS, yLim, 'color', ...
             colors(app.absStepIndex,:), 'linestyle', ':');
         end
       end
-      hold(obj.posAxes, 'off');
+      hold(app.posAxes, 'off');
+%       app.posAxes.Toolbar.Visible = 'off';
+%       app.avgPosAxes.Toolbar.Visible = 'off';
     end
     
     %% velPlots: do the trial and average velocity plots
@@ -132,18 +126,18 @@ classdef MetricsPosVelPlots < handle
       timestepMS = 1000.0 / app.lbj.SampleRateHz;                       	% time interval of samples
       trialTimes = (0:1:size(app.posTrace, 1) - 1) * timestepMS;     % make array of trial time points
       saccadeTimes = (-(size(app.posAvg, 1) / 2):1:(size(app.posAvg,1) / 2) - 1) * timestepMS;
-      colors = get(obj.velAxes, 'ColorOrder');
+      colors = get(app.velAxes, 'ColorOrder');
       % plot the trial velocity trace
-      cla(obj.velAxes, 'reset');
-      plot(obj.velAxes, trialTimes, app.velTrace, 'color', colors(app.absStepIndex,:));
+      cla(app.velAxes, 'reset');
+      plot(app.velAxes, trialTimes, app.velTrace, 'color', colors(app.absStepIndex,:));
 %         fprintf('  velPlots: finish plot\n');
-     yLim = max(abs(ylim(obj.velAxes)));
+     yLim = max(abs(ylim(app.velAxes)));
 %          fprintf('  velPlots: got Ylim\n');
-     axis(obj.velAxes, [-inf, inf, -yLim, yLim]);
-      title(obj.velAxes, 'Most recent velocity trace', 'FontSize',12,'FontWeight','Bold');
+     axis(app.velAxes, [-inf, inf, -yLim, yLim]);
+      title(app.velAxes, 'Most recent velocity trace', 'FontSize',12,'FontWeight','Bold');
 %          fprintf('  velPlots: finish title\n');
-     ylabel(obj.velAxes,'Analog Input (dV/dt)','FontSize',14);
-      xlabel(obj.velAxes,'Time (ms)','FontSize',14);
+     ylabel(app.velAxes,'Analog Input (dV/dt)','FontSize',14);
+      xlabel(app.velAxes,'Time (ms)','FontSize',14);
       hold(app.velAxes, 'on');                                    % mark fixOff and targetOn
 %         fprintf('  velPlots: all done plot\n');
      saccades = app.saccades;
@@ -162,25 +156,25 @@ classdef MetricsPosVelPlots < handle
       if mustPlot
 %         fprintf('    velPlots: plotting averages\n');
 
-        cla(obj.velAvgAxes, 'reset');
+        cla(app.avgVelAxes, 'reset');
         if sum(app.numSummed) > 0                  % make sure there is at least one set of steps
-          plot(obj.velAvgAxes, saccadeTimes, app.velAvg(:, 1:app.numOffsets / 2), '-');
-          hold(obj.velAvgAxes, 'on');
-          obj.velAvgAxes.ColorOrderIndex = 1;
-          plot(obj.velAvgAxes, saccadeTimes, app.velAvg(:, app.numOffsets / 2 + 1:app.numOffsets), '-');
-          hold(obj.velAvgAxes, 'off');
-          title(obj.velAvgAxes, sprintf('Average velocity traces (n\x2265%d)', app.blocksDone), ...
+          plot(app.avgVelAxes, saccadeTimes, app.velAvg(:, 1:app.numOffsets / 2), '-');
+          hold(app.avgVelAxes, 'on');
+          app.avgVelAxes.ColorOrderIndex = 1;
+          plot(app.avgVelAxes, saccadeTimes, app.velAvg(:, app.numOffsets / 2 + 1:app.numOffsets), '-');
+          hold(app.avgVelAxes, 'off');
+          title(app.avgVelAxes, sprintf('Average velocity traces (n\x2265%d)', app.blocksDone), ...
             'fontSize', 12, 'fontWeight','Bold')
-          ylabel(obj.velAvgAxes,'Analog Input (dV/dt)', 'FontSize', 14);
-          xlabel(obj.velAvgAxes,'Time (ms)','FontSize', 14);
+          ylabel(app.avgVelAxes,'Analog Input (dV/dt)', 'FontSize', 14);
+          xlabel(app.avgVelAxes,'Time (ms)','FontSize', 14);
           % put both plots on the same y scale
-          yLim = max([max(abs(ylim(obj.velAxes))), max(abs(ylim(obj.velAvgAxes)))]);
-          axis(obj.velAxes, [-inf inf -yLim yLim]);
-          axis(obj.velAvgAxes, [-inf inf -yLim yLim]);
+          yLim = max([max(abs(ylim(app.velAxes))), max(abs(ylim(app.avgVelAxes)))]);
+          axis(app.velAxes, [-inf inf -yLim yLim]);
+          axis(app.avgVelAxes, [-inf inf -yLim yLim]);
           % averages are always aligned on onset, so draw a vertical line at that point
-          hold(obj.velAvgAxes, 'on');
-          plot(obj.velAvgAxes, [0 0], [-yLim yLim], 'color', 'k', 'linestyle', ':');
-          hold(obj.velAvgAxes, 'off');
+          hold(app.avgVelAxes, 'on');
+          plot(app.avgVelAxes, [0 0], [-yLim yLim], 'color', 'k', 'linestyle', ':');
+          hold(app.avgVelAxes, 'off');
         end
       end
       % if eye position has been calibrated, change the y scaling on the average to degrees rather than volts
@@ -197,30 +191,31 @@ classdef MetricsPosVelPlots < handle
         for i = 1:length(yTicks)
           yLabels{i} = num2str(yTicks(i) * saccades.degPerSPerV, '%.0f');
         end
-        set(obj.velAxes, 'YTick', yTicks);
-        set(obj.velAxes, 'YTickLabel', yLabels);
-        ylabel(obj.velAxes, 'Eye Speed (deg/s)', 'FontSize',14);
+        set(app.velAxes, 'YTick', yTicks);
+        set(app.velAxes, 'YTickLabel', yLabels);
+        ylabel(app.velAxes, 'Eye Speed (deg/s)', 'FontSize',14);
         if mustPlot
-          set(obj.velAvgAxes, 'YTick', yTicks);
-          set(obj.velAvgAxes, 'YTickLabel', yLabels);
-          ylabel(obj.velAvgAxes, 'Avg Eye Speed (deg/s)', 'FontSize', 14);
+          set(app.avgVelAxes, 'YTick', yTicks);
+          set(app.avgVelAxes, 'YTickLabel', yLabels);
+          ylabel(app.avgVelAxes, 'Avg Eye Speed (deg/s)', 'FontSize', 14);
         end
       end
-      yLim = ylim(obj.velAxes);
+      yLim = ylim(app.velAxes);
       % Once the y-axis scaling is set, we can draw vertical marks for stimOn and saccades
-      hold(obj.velAxes, 'on');
-      plot(obj.velAxes, [app.stimTimeS * 1000.0, app.stimTimeS * 1000.0], yLim, 'k-.');
-      plot(obj.velAxes, [0, trialTimes(end)], [0, 0], 'linewidth', 0.25, 'linestyle', '-.', 'color', 'k');
+      hold(app.velAxes, 'on');
+      plot(app.velAxes, [app.stimTimeS * 1000.0, app.stimTimeS * 1000.0], yLim, 'k-.');
+      plot(app.velAxes, [0, trialTimes(end)], [0, 0], 'linewidth', 0.25, 'linestyle', '-.', 'color', 'k');
       if (startIndex > 0)
-        plot(obj.velAxes, [startIndex, startIndex] * timestepMS, yLim, 'color', ...
+        plot(app.velAxes, [startIndex, startIndex] * timestepMS, yLim, 'color', ...
           colors(app.absStepIndex,:), 'linestyle', ':');
         if (endIndex > 0)
-          plot(obj.velAxes, [endIndex, endIndex] * timestepMS, yLim, 'color', ...
+          plot(app.velAxes, [endIndex, endIndex] * timestepMS, yLim, 'color', ...
             colors(app.absStepIndex,:), 'linestyle', ':');
         end
       end
-      hold(obj.velAxes, 'off');
-%         fprintf('    velPlots: done\n');
+      hold(app.velAxes, 'off');
+%       app.velAxes.Toolbar.Visible = 'off';
+%       app.avgVelAxes.Toolbar.Visible = 'off';
    end
   end
 end

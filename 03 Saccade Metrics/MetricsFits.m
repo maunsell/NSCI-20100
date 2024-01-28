@@ -79,7 +79,6 @@ classdef MetricsFits < handle
       obj.fitsValid = true;
       app.ampDur.accFit = accSlope;
       app.ampDur.speedFit = speedSlope;
-      plotFits(app.ampDur, app);
     end
 
     %% clearAll
