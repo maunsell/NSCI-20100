@@ -36,6 +36,7 @@ classdef SRCountPlot < handle
       clearAll(obj, app);
       app.countAxes.YGrid = 'on';
       xlabel(app.countAxes, 'Spike Counts', 'fontsize', 14, 'fontWeight', 'bold');
+      configureTable(obj, app);
       addStyle(app.resultsTable, uistyle('backgroundColor', [0.85, 0.85, 0.43]), 'cell', [1, 1]);
       addStyle(app.resultsTable, uistyle('backgroundColor', [0.90, 0.60, 0.47]), 'cell', [2, 1]);
       addStyle(app.resultsTable, uistyle('horizontalAlignment', 'center'));
@@ -68,14 +69,19 @@ classdef SRCountPlot < handle
       end
       plotCounts(obj, app);
       tableData = get(app.resultsTable, 'Data');          % update table
-      tableData = loadCountData(obj, app, tableData, obj.shortCounts(1:obj.numShortCounts), app.shortWindowMS, 2);
+      if app.doShortCounts
+        tableData = loadCountData(obj, app, tableData, obj.shortCounts(1:obj.numShortCounts), app.shortWindowMS, 2);
+      end
       tableData = loadCountData(obj, app, tableData, obj.longCounts(1:obj.numLongCounts), app.longWindowMS, 1);
       set(app.resultsTable, 'Data', tableData);
+      if ~app.doShortCounts
+        plotISI(app.isiPlot, app);
+      end
     end
 
     %% addShortCount -- add a new short count to the distribution
     function addShortCount(obj, app, shortCount)
-      if obj.clearingNow
+      if ~app.doShortCounts || obj.clearingNow 
         return;
       end
       obj.numShortCounts = obj.numShortCounts + 1;                        % increment count of spike counts
@@ -113,8 +119,22 @@ classdef SRCountPlot < handle
       % clear the contents of the count table
       tableData = cell(2, 5);
       tableData{1, 1} = app.longWindowMSText.Value;
-      tableData{2, 1} = app.shortWindowMSText.Value;
+      if app.doShortCounts
+        tableData{2, 1} = app.shortWindowMSText.Value;
+      end
       set(app.resultsTable, 'Data', tableData);
+    end
+
+    % configureTable
+    % configure the data table to determine whether it shows long and short counts
+    function configureTable(~, app)
+      if app.doShortCounts
+        app.resultsTable.Position(2) = 25;
+        app.resultsTable.Position(4) = 75;
+      else
+        app.resultsTable.Position(2) = 50;
+        app.resultsTable.Position(4) = 50;
+      end
     end
 
     % loadCountData

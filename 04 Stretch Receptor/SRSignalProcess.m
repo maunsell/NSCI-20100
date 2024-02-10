@@ -30,19 +30,23 @@ classdef SRSignalProcess < handle
       inSampleRateHz = app.lbj.SampleRateHz;
       obj.outSampleRatio = 1;
       outSampleRateHz = inSampleRateHz;
-      while outSampleRateHz < 8000                                    % must be 8 kHz or greater
+      while outSampleRateHz < 10000                                  % must be 8 kHz or greater (unsure about this)
         obj.outSampleRatio = obj.outSampleRatio + 1;
         outSampleRateHz = inSampleRateHz * obj.outSampleRatio;
       end
       obj.audioBufferSize = 512;
+      % obj.audioBufferSize = 4096;
       while mod(obj.audioBufferSize, obj.outSampleRatio) ~= 0         % must fit whole sample ratios
         obj.audioBufferSize = obj.audioBufferSize + 1;
       end
       obj.audioBuffer = int16(zeros(obj.audioBufferSize, 1));
       obj.audioOutIndex = 0;
-      obj.audioOutDevice = audioDeviceWriter('SampleRate', outSampleRateHz, ...
-        'SupportVariableSizeInput', true, 'BufferSize', obj.audioBufferSize);
-      makeFakeSpike(obj, app);
+      obj.audioOutDevice = audioDeviceWriter('SampleRate', outSampleRateHz, 'BufferSize', obj.audioBufferSize);
+        % 'SupportVariableSizeInput', true);
+
+      fprintf('Open: bufferSize = %d inSampleRateHz %d outSampleRateHz %d\n', obj.audioBufferSize, inSampleRateHz, outSampleRateHz);
+
+        makeFakeSpike(obj, app);
       setVolume(obj, app);
       clearAll(obj, app);
     end

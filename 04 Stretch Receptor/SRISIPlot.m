@@ -62,7 +62,7 @@ classdef SRISIPlot < handle
       makeSnippets(obj.isiSnippets, app, 100);
     end
 
-    % displayStats: When plot is down, display the mean and SD for first
+    % displayStats: When plot is done, display the mean and SD for first
     % and second halves of the ISI samples
     function displayStats(obj, app)
       if obj.numISIs < 20
