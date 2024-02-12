@@ -74,6 +74,7 @@ classdef SRPlots < handle
     
     %% clearTriggerPlot -- clear the continuous trace plot
     function clearTriggerPlot(obj, app)
+      fprintf('clearTriggerPlot\n');
       theAxes = app.vTrigAxes;
       % set up the triggered spike plot
       triggerMSPerDiv = obj.triggerTraceDurS * 1000.0 / obj.triggerDivisions;

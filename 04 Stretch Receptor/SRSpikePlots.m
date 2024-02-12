@@ -150,7 +150,6 @@ classdef SRSpikePlots < handle
       set(nextSnippet(obj.contSnippets, app), 'XData', startIndex:endIndex, ...
                 'YData', app.filteredTrace(startIndex:endIndex));
       obj.samplesPlotted = endIndex;
-%       drawnow;
     end
 
     % plot the triggered spike waveforms
@@ -186,6 +185,5 @@ classdef SRSpikePlots < handle
         end
       end
     end
-
   end
 end

@@ -69,9 +69,7 @@ classdef SRCountPlot < handle
       end
       plotCounts(obj, app);
       tableData = get(app.resultsTable, 'Data');          % update table
-      if app.doShortCounts
-        tableData = loadCountData(obj, app, tableData, obj.shortCounts(1:obj.numShortCounts), app.shortWindowMS, 2);
-      end
+      tableData = loadCountData(obj, app, tableData, obj.shortCounts(1:obj.numShortCounts), app.shortWindowMS, 2);
       tableData = loadCountData(obj, app, tableData, obj.longCounts(1:obj.numLongCounts), app.longWindowMS, 1);
       set(app.resultsTable, 'Data', tableData);
       if ~app.doShortCounts
@@ -140,14 +138,22 @@ classdef SRCountPlot < handle
     % loadCountData
     % load the data table with values for one count window
     function tableData = loadCountData(obj, app, tableData, counts, windowMS, row)
-      rates = counts / (windowMS / 1000);
-      meanRate = mean(rates);
-      sdRate = std(rates);                                        % SD of rate
-      jndRate = sdRate * 1.34;                                    % JND for 75% performance
-      tableData{row, 2} = sprintf('%.0f', length(counts));
-      tableData{row, 3} = validString(obj, app, meanRate);
-      tableData{row, 4} = validString(obj, app, sdRate);
-      tableData{row, 5} = validString(obj, app, jndRate);
+      if row == 2 && ~app.doShortCounts
+        tableData{row, 1} = '0';
+        tableData{row, 2} = '0';
+        tableData{row, 3} = '0';
+        tableData{row, 4} = '0';
+        tableData{row, 5} = '0';
+      else
+        rates = counts / (windowMS / 1000);
+        meanRate = mean(rates);
+        sdRate = std(rates);                                        % SD of rate
+        jndRate = sdRate * 1.34;                                    % JND for 75% performance
+        tableData{row, 2} = sprintf('%.0f', length(counts));
+        tableData{row, 3} = validString(obj, app, meanRate);
+        tableData{row, 4} = validString(obj, app, sdRate);
+        tableData{row, 5} = validString(obj, app, jndRate);
+      end
     end
     
     % makeCountHistograms
