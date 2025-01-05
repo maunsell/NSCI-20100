@@ -42,12 +42,13 @@ classdef RTPosVelPlots < handle
       xLimit = (size(app.posTrace, 1) - 1) * timestepMS;
       trialTimes = 0:timestepMS:xLimit;                           % make array of trial time points
       % current trial position trace
-      cla(app.posAxes, 'reset');
-      plot(app.posAxes, [0, xLimit], [0, 0], 'k', trialTimes, app.posTrace, 'b');
+      % cla(app.posAxes, 'reset');
+      % delete([obj.xAxisLine, obj.posLine]);
+      plot(app.posAxes, [0, xLimit], [0, 0], 'k');
+      hold(app.posAxes, 'on'); 
+      plot(app.posAxes, trialTimes, app.posTrace, 'b');
       yLimit = max(abs(ylim(app.posAxes)));
-      % axis(app.posAxes, [-inf, inf, -yLim, yLim]);
       ylim(app.posAxes, [-yLimit, yLimit]);
-      hold(app.posAxes, 'on');                                    % mark fixOff and targetOn
       saccades = app.saccades;
       if saccades.degPerV > 0                                     % plot saccade threshold
         if strcmp(app.ThresholdType.SelectedObject.Text, 'Position')
@@ -60,15 +61,15 @@ classdef RTPosVelPlots < handle
         ylabel(app.posAxes,'Analog Input (V)','FontSize',14);
       end
       title(app.posAxes, 'Most recent position trace', 'fontSize', 12, 'fontWeight', 'bold')
-      a1 = axis(app.posAxes);
-      plot(app.posAxes, [app.targetTimeS, app.targetTimeS] * 1000, [a1(3), a1(4)], 'k-.');
+      yLimits = get(app.posAxes, ['Y' 'Lim']);       % axis() can be very slow sometimes
+      plot(app.posAxes, [app.targetTimeS, app.targetTimeS] * 1000, yLimits, 'k-.');
       if (app.fixOffTimeS ~= app.targetTimeS)
-        plot(app.posAxes, [app.fixOffTimeS, app.fixOffTimeS] * 1000, [a1(3), a1(4)], 'r-.');
+        plot(app.posAxes, [app.fixOffTimeS, app.fixOffTimeS] * 1000, yLimits, 'r-.');
       end
       if (startIndex > 0)                                 % mark the saccade start and end
-        plot(app.posAxes, [startIndex, startIndex] * timestepMS, [a1(3), a1(4)], 'b:');
+        plot(app.posAxes, [startIndex, startIndex] * timestepMS, yLimits, 'b:');
         if (endIndex > 0)
-          plot(app.posAxes, [endIndex, endIndex] * timestepMS, [a1(3), a1(4)], 'b:');
+          plot(app.posAxes, [endIndex, endIndex] * timestepMS, yLimits, 'b:');
         end
       end
       hold(app.posAxes, 'off');
@@ -80,11 +81,10 @@ classdef RTPosVelPlots < handle
       xLimit = (size(app.posTrace, 1) - 1) * timestepMS;
       trialTimes = 0:timestepMS:xLimit;                               % make array of trial time points
       % plot the trial velocity trace
-      cla(app.velAxes, 'reset');                                      % we need 'reset' to clear axis scaling
+      % cla(app.velAxes, 'reset');                                      % we need 'reset' to clear axis scaling
       plot(app.velAxes, [0, xLimit], [0, 0], 'k', trialTimes, app.velTrace, 'b');
       yLimit = max(abs(ylim(app.velAxes)));
       ylim(app.velAxes, [-yLimit, yLimit]);
-      % axis(app.velAxes, [-inf, inf, -yLimit, yLimit,]);
       xlabel(app.velAxes,'Time (ms)','FontSize',14);
       hold(app.velAxes, 'on');                                    % mark fixOff and targetOn
       saccades = app.saccades;
@@ -99,18 +99,18 @@ classdef RTPosVelPlots < handle
       else
         ylabel(app.velAxes, 'Analog Input (dV/dt)', 'FontSize', 14);
       end
-      a1 = axis(app.velAxes);
       % Once the y-axis scaling is set, we can draw vertical marks for stimOn and saccades
+      yLimits = get(app.velAxes, ['Y' 'Lim']);       % axis() can be very slow sometimes
       hold(app.velAxes, 'on');
       title(app.velAxes, 'Most recent velocity trace', 'fontSize', 12, 'fontWeight', 'bold')
-      plot(app.velAxes, [app.targetTimeS, app.targetTimeS] * 1000, [a1(3), a1(4)], 'k-.');
+      plot(app.velAxes, [app.targetTimeS, app.targetTimeS] * 1000, yLimits, 'k-.');
       if (app.fixOffTimeS ~= app.targetTimeS)
-        plot(app.velAxes, [app.fixOffTimeS, app.fixOffTimeS] * 1000, [a1(3), a1(4)], 'r-.');
+        plot(app.velAxes, [app.fixOffTimeS, app.fixOffTimeS] * 1000, yLimits, 'r-.');
       end
       if (startIndex > 0)                                         % plot the saccade start and end
-        plot(app.velAxes, [startIndex, startIndex] * timestepMS, [a1(3), a1(4)], 'b:');
+        plot(app.velAxes, [startIndex, startIndex] * timestepMS, yLimits, 'b:');
         if (endIndex > 0)
-          plot(app.velAxes, [endIndex, endIndex] * timestepMS, [a1(3), a1(4)], 'b:');
+          plot(app.velAxes, [endIndex, endIndex] * timestepMS, yLimits, 'b:');
         end
       end
       hold(app.velAxes, 'off');

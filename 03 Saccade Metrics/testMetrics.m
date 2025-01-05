@@ -16,7 +16,7 @@
       keyboard; %#ok<*KEYBOARDFUN>
 
       blockInc = 5;
-      blockLimit = 100;
+      blockLimit = 2500;
       speedThresholdDPS = 150;
       testCase.type(app.stopAfterText, sprintf('%d', blockInc));
       testCase.type(app.thresholdDPSText, sprintf('%d', speedThresholdDPS));

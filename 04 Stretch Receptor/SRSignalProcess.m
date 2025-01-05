@@ -43,9 +43,6 @@ classdef SRSignalProcess < handle
       obj.audioOutIndex = 0;
       obj.audioOutDevice = audioDeviceWriter('SampleRate', outSampleRateHz, 'BufferSize', obj.audioBufferSize);
         % 'SupportVariableSizeInput', true);
-
-      fprintf('Open: bufferSize = %d inSampleRateHz %d outSampleRateHz %d\n', obj.audioBufferSize, inSampleRateHz, outSampleRateHz);
-
         makeFakeSpike(obj, app);
       setVolume(obj, app);
       clearAll(obj, app);

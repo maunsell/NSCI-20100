@@ -10,6 +10,5 @@ classdef ctTaskState
         taskStopped
         taskWaitGoKey
         taskWaitResponse
-
     end
 end

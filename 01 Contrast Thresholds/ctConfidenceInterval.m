@@ -1,13 +1,13 @@
-function CIs = ctConfidenceInterval(app, i)
+function CIs = ctConfidenceInterval(app, base)
 
-  tstart = tic;
   numBoot = 100;
   thresholds = zeros(numBoot, 1);
-  hits = app.hits(i, :);
-  n = app.trialsDone(i, :);
+  hits = app.hits(base, :);
+  n = app.trialsDone(base, :);
   for rep = 1:numBoot
     bootRate = binornd(n, hits ./ n) ./ n;
-    thresholds(rep) = ctSigmoidFit(app, i, bootRate);
+    fitParams = ctSigmoidFit(app, base, bootRate);
+    thresholds(rep) = fitParams(1) * 100.0;
   end
   CIs = prctile(thresholds, [2.5, 97.5]);
 end

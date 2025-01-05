@@ -1,6 +1,8 @@
 
 %% taskController: function to handle transition of task state.
 function ctTaskController(~, ~, app)
+
+try
   switch app.taskState
     case ctTaskState.taskStopped
       % do nothing
@@ -119,4 +121,9 @@ function ctTaskController(~, ~, app)
       ctControlState(app, 'on', {app.runButton});
       app.taskState = ctTaskState.taskStopped;
   end
+catch e
+  fprintf(1,'The identifier was:\n%s',e.identifier);
+  fprintf(1,'There was an error! The message was:\n%s',e.message);
+  return;
+end
 end

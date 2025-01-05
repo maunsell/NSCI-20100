@@ -22,7 +22,7 @@ classdef MetricsFits < handle
       app.fitTable.ColumnName = {'Fit Value'; 'Intercept'; sprintf('r%c', 178); 'Res. Sum Sq.'};
       app.fitTable.RowName = {'Speed'; 'Accel.'};
 
-      s = uistyle('HorizontalAlignment','center');
+      s = uistyle('HorizontalAlignment', 'center');
       addStyle(app.fitTable, s, 'table', '');
       addStyle(app.statsTable, s, 'table', '');
       clearAll(obj, app);
@@ -35,22 +35,26 @@ classdef MetricsFits < handle
       end
       x = abs(app.offsetsDeg);
       y = app.medians;
+      totalSS = (length(y) - 1) * var(y);
 
-      p = polyfit([x, -x], [y, -y], 1);
+      % fit to speed
+      p = polyfit([x, -x], [y, -y], 1);           % to force intercept of 0
+      % p = polyfit(x, y, 1);                       % to fit intercept
       speedSlope = 1000.0 / p(1);
       speedIntercept = p(2);
-      speedSS = sum(([y, -y] - polyval(p, [x, -x])).^2);
-      totalSS = (length([y, -y]) - 1) * var([y, -y]);
+      speedSS = sum((y - polyval(p, x)).^2);
       speedR2 = 1 - speedSS / totalSS;
       obj.tableData{1, 1} = sprintf('%.0f%c/s', speedSlope, 176);
       obj.tableData{1, 2} = sprintf('%.0f ms', speedIntercept);
       obj.tableData{1, 3} = sprintf('%.2f', speedR2);
       obj.tableData{1, 4} = sprintf('%.0f', speedSS);
 
+      % fit to acceleration
       p = polyfit([x, -x], [y.^2, -(y.^2)], 1);
-      accSlope = 4 / p(1) * 1000000;
+      accSlope = 4 / p(1) * 1000000;          % convert from deg/ms^2 to deg/s^2 and acc to acc/dec
       accIntercept = sqrt(p(2));
-      accSS = sum((sqrt(abs([y.^2, -(y.^2)])) - sqrt(abs(polyval(p, [x, -x])))).^2);
+      % accSS = sum((sqrt(abs([y.^2, -(y.^2)])) - sqrt(abs(polyval(p, [x, -x])))).^2);
+      accSS = sum((sqrt(abs(y.^2)) - sqrt(abs(polyval(p, x)))).^2);
       accR2 = 1 - accSS/ totalSS;
       obj.tableData{2, 1} = sprintf('%.0f%c/s%c', accSlope, 176, 178);
       obj.tableData{2, 2} = sprintf('%.0f ms', accIntercept);
@@ -60,10 +64,10 @@ classdef MetricsFits < handle
 
       F = accSS / speedSS;
       df = app.numOffsets - 1;
-      prob = 1.0 - fcdf(F, df, df);
+      prob = fcdf(F, df, df);
       obj.statsData = cell(1, 2);
-      obj.statsData{1} = sprintf('%.2f', F);
-      obj.statsData{2} = sprintf('%.2g', prob);
+      obj.statsData{1} = sprintf('%.3f', F);
+      obj.statsData{2} = sprintf('%.3e', prob);
       set(app.statsTable, 'Data', obj.statsData);
       
       % load table values
@@ -74,8 +78,9 @@ classdef MetricsFits < handle
             obj.fitData{row, col} = obj.tableData{row - 1, col - 1};
         end
       end
-      obj.fitData{2, 6} = obj.statsData{1};
-      obj.fitData{2, 7} = obj.statsData{2};
+      obj.fitData{2, 6} = obj.statsData{1};               % F statistic
+      obj.fitData{2, 7} = obj.statsData{2};               % p value
+      obj.fitData{2, 8} = sprintf('%.1f mV/deg', 1000 / app.saccades.degPerV);    % eye calibration (mv/deg)
       obj.fitsValid = true;
       app.ampDur.accFit = accSlope;
       app.ampDur.speedFit = speedSlope;
@@ -84,8 +89,8 @@ classdef MetricsFits < handle
     %% clearAll
     function clearAll(obj, app)
       obj.fitsValid = false;
-      obj.fitData = cell(3, 7);
-      [obj.fitData{1, :}] = deal(' ', 'Fit Value', 'Intercept', 'r^2', 'Sum Squares', 'F', 'p');
+      obj.fitData = cell(3, 8);
+      [obj.fitData{1, :}] = deal(' ', 'Fit Value', 'Intercept', 'r^2', 'Sum Squares', 'F', 'p', 'Calibration');
       obj.tableData = {'', '', '', ''; '', '', '', ''};      % contents of fit table
       app.fitTable.Data = obj.tableData;
       % set(app.fitTable, 'Data', obj.tableData);

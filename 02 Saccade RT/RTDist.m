@@ -47,11 +47,12 @@ classdef RTDist < handle
     %% doOneInterval -- plot the length of one confidence interval, and update the text to display
     function [displayText, plotY] = doOneInterval(obj, meanRT, value, valueStr, displayText, plotY)
       precision = value < 2.0;
-      a = axis(obj.fHandle);
+      % a = axis(obj.fHandle);
+      yLimits = get(obj.fHandle, ['Y' 'Lim']);       % axis() can be very slow sometimes
       colors = get(obj.fHandle, 'colorOrder');            % get the colors for the different plots
       displayText{length(displayText) + 1} = sprintf('%s %.*f-%.*f ms', valueStr, precision, meanRT - value, ...
         precision, meanRT + value);
-      plot(obj.fHandle, [-value, value] + meanRT, [1, 1] * plotY * a(4), 'color', colors(obj.index, :), ...
+      plot(obj.fHandle, [-value, value] + meanRT, [1, 1] * plotY * yLimits(2), 'color', colors(obj.index, :), ...
         'lineWidth', 3);
       plotY = plotY - 0.03;
     end
@@ -69,7 +70,7 @@ classdef RTDist < handle
         return
       end
       colors = get(obj.fHandle, 'colorOrder');            % get the colors for the different plots
-      cla(obj.fHandle, 'reset');
+      % cla(obj.fHandle, 'reset');
       h = histogram(obj.fHandle, obj.reactTimesMS(1:obj.n), 'facecolor', colors(obj.index,:));
       set(obj.fHandle, 'tickDir', 'out');
       hold(obj.fHandle, 'on');
@@ -114,12 +115,14 @@ classdef RTDist < handle
 
     %% rescale -- rescale the plots
     function rescale(obj, newMaxRT)
-      a = axis(obj.fHandle);
-      if a(2) ~= newMaxRT                                 % new x limit, announce new limit
+      xLimits = get(obj.fHandle, ['X' 'Lim']);            % axis() can be very slow sometimes
+      % a = axis(obj.fHandle);
+      if xLimits(2) ~= newMaxRT                                 % new x limit, announce new limit
         obj.maxRT = newMaxRT;
         hold(obj.fHandle, 'on');
-        a(2) = newMaxRT;
-        axis(obj.fHandle, a);
+        xLimits(2) = newMaxRT;
+        set(obj.fHandle, ['X' 'Lim'], xLimits);
+        % axis(obj.fHandle, a);
         hold(obj.fHandle, 'off');
       end
     end
