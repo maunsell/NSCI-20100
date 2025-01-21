@@ -42,8 +42,7 @@ classdef RTPosVelPlots < handle
       xLimit = (size(app.posTrace, 1) - 1) * timestepMS;
       trialTimes = 0:timestepMS:xLimit;                           % make array of trial time points
       % current trial position trace
-      % cla(app.posAxes, 'reset');
-      % delete([obj.xAxisLine, obj.posLine]);
+      cla(app.posAxes, 'reset');
       plot(app.posAxes, [0, xLimit], [0, 0], 'k');
       hold(app.posAxes, 'on'); 
       plot(app.posAxes, trialTimes, app.posTrace, 'b');
@@ -81,7 +80,7 @@ classdef RTPosVelPlots < handle
       xLimit = (size(app.posTrace, 1) - 1) * timestepMS;
       trialTimes = 0:timestepMS:xLimit;                               % make array of trial time points
       % plot the trial velocity trace
-      % cla(app.velAxes, 'reset');                                      % we need 'reset' to clear axis scaling
+      cla(app.velAxes, 'reset');                                      % we need 'reset' to clear axis scaling
       plot(app.velAxes, [0, xLimit], [0, 0], 'k', trialTimes, app.velTrace, 'b');
       yLimit = max(abs(ylim(app.velAxes)));
       ylim(app.velAxes, [-yLimit, yLimit]);

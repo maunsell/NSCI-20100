@@ -29,7 +29,6 @@ function timeChar = savePlot(axesToSave, folderPath, appString, extString, timeC
   fHandle.Children.Position = [10, 10, pos(3), pos(4)];
   exportgraphics(fHandle.Children(1), filePath);                    % export the copied axes (now the first child)
   close(fHandle);                                                   % destroy the window
-  % fprintf(' (%.1f s)\n', toc);
   backupFile(filePath, '~/Desktop', '~/Documents/Respository');     % save backup in repository directory
 end
   

@@ -1,5 +1,5 @@
 function [sIndex, eIndex] = findSaccade(obj, app, startIndex)
-  if startIndex <= 0
+  if startIndex <= 0 || startIndex >= length(app.posTrace)
     sIndex = 0;
     eIndex = 0;
     return;
@@ -16,7 +16,6 @@ function [sIndex, eIndex] = findSaccade(obj, app, startIndex)
     sIndex = 0; eIndex = 0;
     return;                                                   % no saccades until we have a calibration
   end
-%   fprintf('findSaccade start\n');
   % set up to use the selected threshold type (position or speed)
   if strcmp(app.ThresholdType.SelectedObject.Text, 'Position')
       thresholdV = mean(app.posTrace(1:startIndex)) + obj.thresholdDeg / obj.degPerV;

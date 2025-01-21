@@ -6,7 +6,7 @@ classdef RTDist < handle
     ampLabel
     fHandle
     index
-    maxRT
+    nativeXAxisMax;
     n
     pValue
     reactTimesMS
@@ -39,9 +39,18 @@ classdef RTDist < handle
     function clearAll(obj, ~)
       obj.n = 0;
       obj.stepN = 0;
-      obj.maxRT = 0;
+      obj.nativeXAxisMax = 1;
       cla(obj.fHandle, 'reset');                        % clear the figures
-      setupPlot(obj);
+      plotLabels(obj);
+    end
+
+    %% displayPrecision -- find the correct display precision for a value
+    function p = displayPrecision(~, value)
+      if value < 20
+        p = 2 - ceil(log10(value / 2));
+      else
+        p = 0;
+      end
     end
 
     %% doOneInterval -- plot the length of one confidence interval, and update the text to display
@@ -57,34 +66,24 @@ classdef RTDist < handle
       plotY = plotY - 0.03;
     end
 
-    %% stepTimesMS -- accept the RT values for the step distribution
+    %% loadStepTimesMS -- accept the RT values for the step distribution
     function loadStepTimesMS(obj, reactMS, n)
       obj.stepReactMS(1:n) = reactMS(1:n);
       obj.stepN = n;
     end
 
-    %% plot -- plot all the distributions
-    function rescale = doPlots(obj)
-      rescale = 0;
+    %% doPlots -- plot all the distributions
+    function xAxisMax = doPlots(obj)
       if obj.n == 0                                       % nothing to plot
+        xAxisMax = 1;
         return
       end
       colors = get(obj.fHandle, 'colorOrder');            % get the colors for the different plots
-      % cla(obj.fHandle, 'reset');
+      cla(obj.fHandle, 'reset');
       h = histogram(obj.fHandle, obj.reactTimesMS(1:obj.n), 'facecolor', colors(obj.index,:));
-      set(obj.fHandle, 'tickDir', 'out');
       hold(obj.fHandle, 'on');
-      setupPlot(obj);
-      a = axis(obj.fHandle);                              % set scale, flag whether we're rescaling
-      a(1) = 0;
-      if a(2) > obj.maxRT                                 % new x limit, announce new limit
-        obj.maxRT = a(2);
-        rescale = a(2);
-      else                                                % otherwise, force plot to current maxRT
-        a(2) = obj.maxRT;
-      end
-      a(4) = 1.2 * max(h.Values);                       	% leave some headroom about the histogram
-      axis(obj.fHandle, a);
+      set(obj.fHandle, 'tickDir', 'out');
+      plotLabels(obj);
       meanRT = mean(obj.reactTimesMS(1:obj.n));           % mean RT
       stdRT = std(obj.reactTimesMS(1:obj.n));             % std for RT
       displayText = {sprintf('n = %.0f, mean = %.0f', obj.n, meanRT)};
@@ -99,41 +98,53 @@ classdef RTDist < handle
           displayText{length(displayText) + 1} = sprintf('t-test: p=%.3g\n', obj.pValue);
         end
       end
+      a = axis(obj.fHandle);                              % set scale, flag whether we're rescaling
+      a(1) = 0;                                           % always start from origin
+      obj.nativeXAxisMax = a(2);                          % report our x axis maximum
+      a(4) = 1.2 * max(h.Values);                       	% leave some headroom about the histogram
+      axis(obj.fHandle, a);
       plot(obj.fHandle, [meanRT meanRT], [a(3) a(4)], 'k:');
-      text(0.6 * a(2), 0.98 * a(4), displayText, 'verticalAlignment', 'top', 'parent', obj.fHandle);
+      text(0.6, 0.98, displayText, 'Units', 'normalized', 'verticalAlignment', 'top', 'parent', obj.fHandle);
       hold(obj.fHandle, 'off');
+      xAxisMax = obj.nativeXAxisMax;                      % return our native axis
     end
     
-    %% precision -- find the correct display precision for a value
-    function p = displayPrecision(~, value)
-      if value < 20
-        p = 2 - ceil(log10(value / 2));
-      else
-        p = 0;
-      end
-    end
-
     %% rescale -- rescale the plots
     function rescale(obj, newMaxRT)
-      xLimits = get(obj.fHandle, ['X' 'Lim']);            % axis() can be very slow sometimes
-      % a = axis(obj.fHandle);
+      xLimits = get(obj.fHandle, ['X' 'Lim']);                  % axis() can be very slow sometimes
       if xLimits(2) ~= newMaxRT                                 % new x limit, announce new limit
-        obj.maxRT = newMaxRT;
+        obj.nativeXAxisMax = xLimits(2);                        % save our natural x axis max
         hold(obj.fHandle, 'on');
         xLimits(2) = newMaxRT;
         set(obj.fHandle, ['X' 'Lim'], xLimits);
-        % axis(obj.fHandle, a);
         hold(obj.fHandle, 'off');
       end
     end
 
-    %% setupPlot -- prepare a blank plot
-    function setupPlot(obj)
+    %% plotLabels -- prepare a blank plot
+    function plotLabels(obj)
       title(obj.fHandle, sprintf('%s Condition', obj.titles{obj.index}), 'fontSize', 12, 'fontWeight', 'bold');
       if (obj.index == 2)                                 % label the bottom plot
         xlabel(obj.fHandle, 'Reaction Time (ms)', 'fontSize', 14);
       end
     end
+     
+    %% setXAxisMax -- set the maximum x axis value 
+    function setXAxisMax(obj, newXMax)
+      xLimits = get(obj.fHandle, ['X' 'Lim']);                  % axis() can be very slow sometimes
+      hold(obj.fHandle, 'on');
+      xLimits(2) = newXMax;
+      set(obj.fHandle, ['X' 'Lim'], xLimits);
+      hold(obj.fHandle, 'off');
+    end
+       
+    %% xAxisMax -- return the xAxisMax we would use if unadjusted 
+    function xMax = xAxisMax(obj)
+      xMax = obj.nativeXAxisMax;
+      % xLimits = get(obj.fHandle, ['X' 'Lim']);                  % axis() can be very slow sometimes
+      % xMax = xLimits(2);
+    end
+
   end
 end
 
