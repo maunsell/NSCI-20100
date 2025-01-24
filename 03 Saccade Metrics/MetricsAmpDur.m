@@ -95,7 +95,7 @@ classdef MetricsAmpDur < handle
     % return a cell array suitable for creating an Excel spreadsheet reporting the ampDur statistics
     function writeAmpDurData(obj, app, timeString)
       if min(obj.n) < 3                 % need at least 3 reps to have savable data
-        fprintf('writeAmpDurData -- not writing, too few\n');
+        % fprintf('writeAmpDurData -- not writing, too few\n');
         return;
       end
       if nargin < 3
@@ -124,7 +124,7 @@ classdef MetricsAmpDur < handle
         mkdir(fPath);
       end
       filePath = fullfile(fPath, ['MT-', timeString, '.xlsx']);
-      fprintf('writeAmpDurData -- writing, %s\n', filePath);
+      % fprintf('writeAmpDurData -- writing, %s\n', filePath);
       writecell(c, filePath, 'writeMode', 'replacefile', 'autoFitWidth', 1);
       backupFile(filePath, '~/Desktop', '~/Documents/Respository');     % save backup in repository directory
     end

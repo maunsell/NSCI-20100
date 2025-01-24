@@ -105,7 +105,7 @@ classdef MetricsFits < handle
     % return a cell array suitable for creating an Excel spreadsheet reporting the ampDur statistics
     function writeFitData(obj, app, timeString)
       if ~obj.fitsValid
-          fprintf('writeFitData -- not writing because fit is not valid\n');
+          % fprintf('writeFitData -- not writing because fit is not valid\n');
         return;
       end
       if nargin < 3
@@ -116,7 +116,7 @@ classdef MetricsFits < handle
         mkdir(fPath);
       end
       filePath = fullfile(fPath, ['MT-', timeString, '.xlsx']);
-      fprintf('writeFitData -- writing fit %s\n', filePath);
+      % fprintf('writeFitData -- writing fit %s\n', filePath);
       writecell(obj.fitData, filePath, 'writeMode', 'replacefile', 'autoFitWidth', 1);
       backupFile(filePath, '~/Desktop', '~/Documents/Respository');     % save backup in repository directory
     end

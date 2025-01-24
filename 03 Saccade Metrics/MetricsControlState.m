@@ -1,8 +1,7 @@
 function MetricsControlState(app, state, except)
       
-    controls = {app.startButton, app.clearButton, app.savePlotsButton, app.stopAfterText, ...
-            app.saveDataButton, app.loadDataButton, app.viewDistanceText, app.thresholdDegText, ...
-            app.thresholdDPSText};
+    controls = {app.startButton, app.clearButton, app.stopAfterText, app.saveDataButton, app.loadDataButton, ...
+      app.viewDistanceText, app.thresholdDegText, app.thresholdDPSText, app.ThresholdType};
         
     for c = 1:length(controls)
         skip = false;
