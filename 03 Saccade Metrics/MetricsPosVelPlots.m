@@ -38,7 +38,6 @@ classdef MetricsPosVelPlots < handle
     
     %% posPlots: do the trial and average position plots
     function posPlots(~, app, startIndex, endIndex, mustPlot)
-
       timestepMS = 1000.0 / app.lbj.SampleRateHz;                 % time interval of samples
       trialTimes = (0:1:size(app.posTrace, 1) - 1) * timestepMS;	% make array of trial time points
       colors = get(app.posAxes, 'ColorOrder');
@@ -46,12 +45,12 @@ classdef MetricsPosVelPlots < handle
       plot(app.posAxes, trialTimes, app.posTrace, 'color', colors(app.absStepIndex,:));
       saccades = app.saccades;
       if saccades.degPerV > 0                                     % plot saccade threshold
-        hold(app.posAxes, 'on');
         if strcmp(app.ThresholdType.SelectedObject.Text, 'Position')
           thresholdV = saccades.thresholdDeg / saccades.degPerV * app.stepSign;
+          hold(app.posAxes, 'on');
           plot(app.posAxes, [trialTimes(1) trialTimes(end)], [thresholdV, thresholdV], ':r');
+          hold(app.posAxes, 'off');
         end        
-        hold(app.posAxes, 'off');
         ylabel(app.posAxes, 'Eye Position (deg)', 'FontSize', 14);
       else
         ylabel(app.posAxes, 'Analog Input (V)', 'FontSize', 14); 
@@ -60,9 +59,10 @@ classdef MetricsPosVelPlots < handle
       
       % average position traces every complete block
       if mustPlot
-        % cla(app.avgPosAxes, 'reset');
-        saccadeTimes = (-(size(app.posAvg, 1) / 2):1:(size(app.posAvg, 1) / 2) - 1) * timestepMS;
-        if sum(app.numSummed) > 0
+        if sum(app.numSummed) == 0
+          cla(app.avgPosAxes, 'reset');       % must plot with no steps -- just clear
+        else
+          saccadeTimes = (-(size(app.posAvg, 1) / 2):1:(size(app.posAvg, 1) / 2) - 1) * timestepMS;
           plot(app.avgPosAxes, saccadeTimes, app.posAvg(:, 1:app.numOffsets / 2), '-');
           hold(app.avgPosAxes, 'on');
           app.avgPosAxes.ColorOrderIndex = 1;
@@ -77,9 +77,11 @@ classdef MetricsPosVelPlots < handle
           hold(app.avgPosAxes, 'on');
           plot(app.avgPosAxes, [0 0], [-yLim yLim], 'color', 'k', 'linestyle', ':'); % saccade start, t = 0
           for i = 1:length(app.medians)          % draw saccade median for each average trace
-            yEnd = yLim - floor((i - 1) / (app.numOffsets / 2)) * 2 * yLim;
-            plot(app.avgPosAxes, [app.medians(i), app.medians(i)], ...
-              [0, yEnd], ':', 'color', colors(mod(i - 1, app.numOffsets / 2) + 1, :));
+            if app.numSummed(i) > 0
+              yEnd = yLim - floor((i - 1) / (app.numOffsets / 2)) * 2 * yLim;
+              plot(app.avgPosAxes, [app.medians(i), app.medians(i)], ...
+                [0, yEnd], ':', 'color', colors(mod(i - 1, app.numOffsets / 2) + 1, :));
+            end
           end
           hold(app.avgPosAxes, 'off');
           % if eye position has been calibrated, change the y scaling on the average to degrees rather than volts
@@ -129,13 +131,14 @@ classdef MetricsPosVelPlots < handle
       title(app.velAxes, 'Most recent velocity trace', 'FontSize',12,'FontWeight','Bold');
       ylabel(app.velAxes,'Analog Input (dV/dt)','FontSize',14);
       xlabel(app.velAxes,'Time (ms)','FontSize',14);
-      hold(app.velAxes, 'on');                                    % mark fixOff and targetOn
-     saccades = app.saccades;
+      saccades = app.saccades;
       % if eye position has been calibrated, change the y scaling on the average to degrees rather than volts
       if saccades.degPerSPerV > 0
         if strcmp(app.ThresholdType.SelectedObject.Text, 'Speed')
           thresholdV = saccades.thresholdDPS / saccades.degPerSPerV * app.stepSign;
+          hold(app.avgVelAxes, 'on');
           plot(app.velAxes, [trialTimes(1) trialTimes(end)], [thresholdV, thresholdV], 'r:');
+          hold(app.avgVelAxes, 'off');
         end
         calibratedLabels(obj, app.velAxes, app.saccades.degPerSPerV, 100)
         ylabel(app.velAxes, 'Eye Speed (deg/s)', 'FontSize', 14);
@@ -144,7 +147,9 @@ classdef MetricsPosVelPlots < handle
       end
       % plot the average velocity traces every time a set of step sizes is completed
       if mustPlot
-        if sum(app.numSummed) > 0                  % make sure there is at least one set of steps
+        if sum(app.numSummed) == 0                    % mustPlot with no steps -- just clear
+          cla(app.avgVelAxes, 'reset');
+        else
           plot(app.avgVelAxes, saccadeTimes, app.velAvg(:, 1:app.numOffsets / 2), '-');
           hold(app.avgVelAxes, 'on');
           app.avgVelAxes.ColorOrderIndex = 1;
@@ -167,8 +172,6 @@ classdef MetricsPosVelPlots < handle
       end
       % if eye position has been calibrated, change the y scaling on the average to degrees rather than volts
       if saccades.degPerV > 0
-%                   fprintf('    velPlots: change yscaling\n');
-
         maxSpeedDPS = ceil((yLim * saccades.degPerSPerV) / 100.0) * 100;
         increment = 100;
         while maxSpeedDPS / increment > 5
@@ -202,8 +205,6 @@ classdef MetricsPosVelPlots < handle
         end
       end
       hold(app.velAxes, 'off');
-%       app.velAxes.Toolbar.Visible = 'off';
-%       app.avgVelAxes.Toolbar.Visible = 'off';
    end
   end
 end
