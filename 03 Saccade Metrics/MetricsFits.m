@@ -66,8 +66,15 @@ classdef MetricsFits < handle
       F = accSSR / speedSSR;
       df = app.numOffsets - 1;
       prob = fcdf(F, df, df) * 2;               % corrected for two-tailed
-      obj.tableData{1, 4} = sprintf('%.2e', 1.0 - prob);    % speed p
-      obj.tableData{2, 4} = sprintf('%.2e', prob);          % acc p
+      if prob >= 0.01
+        formats = {'%.3f', '%.2f'};
+      elseif prob >= 0.001
+        formats = {'%.4f', '%.2f'};
+      else
+        formats = {'%.1e', '%.2f'};
+      end
+      obj.tableData{1, 4} = sprintf(formats{2}, 1.0 - prob);    % speed p
+      obj.tableData{2, 4} = sprintf(formats{1}, prob);          % acc p
       obj.statsData = cell(1, 2);
       obj.statsData{1} = sprintf('%.3f', F);
       obj.statsData{2} = sprintf('%.3e', prob);
