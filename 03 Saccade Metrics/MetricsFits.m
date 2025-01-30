@@ -5,7 +5,7 @@ classdef MetricsFits < handle
   properties
     fitData
     fitsValid = false;
-    tableData
+    tableData               % local data to load into GUI table
     statsData
     minForFit = 3;
   end
@@ -19,7 +19,7 @@ classdef MetricsFits < handle
       obj = obj@handle();
       
       %% Post Initialization %%
-      app.fitTable.ColumnName = {'Fit Value'; 'Intercept'; sprintf('r%c', 178); 'Res. Sum Sq.'};
+      app.fitTable.ColumnName = {'Fit Value'; 'Intercept'; sprintf('r%c', 178); 'p'};
       app.fitTable.RowName = {'Speed'; 'Accel.'};
 
       s = uistyle('HorizontalAlignment', 'center');
@@ -35,51 +35,57 @@ classdef MetricsFits < handle
       end
       x = abs(app.offsetsDeg);
       y = app.medians;
-      totalSS = (length(y) - 1) * var(y);
+      TSS = (length(y) - 1) * var(y);
 
       % fit to speed
       p = polyfit([x, -x], [y, -y], 1);           % to force intercept of 0
-      % p = polyfit(x, y, 1);                       % to fit intercept
       speedSlope = 1000.0 / p(1);
       speedIntercept = p(2);
-      speedSS = sum((y - polyval(p, x)).^2);
-      speedR2 = 1 - speedSS / totalSS;
+      speedSSR = sum((y - polyval(p, x)).^2);
+      speedR2 = 1 - speedSSR / TSS;
+      if speedR2 < 0
+          fprintf('\nnegative R2\n')
+          fprintf('speedSSR %.1f, TSS %.1f R2 %.2f', speedSSR, TSS, speedR2);
+          fprintf('mean y: %.1f\n', mean(y))
+          fprintf('y values: %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f %.1f\n\n', y)
+      end
       obj.tableData{1, 1} = sprintf('%.0f%c/s', speedSlope, 176);
       obj.tableData{1, 2} = sprintf('%.0f ms', speedIntercept);
       obj.tableData{1, 3} = sprintf('%.2f', speedR2);
-      obj.tableData{1, 4} = sprintf('%.0f', speedSS);
 
       % fit to acceleration
       p = polyfit([x, -x], [y.^2, -(y.^2)], 1);
       accSlope = 4 / p(1) * 1000000;          % convert from deg/ms^2 to deg/s^2 and acc to acc/dec
       accIntercept = sqrt(p(2));
-      % accSS = sum((sqrt(abs([y.^2, -(y.^2)])) - sqrt(abs(polyval(p, [x, -x])))).^2);
-      accSS = sum((sqrt(abs(y.^2)) - sqrt(abs(polyval(p, x)))).^2);
-      accR2 = 1 - accSS/ totalSS;
+      accSSR = sum((y - sqrt(abs(polyval(p, x)))).^2);
+      accR2 = 1 - accSSR / TSS;
       obj.tableData{2, 1} = sprintf('%.0f%c/s%c', accSlope, 176, 178);
       obj.tableData{2, 2} = sprintf('%.0f ms', accIntercept);
       obj.tableData{2, 3} = sprintf('%.2f', accR2);
-      obj.tableData{2, 4} = sprintf('%.0f', accSS);
-      app.fitTable.Data = obj.tableData;
 
-      F = accSS / speedSS;
+      F = accSSR / speedSSR;
       df = app.numOffsets - 1;
-      prob = fcdf(F, df, df);
+      prob = fcdf(F, df, df) * 2;               % corrected for two-tailed
+      obj.tableData{1, 4} = sprintf('%.2e', 1.0 - prob);    % speed p
+      obj.tableData{2, 4} = sprintf('%.2e', prob);          % acc p
       obj.statsData = cell(1, 2);
       obj.statsData{1} = sprintf('%.3f', F);
       obj.statsData{2} = sprintf('%.3e', prob);
       set(app.statsTable, 'Data', obj.statsData);
       
-      % load table values
-      for row = 2:3
-      obj.fitData{2, 1} = 'Speed';
-      obj.fitData{3, 1} = 'Accel.';
+      % load output table values
+
+      app.fitTable.Data = obj.tableData;        % transfer local table to GUI
+      obj.fitData{2, 1} = 'Speed';              % add row names to export table
+      obj.fitData{3, 1} = 'Accel.';      
+      for row = 2:3                             
         for col = 2:5
             obj.fitData{row, col} = obj.tableData{row - 1, col - 1};
         end
       end
-      obj.fitData{2, 6} = obj.statsData{1};               % F statistic
-      obj.fitData{2, 7} = obj.statsData{2};               % p value
+      obj.fitData{2, 6} = sprintf('%.1f', speedSSR);
+      obj.fitData{3, 6} = sprintf('%.1f', accSSR);
+      obj.fitData{2, 7} = obj.statsData{1};               % F statistic
       obj.fitData{2, 8} = sprintf('%.1f mV/deg', 1000 / app.saccades.degPerV);    % eye calibration (mv/deg)
       obj.fitsValid = true;
       app.ampDur.accFit = accSlope;
@@ -90,13 +96,11 @@ classdef MetricsFits < handle
     function clearAll(obj, app)
       obj.fitsValid = false;
       obj.fitData = cell(3, 8);
-      [obj.fitData{1, :}] = deal(' ', 'Fit Value', 'Intercept', 'r^2', 'Sum Squares', 'F', 'p', 'Calibration');
+      [obj.fitData{1, :}] = deal(' ', 'Fit Value', 'Intercept', 'r^2', 'p', 'Sum Squares', 'F', 'Calibration');
       obj.tableData = {'', '', '', ''; '', '', '', ''};      % contents of fit table
       app.fitTable.Data = obj.tableData;
-      % set(app.fitTable, 'Data', obj.tableData);
       obj.statsData = {'', ''};
       app.statsTable.Data = obj.statsData;
-      % set(app.statsTable, 'Data', obj.statsData);
       app.ampDur.accFit = -1;
       app.ampDur.speedFit = -1;
     end
@@ -116,7 +120,6 @@ classdef MetricsFits < handle
         mkdir(fPath);
       end
       filePath = fullfile(fPath, ['MT-', timeString, '.xlsx']);
-      % fprintf('writeFitData -- writing fit %s\n', filePath);
       writecell(obj.fitData, filePath, 'writeMode', 'replacefile', 'autoFitWidth', 1);
       backupFile(filePath, '~/Desktop', '~/Documents/Respository');     % save backup in repository directory
     end

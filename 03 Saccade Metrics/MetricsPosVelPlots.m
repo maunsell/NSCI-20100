@@ -101,6 +101,7 @@ classdef MetricsPosVelPlots < handle
       if sum(app.numSummed) > app.numOffsets
         yLim = max(abs(ylim(app.avgPosAxes)));
         set(app.posAxes, ['Y' 'Lim'], [-yLim, yLim]);
+        fprintf('test ylimits to %.1f %.1f\n', -yLim, yLim);
       end
       yLim = ylim(app.posAxes);
       % Once the y-axis scaling is set, we can draw vertical marks for stimOn and saccades
