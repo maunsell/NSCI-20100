@@ -1,9 +1,9 @@
 function timeChar = savePlot(axesToSave, folderPath, appString, extString, timeChar)
 
-  if strcmp(extString, 'pdf')
-    fprintf('savePlots: exportgraphics does not support pdf format, using png\n')
-    extString = 'png';
-  end
+  % if strcmp(extString, 'pdf')
+  %   fprintf('savePlots: exportgraphics does not support pdf format, using png\n')
+  %   extString = 'png';
+  % end
   if nargin < 5
     timeChar = char(string(datetime('now', 'format', 'MMM-dd-HHmmss')));
   end
@@ -11,11 +11,9 @@ function timeChar = savePlot(axesToSave, folderPath, appString, extString, timeC
       mkdir(folderPath);
   end
   filePath = fullfile(folderPath, [appString, '-', timeChar, '.', extString]);
-  % fprintf('savePlot: writing to %s', filePath);
-  % tic
   % Here, we do a bizarre maneuver to workaround a terrible latency problem
   % with Matlab's exportgraphics(). When running the lab, exportgraphics()
-  % always takes ~5 to output a plot from the GUI. But this time gets
+  % always takes ~5s to output a plot from the GUI. But this time gets
   % slower and slower the longer that the task been running.  I could not
   % find what was bogging things down. I tried many things, but what works
   % is the following strategy of 1) creating a new, invisible figure,
