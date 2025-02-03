@@ -62,25 +62,34 @@ classdef SRISIPlot < handle
       makeSnippets(obj.isiSnippets, app, 100);
     end
 
+    function displayStats(obj, app)
     % displayStats: When plot is done, display the mean and SD for first
     % and second halves of the ISI samples
-    function displayStats(obj, app)
       if obj.numISIs < 20
         return;
       end
-      displayText = cell(1, 3);
-      displayText{1} = sprintf('%d ISIs', obj.numISIs);
+      % prepare text displaying the means and SDs for first and second
+      % halves of the ISI sequence.
+      meansText = cell(2, 1);
+      ISIMeans = zeros(2, 1);
       halfLabels = [{'1st'}, {'2nd'}];
       for i = 1:2
         startIndex = 1 + (i - 1) * floor(obj.numISIs / 2);
         endIndex = startIndex + floor(obj.numISIs / 2) - 1;
-        displayText{i + 1} = sprintf('%s half: mean %.0f, SD %.0f', halfLabels{i}, ...
-                  mean(obj.isiMS(startIndex:endIndex)), std(obj.isiMS(startIndex:endIndex)));
+        ISIMeans(i) = mean(obj.isiMS(startIndex:endIndex));
+        meansText{i} = sprintf('%s half: mean %.0f, SD %.0f', halfLabels{i}, ...
+                  ISIMeans(i), std(obj.isiMS(startIndex:endIndex)));
       end
+      % prepare text displaying the number of ISIs and drift
+      countsText = cell(2, 1);
+      countsText{1} = sprintf('%d ISIs', obj.numISIs);
+      countsText{2} = sprintf('Drift %.0f%%', abs(ISIMeans(1) - ISIMeans(2)) / mean(ISIMeans) * 100.0);
       if ~isempty(obj.hText)
         delete(obj.hText);
       end
-      obj.hText = text(app.isiAxes, 0.025, 0.95, displayText, 'units', 'normalized', 'VerticalAlignment', 'top');
+      % display the text, saving it for writing to disk later. 
+      obj.hText(1) = text(app.isiAxes, 0.02, 0.95, countsText, 'units', 'normalized', 'verticalAlignment', 'top');
+      obj.hText(2) = text(app.isiAxes, 0.15, 0.95, meansText, 'units', 'normalized', 'verticalAlignment', 'top');
     end
 
     % plotISI - plot the ISIs as a function of time
