@@ -1,6 +1,6 @@
 classdef RTPosVelPlots < handle
   %   Support for processing eye traces and detecting saccades
-  methods
+   methods
     function obj = RTPosVelPlots(app)
       %% Object Initialization %%
       obj = obj@handle();                                            % object initialization
@@ -8,8 +8,7 @@ classdef RTPosVelPlots < handle
       %% Post Initialization %%
       cla(app.posAxes, 'reset');
       cla(app.velAxes, 'reset');
-      title(app.posAxes, 'Single position trace', 'fontSize', 12, 'fontWeight', 'bold')
-      title(app.velAxes, 'Single velocity trace', 'fontSize', 12, 'fontWeight', 'bold')
+      doTitles(obj, app);
     end
     
     %%
@@ -34,8 +33,15 @@ classdef RTPosVelPlots < handle
       % RTPlots Updata all plots for RT
       posPlots(obj, app, startIndex, endIndex);
       velPlots(obj, app, startIndex, endIndex);
+      doTitles(obj, app);
     end
-    
+
+    %%
+    function doTitles(~, app)
+      title(app.posAxes, 'Eye Position', 'fontSize', 12, 'fontWeight', 'bold');
+      title(app.velAxes, 'Eye Velocity', 'fontSize', 12, 'fontWeight', 'bold');
+    end
+
     %% posPlots: do the trial and average position plots
     function posPlots(obj, app, startIndex, endIndex)
       timestepMS = 1000.0 / app.lbj.SampleRateHz;                 % time interval of samples
@@ -59,7 +65,6 @@ classdef RTPosVelPlots < handle
       else
         ylabel(app.posAxes,'Analog Input (V)','FontSize',14);
       end
-      title(app.posAxes, 'Most recent position trace', 'fontSize', 12, 'fontWeight', 'bold')
       yLimits = get(app.posAxes, ['Y' 'Lim']);       % axis() can be very slow sometimes
       plot(app.posAxes, [app.targetTimeS, app.targetTimeS] * 1000, yLimits, 'k-.');
       if (app.fixOffTimeS ~= app.targetTimeS)
@@ -101,7 +106,6 @@ classdef RTPosVelPlots < handle
       % Once the y-axis scaling is set, we can draw vertical marks for stimOn and saccades
       yLimits = get(app.velAxes, ['Y' 'Lim']);       % axis() can be very slow sometimes
       hold(app.velAxes, 'on');
-      title(app.velAxes, 'Most recent velocity trace', 'fontSize', 12, 'fontWeight', 'bold')
       plot(app.velAxes, [app.targetTimeS, app.targetTimeS] * 1000, yLimits, 'k-.');
       if (app.fixOffTimeS ~= app.targetTimeS)
         plot(app.velAxes, [app.fixOffTimeS, app.fixOffTimeS] * 1000, yLimits, 'r-.');

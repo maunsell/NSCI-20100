@@ -6,11 +6,12 @@ classdef MetricsPosVelPlots < handle
   end
   
   methods
-    function obj = MetricsPosVelPlots(~)
+    function obj = MetricsPosVelPlots(app)
       % Object Initialization
       obj = obj@handle();                                            % object initialization
       
       % Post Initialization
+      doTitles(obj, app);
     end
 
     function calibratedLabels(~, theAxes, conversion, unit)
@@ -28,12 +29,22 @@ classdef MetricsPosVelPlots < handle
       set(theAxes, 'YTick', yTicks);
       set(theAxes, 'YTickLabel', yLabels);
     end
-    
+   
+    function doTitles(~, app)
+      title(app.posAxes, 'Eye Position', 'fontSize', 12, 'fontWeight', 'bold');
+      title(app.velAxes, 'Eye Velocity', 'fontSize', 12, 'fontWeight', 'bold');
+      title(app.avgPosAxes, sprintf('Average Positions (n\x2265%d)', app.blocksDone), ...
+            'FontSize',12,'FontWeight','Bold');
+      title(app.avgVelAxes, sprintf('Average Velocities (n\x2265%d)', app.blocksDone), ...
+            'fontSize', 12, 'fontWeight','Bold');
+    end
+
     function plotPosVel(obj, app, startIndex, endIndex, mustPlot)
       %plotPosVel Update all plots for EOG
       mustPlot = mustPlot || (mod(sum(app.numSummed), app.numOffsets) == 0);
       posPlots(obj, app, startIndex, endIndex, mustPlot);
       velPlots(obj, app, startIndex, endIndex, mustPlot);
+      doTitles(obj, app);
     end
     
     %% posPlots: do the trial and average position plots
@@ -55,7 +66,6 @@ classdef MetricsPosVelPlots < handle
       else
         ylabel(app.posAxes, 'Analog Input (V)', 'FontSize', 14); 
       end
-      title(app.posAxes, 'Most recent position trace', 'FontSize', 12,'FontWeight','Bold')
       
       % average position traces every complete block
       if mustPlot
@@ -68,8 +78,6 @@ classdef MetricsPosVelPlots < handle
           app.avgPosAxes.ColorOrderIndex = 1;
           plot(app.avgPosAxes, saccadeTimes, app.posAvg(:, app.numOffsets / 2 + 1:app.numOffsets), '-');
           hold(app.avgPosAxes, 'off');
-          title(app.avgPosAxes, sprintf('Average position traces (n\x2265%d)', app.blocksDone), ...
-            'FontSize',12,'FontWeight','Bold')
           % set both plots to the y scaling range, using the maximum y value from the average plot
           yLim = max(abs(ylim(app.avgPosAxes)));
           set(app.avgPosAxes, ['X' 'Lim'], [saccadeTimes(1), saccadeTimes(end) + 1]);
@@ -129,7 +137,6 @@ classdef MetricsPosVelPlots < handle
       plot(app.velAxes, trialTimes, app.velTrace, 'color', colors(app.absStepIndex,:));
       yLim = max(abs(ylim(app.velAxes)));
       set(app.velAxes, ['Y' 'Lim'], [-yLim, yLim]);
-      title(app.velAxes, 'Most recent velocity trace', 'FontSize',12,'FontWeight','Bold');
       ylabel(app.velAxes,'Analog Input (dV/dt)','FontSize',14);
       xlabel(app.velAxes,'Time (ms)','FontSize',14);
       saccades = app.saccades;
@@ -156,8 +163,6 @@ classdef MetricsPosVelPlots < handle
           app.avgVelAxes.ColorOrderIndex = 1;
           plot(app.avgVelAxes, saccadeTimes, app.velAvg(:, app.numOffsets / 2 + 1:app.numOffsets), '-');
           hold(app.avgVelAxes, 'off');
-          title(app.avgVelAxes, sprintf('Average velocity traces (n\x2265%d)', app.blocksDone), ...
-            'fontSize', 12, 'fontWeight','Bold')
           ylabel(app.avgVelAxes,'Analog Input (dV/dt)', 'FontSize', 14);
           xlabel(app.avgVelAxes,'Time (ms)','FontSize', 14);
           % put both plots on the same y scale

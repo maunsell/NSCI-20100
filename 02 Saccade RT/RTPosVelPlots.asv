@@ -1,15 +1,20 @@
 classdef RTPosVelPlots < handle
   %   Support for processing eye traces and detecting saccades
-  methods
+   methods(Static)
+   function p = pi(tol)
+       [n d] = rat(pi,tol);
+       p = n/d;
+   end
+   end  
+   methods
     function obj = RTPosVelPlots(app)
       %% Object Initialization %%
       obj = obj@handle();                                            % object initialization
       
       %% Post Initialization %%
       cla(app.posAxes, 'reset');
-      cla(app.velAxes);
-      title(app.posAxes, 'Single position trace', 'fontSize', 12, 'fontWeight', 'bold')
-      title(app.velAxes, 'Single velocity trace', 'fontSize', 12, 'fontWeight', 'bold')
+      cla(app.velAxes, 'reset');
+      doTitles(obj);
     end
     
     %%
@@ -34,8 +39,15 @@ classdef RTPosVelPlots < handle
       % RTPlots Updata all plots for RT
       posPlots(obj, app, startIndex, endIndex);
       velPlots(obj, app, startIndex, endIndex);
+      doTitles();
     end
     
+    %%
+    function doTitles(obj)
+      title(app.posAxes, 'Eye Position', 'fontSize', 12, 'fontWeight', 'bold');
+      title(app.velAxes, 'Eye Velocity', 'fontSize', 12, 'fontWeight', 'bold');
+    end
+
     %% posPlots: do the trial and average position plots
     function posPlots(obj, app, startIndex, endIndex)
       timestepMS = 1000.0 / app.lbj.SampleRateHz;                 % time interval of samples
@@ -43,11 +55,11 @@ classdef RTPosVelPlots < handle
       trialTimes = 0:timestepMS:xLimit;                           % make array of trial time points
       % current trial position trace
       cla(app.posAxes, 'reset');
-      plot(app.posAxes, [0, xLimit], [0, 0], 'k', trialTimes, app.posTrace, 'b');
+      plot(app.posAxes, [0, xLimit], [0, 0], 'k');
+      hold(app.posAxes, 'on'); 
+      plot(app.posAxes, trialTimes, app.posTrace, 'b');
       yLimit = max(abs(ylim(app.posAxes)));
-      % axis(app.posAxes, [-inf, inf, -yLim, yLim]);
-      ylim([-yLimit, yLimit]);
-      hold(app.posAxes, 'on');                                    % mark fixOff and targetOn
+      ylim(app.posAxes, [-yLimit, yLimit]);
       saccades = app.saccades;
       if saccades.degPerV > 0                                     % plot saccade threshold
         if strcmp(app.ThresholdType.SelectedObject.Text, 'Position')
@@ -59,16 +71,16 @@ classdef RTPosVelPlots < handle
       else
         ylabel(app.posAxes,'Analog Input (V)','FontSize',14);
       end
-      title(app.posAxes, 'Most recent position trace', 'fontSize', 12, 'fontWeight', 'bold')
-      a1 = axis(app.posAxes);
-      plot(app.posAxes, [app.targetTimeS, app.targetTimeS] * 1000, [a1(3), a1(4)], 'k-.');
+      title(app.posAxes, 'Eye Position', 'fontSize', 12, 'fontWeight', 'bold')
+      yLimits = get(app.posAxes, ['Y' 'Lim']);       % axis() can be very slow sometimes
+      plot(app.posAxes, [app.targetTimeS, app.targetTimeS] * 1000, yLimits, 'k-.');
       if (app.fixOffTimeS ~= app.targetTimeS)
-        plot(app.posAxes, [app.fixOffTimeS, app.fixOffTimeS] * 1000, [a1(3), a1(4)], 'r-.');
+        plot(app.posAxes, [app.fixOffTimeS, app.fixOffTimeS] * 1000, yLimits, 'r-.');
       end
       if (startIndex > 0)                                 % mark the saccade start and end
-        plot(app.posAxes, [startIndex, startIndex] * timestepMS, [a1(3), a1(4)], 'b:');
+        plot(app.posAxes, [startIndex, startIndex] * timestepMS, yLimits, 'b:');
         if (endIndex > 0)
-          plot(app.posAxes, [endIndex, endIndex] * timestepMS, [a1(3), a1(4)], 'b:');
+          plot(app.posAxes, [endIndex, endIndex] * timestepMS, yLimits, 'b:');
         end
       end
       hold(app.posAxes, 'off');
@@ -83,8 +95,7 @@ classdef RTPosVelPlots < handle
       cla(app.velAxes, 'reset');                                      % we need 'reset' to clear axis scaling
       plot(app.velAxes, [0, xLimit], [0, 0], 'k', trialTimes, app.velTrace, 'b');
       yLimit = max(abs(ylim(app.velAxes)));
-      ylim([-yLimit, yLimit]);
-      % axis(app.velAxes, [-inf, inf, -yLimit, yLimit,]);
+      ylim(app.velAxes, [-yLimit, yLimit]);
       xlabel(app.velAxes,'Time (ms)','FontSize',14);
       hold(app.velAxes, 'on');                                    % mark fixOff and targetOn
       saccades = app.saccades;
@@ -95,22 +106,22 @@ classdef RTPosVelPlots < handle
           plot(app.velAxes, [trialTimes(1) trialTimes(end)], [thresholdV, thresholdV], 'r:');
         end
         calibratedLabels(obj, app.velAxes, app.saccades.degPerSPerV, 100)
-        ylabel(app.velAxes,'Eye Speed (deg/s)','FontSize',14);
+        ylabel(app.velAxes, 'Eye Speed (deg/s)', 'FontSize', 14);
       else
-        ylabel(app.velAxes,'Analog Input (dV/dt)','FontSize',14);
+        ylabel(app.velAxes, 'Analog Input (dV/dt)', 'FontSize', 14);
       end
-      a1 = axis(app.velAxes);
       % Once the y-axis scaling is set, we can draw vertical marks for stimOn and saccades
+      yLimits = get(app.velAxes, ['Y' 'Lim']);       % axis() can be very slow sometimes
       hold(app.velAxes, 'on');
-      title(app.velAxes, 'Most recent velocity trace', 'fontSize', 12, 'fontWeight', 'bold')
-      plot(app.velAxes, [app.targetTimeS, app.targetTimeS] * 1000, [a1(3), a1(4)], 'k-.');
+      title(app.velAxes, 'Eye Velocity', 'fontSize', 12, 'fontWeight', 'bold')
+      plot(app.velAxes, [app.targetTimeS, app.targetTimeS] * 1000, yLimits, 'k-.');
       if (app.fixOffTimeS ~= app.targetTimeS)
-        plot(app.velAxes, [app.fixOffTimeS, app.fixOffTimeS] * 1000, [a1(3), a1(4)], 'r-.');
+        plot(app.velAxes, [app.fixOffTimeS, app.fixOffTimeS] * 1000, yLimits, 'r-.');
       end
       if (startIndex > 0)                                         % plot the saccade start and end
-        plot(app.velAxes, [startIndex, startIndex] * timestepMS, [a1(3), a1(4)], 'b:');
+        plot(app.velAxes, [startIndex, startIndex] * timestepMS, yLimits, 'b:');
         if (endIndex > 0)
-          plot(app.velAxes, [endIndex, endIndex] * timestepMS, [a1(3), a1(4)], 'b:');
+          plot(app.velAxes, [endIndex, endIndex] * timestepMS, yLimits, 'b:');
         end
       end
       hold(app.velAxes, 'off');

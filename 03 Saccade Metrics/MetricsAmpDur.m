@@ -29,6 +29,7 @@ classdef MetricsAmpDur < handle
       for i = 1:app.numOffsets
         obj.ampLabels{i} = sprintf('%.0f', app.offsetsDeg(i));
       end
+      doTitle(obj, app);
     end
 
     %% addAmpDur
@@ -54,6 +55,12 @@ classdef MetricsAmpDur < handle
       axis(app.ampDurAxes, [0 1 0 1]);
     end
     
+    %% doTitle
+    function doTitle(~, app)
+      title(app.ampDurAxes, sprintf('Duration v. Amplitude (n\x2265%d)', app.blocksDone), 'FontSize', 12, ...
+            'FontWeight', 'Bold');
+    end
+
     %% plotAmpDur
     function plotAmpDur(obj, app)
       if obj.lastN <= 2             % we need enough data for the boxplot
@@ -64,13 +71,12 @@ classdef MetricsAmpDur < handle
       [maxQ, indexMax] = max(max(quartiles));      cla(app.ampDurAxes);
       boxplot(app.ampDurAxes, obj.reactTimesMS(1:obj.lastN, :), 'labels', num2str(app.offsetsDeg(:)), ...
             'notch', 'on', 'whisker', 0, 'positions', app.offsetsDeg, 'symbol', '');
-      title(app.ampDurAxes, sprintf('Duration v. Amplitude (n\x2265%d)', app.blocksDone), 'FontSize', 12, ...
-            'FontWeight', 'Bold');
       xlabel(app.ampDurAxes, 'Saccade Amplitude (deg)', 'FontSize', 14);
       ylabel(app.ampDurAxes, 'Saccade Duration (ms)', 'FontSize', 14);
       axis(app.ampDurAxes, [xlim(app.ampDurAxes), 0, app.medians(indexMax) + 2.0 * (maxQ - app.medians(indexMax))]);
       hold(app.ampDurAxes, 'off');
       plotFits(obj, app);
+      doTitle(obj, app);
     end 
 
     %% plotFits -- add fit functions to the amplitude/duration plot
