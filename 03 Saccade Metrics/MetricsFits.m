@@ -6,7 +6,6 @@ classdef MetricsFits < handle
     fitData
     fitsValid = false;
     tableData               % local data to load into GUI table
-    statsData
     minForFit = 3;
   end
   
@@ -19,12 +18,11 @@ classdef MetricsFits < handle
       obj = obj@handle();
       
       %% Post Initialization %%
-      app.fitTable.ColumnName = {'Fit Value'; 'Intercept'; sprintf('r%c', 178); 'p'};
+      app.fitTable.ColumnName = {'Fit Value'; 'Intercept'; sprintf('r%c', 178); 'p'; 'F'};
       app.fitTable.RowName = {'Speed'; 'Accel.'};
 
       s = uistyle('HorizontalAlignment', 'center');
       addStyle(app.fitTable, s, 'table', '');
-      addStyle(app.statsTable, s, 'table', '');
       clearAll(obj, app);
     end
 
@@ -65,7 +63,7 @@ classdef MetricsFits < handle
 
       F = accSSR / speedSSR;
       df = app.numOffsets - 1;
-      prob = fcdf(F, df, df) * 2;               % corrected for two-tailed
+      prob = fcdf(F, df, df);               % one-tailed test
       if prob >= 0.01
         formats = {'%.3f', '%.2f'};
       elseif prob >= 0.001
@@ -73,15 +71,10 @@ classdef MetricsFits < handle
       else
         formats = {'%.1e', '%.2f'};
       end
-      obj.tableData{1, 4} = sprintf(formats{2}, 1.0 - prob);    % speed p
-      obj.tableData{2, 4} = sprintf(formats{1}, prob);          % acc p
-      obj.statsData = cell(1, 2);
-      obj.statsData{1} = sprintf('%.3f', F);
-      obj.statsData{2} = sprintf('%.3e', prob);
-      set(app.statsTable, 'Data', obj.statsData);
+      obj.tableData{2, 4} = sprintf(formats{1}, prob);          % acceleration p-value
+      obj.tableData{2, 5} = sprintf('%.3f', F);                 % acceleration F-statistic
       
       % load output table values
-
       app.fitTable.Data = obj.tableData;        % transfer local table to GUI
       obj.fitData{2, 1} = 'Speed';              % add row names to export table
       obj.fitData{3, 1} = 'Accel.';      
@@ -92,7 +85,7 @@ classdef MetricsFits < handle
       end
       obj.fitData{2, 6} = sprintf('%.1f', speedSSR);
       obj.fitData{3, 6} = sprintf('%.1f', accSSR);
-      obj.fitData{2, 7} = obj.statsData{1};               % F statistic
+      obj.fitData{3, 7} = obj.tableData{2, 5};                  % F statistic
       obj.fitData{2, 8} = sprintf('%.1f mV/deg', 1000 / app.saccades.degPerV);    % eye calibration (mv/deg)
       obj.fitsValid = true;
       app.ampDur.accFit = accSlope;
@@ -104,10 +97,8 @@ classdef MetricsFits < handle
       obj.fitsValid = false;
       obj.fitData = cell(3, 8);
       [obj.fitData{1, :}] = deal(' ', 'Fit Value', 'Intercept', 'r^2', 'p', 'Sum Squares', 'F', 'Calibration');
-      obj.tableData = {'', '', '', ''; '', '', '', ''};      % contents of fit table
+      obj.tableData = {'', '', '', '', ''; '', '', '', '', ''};      % contents of fit table
       app.fitTable.Data = obj.tableData;
-      obj.statsData = {'', ''};
-      app.statsTable.Data = obj.statsData;
       app.ampDur.accFit = -1;
       app.ampDur.speedFit = -1;
     end
