@@ -34,8 +34,8 @@ classdef SRSignalProcess < handle
         obj.outSampleRatio = obj.outSampleRatio + 1;
         outSampleRateHz = inSampleRateHz * obj.outSampleRatio;
       end
-      obj.audioBufferSize = 512;
-      % obj.audioBufferSize = 4096;
+      % obj.audioBufferSize = 512;
+      obj.audioBufferSize = 4096;
       while mod(obj.audioBufferSize, obj.outSampleRatio) ~= 0         % must fit whole sample ratios
         obj.audioBufferSize = obj.audioBufferSize + 1;
       end
@@ -117,57 +117,105 @@ classdef SRSignalProcess < handle
     end
 
     % makeFakeSpike: make a trace with a spike profile for test mode
-    function makeFakeSpike(obj, app)
-      spikeDurMS = 5;
-      templateSampleRateKHz = 10;
-      templateSamples = spikeDurMS * templateSampleRateKHz;
-      templateSpike = zeros(1, templateSamples);
-      templateSpike(1:templateSamples) = [2, 5, 15, 25, 35, 50, 65, 75, 85, 98, ...
-                100, 90, 75, 60, 45, 30, 15, 5, 0, -5, ...
-                -10, -13, -15, -17, -18, -19, -19, -19, -18, -17, ...
-                -16, -15, -14, -13, -12, -11, -10, -9, -8, -7, ...
-                -6, -5, -4, -4, -3, -3, -2, -2, -1, -1];
-      spikeSamples = spikeDurMS * app.lbj.SampleRateHz / 1000;
-      peakV = app.vPerDiv * app.vDivs / 2 * 0.75;
-      obj.fakeSpike = decimate(templateSpike, length(templateSpike) / spikeSamples) * peakV / 100;
-      obj.fakeNoise = 0.2;
+  function makeFakeSpike(obj, app)
+    spikeDurMS = 5;
+    templateSampleRateKHz = 10;
+    templateSamples = spikeDurMS * templateSampleRateKHz;
+    templateSpike = zeros(1, templateSamples);
+    templateSpike(1:templateSamples) = [2, 5, 15, 25, 35, 50, 65, 75, 85, 98, ...
+                100, 90, 75, 60, 45, 30, 15, 5, 0, -5, -10, -13, -15, -17, -18, -19, -19, -19, -18, -17, ...
+                -16, -15, -14, -13, -12, -11, -10, -9, -8, -7, -6, -5, -4, -4, -3, -3, -2, -2, -1, -1];
+    spikeSamples = spikeDurMS * app.lbj.SampleRateHz / 1000;
+    peakV = app.vPerDiv * app.vDivs / 2 * 0.75;
+
+    % Use resample instead of decimate for non-integer downsampling
+    obj.fakeSpike = resample(templateSpike, round(spikeSamples), length(templateSpike)) * peakV / 100;
+    obj.fakeNoise = 0.2;
+  end
+
+%     % outputAudio: output the audio signal
+%     function outputAudio(obj, app)
+%       inIndex = obj.lastProcessed + 1;                    % range to read from filtered trace
+%       inEndIndex = app.samplesRead;
+%       % output to audio output in chunks of audioBufferSize
+%       while inIndex < inEndIndex
+%         inNum = min(inEndIndex - inIndex, (obj.audioBufferSize - obj.audioOutIndex) / obj.outSampleRatio);
+%         ptr = obj.audioOutIndex + 1;
+%         for i = inIndex + 1:inIndex + inNum
+%           for rep = 1:obj.outSampleRatio
+%             obj.audioBuffer(ptr) = int16(app.filteredTrace(i) * obj.audioMultiplier);
+%             ptr = ptr + 1;
+%           end
+%         end
+%         if obj.audioOutIndex + inNum * obj.outSampleRatio == obj.audioBufferSize
+%           try                                         % full buffer, send to audio output
+%             obj.audioOutDevice(obj.audioBuffer);
+% %             underrun = obj.audioOutDevice(obj.audioBuffer);
+% %             if underrun ~= 0
+% %               fprintf('Audio underrun (%d samples)\n', underrun / obj.outSampleRatio);
+% %             end
+%           catch
+%             fprintf('error trying to output to audioOutDevice\n');
+%           end
+%           obj.audioOutIndex = 0;                      % start a new buffer
+%         else
+%           obj.audioOutIndex = obj.audioOutIndex + inNum * obj.outSampleRatio;
+%         end
+%         if obj.audioOutIndex > obj.audioBufferSize
+%           fprintf('Audio buffer mishandling -- buffer overrun\n');
+%         end
+%         inIndex = inIndex + inNum;
+%       end
+%     end
+
+% outputAudio: output the audio signal
+function outputAudio(obj, app)
+  inIndex = obj.lastProcessed + 1;  % Start index in filtered trace
+  inEndIndex = app.samplesRead;     % End index
+
+  if inIndex < inEndIndex
+    T = datetime('now');
+    T.Format = 'HH:mm:ss.SSS';
+    fprintf('audioOutDevice %s processing %d total samples\n', T, inEndIndex - inIndex);
+  end
+  while inIndex < inEndIndex
+    inNum = min(inEndIndex - inIndex, floor((obj.audioBufferSize - obj.audioOutIndex) / obj.outSampleRatio));
+    if inNum <= 0
+      break;
     end
 
-    % outputAudio: output the audio signal
-    function outputAudio(obj, app)
-      inIndex = obj.lastProcessed + 1;                    % range to read from filtered trace
-      inEndIndex = app.samplesRead;
-      % output to audio output in chunks of audioBufferSize
-      while inIndex < inEndIndex
-        inNum = min(inEndIndex - inIndex, (obj.audioBufferSize - obj.audioOutIndex) / obj.outSampleRatio);
-        ptr = obj.audioOutIndex + 1;
-        for i = inIndex + 1:inIndex + inNum
-          for rep = 1:obj.outSampleRatio
-            obj.audioBuffer(ptr) = int16(app.filteredTrace(i) * obj.audioMultiplier);
-            ptr = ptr + 1;
-          end
+    % Efficiently replicate and scale audio samples
+    samples = int16(app.filteredTrace(inIndex:inIndex + inNum - 1) * obj.audioMultiplier);
+    expandedSamples = repelem(samples, obj.outSampleRatio);  % Expand samples for output
+
+    % Store in audio buffer
+    ptr = obj.audioOutIndex + (1:length(expandedSamples));
+    obj.audioBuffer(ptr) = expandedSamples;
+
+    % Check if buffer is full
+    if obj.audioOutIndex + length(expandedSamples) >= obj.audioBufferSize
+      try
+        audioOutStart = tic;
+        obj.audioOutDevice(obj.audioBuffer);  % Send to audio output
+        elapsedAudioOut = toc(audioOutStart);
+        if elapsedAudioOut > 0.010
+            fprintf('audioOutDevice time %.6f; passed %d samples, %d remaining\n', elapsedAudioOut, inNum, inEndIndex - inIndex);
         end
-        if obj.audioOutIndex + inNum * obj.outSampleRatio == obj.audioBufferSize
-          try                                         % full buffer, send to audio output
-            obj.audioOutDevice(obj.audioBuffer);
-%             underrun = obj.audioOutDevice(obj.audioBuffer);
-%             if underrun ~= 0
-%               fprintf('Audio underrun (%d samples)\n', underrun / obj.outSampleRatio);
-%             end
-          catch
-            fprintf('error trying to output to audioOutDevice\n');
-          end
-          obj.audioOutIndex = 0;                      % start a new buffer
-        else
-          obj.audioOutIndex = obj.audioOutIndex + inNum * obj.outSampleRatio;
-        end
-        if obj.audioOutIndex > obj.audioBufferSize
-          fprintf('Audio buffer mishandling -- buffer overrun\n');
-        end
-        inIndex = inIndex + inNum;
+      catch
+        fprintf('Error: Failed to output to audioOutDevice\n');
       end
+      obj.audioOutIndex = 0;  % Reset buffer index
+    else
+      obj.audioOutIndex = obj.audioOutIndex + length(expandedSamples);
     end
 
+    if obj.audioOutIndex > obj.audioBufferSize
+      error('Audio buffer mishandling -- buffer overrun');
+    end
+
+    inIndex = inIndex + inNum;
+  end
+end
     %% processSignals: function to process data from one trial
     function overRun = processSignals(obj, app)
       if app.testMode
