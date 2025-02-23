@@ -199,7 +199,7 @@ function outputAudio(obj, app)
         obj.audioOutDevice(obj.audioBuffer);  % Send to audio output
         elapsedAudioOut = toc(audioOutStart);
         if elapsedAudioOut > 0.010
-            fprintf('audioOutDevice time %.6f; passed %d samples, %d remaining\n', elapsedAudioOut, inNum, inEndIndex - inIndex);
+            fprintf('audioOutDevice time %.6f; passed %d samples, %d remaining\n', elapsedAudioOut, length(expandedSamples), inEndIndex - inIndex);
         end
       catch
         fprintf('Error: Failed to output to audioOutDevice\n');

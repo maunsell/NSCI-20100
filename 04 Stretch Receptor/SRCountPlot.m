@@ -37,8 +37,8 @@ classdef SRCountPlot < handle
       app.countAxes.YGrid = 'on';
       xlabel(app.countAxes, 'Spike Counts', 'fontsize', 14, 'fontWeight', 'bold');
       configureTable(obj, app);
-      addStyle(app.resultsTable, uistyle('backgroundColor', [0.85, 0.85, 0.43]), 'cell', [1, 1]);
-      addStyle(app.resultsTable, uistyle('backgroundColor', [0.90, 0.60, 0.47]), 'cell', [2, 1]);
+      % addStyle(app.resultsTable, uistyle('backgroundColor', [0.85, 0.85, 0.43]), 'cell', [1, 1]);
+      % addStyle(app.resultsTable, uistyle('backgroundColor', [0.90, 0.60, 0.47]), 'cell', [2, 1]);
       addStyle(app.resultsTable, uistyle('horizontalAlignment', 'center'));
     end
 
@@ -69,7 +69,6 @@ classdef SRCountPlot < handle
       end
       plotCounts(obj, app);
       tableData = get(app.resultsTable, 'Data');          % update table
-      tableData = loadCountData(obj, app, tableData, obj.shortCounts(1:obj.numShortCounts), app.shortWindowMS, 2);
       tableData = loadCountData(obj, app, tableData, obj.longCounts(1:obj.numLongCounts), app.longWindowMS, 1);
       set(app.resultsTable, 'Data', tableData);
       if ~app.doShortCounts
@@ -115,11 +114,11 @@ classdef SRCountPlot < handle
         'faceColor', [0.8500, 0.3250, 0.0980]);
        obj.clearingNow = false;
       % clear the contents of the count table
-      tableData = cell(2, 5);
-      tableData{1, 1} = app.longWindowMSText.Value;
-      if app.doShortCounts
-        tableData{2, 1} = app.shortWindowMSText.Value;
-      end
+      tableData = cell(2, 7);
+      tableData{1, 3} = app.longWindowMSText.Value;
+      % if app.doShortCounts
+      %   tableData{2, 3} = app.shortWindowMSText.Value;
+      % end
       set(app.resultsTable, 'Data', tableData);
     end
 
@@ -139,20 +138,20 @@ classdef SRCountPlot < handle
     % load the data table with values for one count window
     function tableData = loadCountData(obj, app, tableData, counts, windowMS, row)
       if row == 2 && ~app.doShortCounts
-        tableData{row, 1} = '0';
-        tableData{row, 2} = '0';
-        tableData{row, 3} = '0';
-        tableData{row, 4} = '0';
-        tableData{row, 5} = '0';
+        for c = 1:7
+          tableData{row, c} = '0';
+        end
       else
+        tableData{1, 3} = app.longWindowMSText.Value;
         rates = counts / (windowMS / 1000);
-        meanRate = mean(rates);
         sdRate = std(rates);                                        % SD of rate
-        jndRate = sdRate * 1.34;                                    % JND for 75% performance
-        tableData{row, 2} = sprintf('%.0f', length(counts));
-        tableData{row, 3} = validString(obj, app, meanRate);
-        tableData{row, 4} = validString(obj, app, sdRate);
-        tableData{row, 5} = validString(obj, app, jndRate);
+        [numISIs, driftPC] = countStats(app.isiPlot);
+        tableData{row, 1} = sprintf('%.0f', numISIs);
+        tableData{row, 2} = sprintf('%.0f%%', driftPC);
+        tableData{row, 4} = sprintf('%.0f', length(counts));
+        tableData{row, 5} = validString(obj, app, mean(rates));
+        tableData{row, 6} = validString(obj, app, sdRate);
+        tableData{row, 7} = validString(obj, app, sdRate * 1.34);
       end
     end
     

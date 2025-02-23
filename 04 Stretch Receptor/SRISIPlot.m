@@ -9,7 +9,6 @@ classdef SRISIPlot < handle
   properties
     countMaxX;      % last count histogram bin to plot
     countMaxY;      % limit on count histogram y axis
-    hText;          % handle to text displayed on the plot
     isiLastPlot;    % countt of the last ISI plot
     isiMS;          % array of all isi in ms
     isiPlotXLimit;  % maximum displayed point in the ISI plot
@@ -54,7 +53,6 @@ classdef SRISIPlot < handle
       obj.isiPlotYLimit = 10;
       obj.numISIs = 0;
       obj.maxISIMS = 10;
-      obj.hText = [];
       hold(app.isiAxes, 'off');
       cla(app.isiAxes);
       axis(app.isiAxes, [0, str2double(app.longWindowLimitText.Value), 0, max(10, obj.maxISIMS * 1.1)]);
@@ -62,10 +60,12 @@ classdef SRISIPlot < handle
       makeSnippets(obj.isiSnippets, app, 100);
     end
 
-    function displayStats(obj, app)
-    % displayStats: When plot is done, display the mean and SD for first
-    % and second halves of the ISI samples
-      if obj.numISIs < 20
+    function [numISIs, driftPC] = countStats(obj)
+    % countStats: stats for the number of ISIs and the drift between first
+    % and second halves of the counted period
+      numISIs = obj.numISIs;
+      if numISIs < 20
+        driftPC = 0;
         return;
       end
       % prepare text displaying the means and SDs for first and second
@@ -74,22 +74,13 @@ classdef SRISIPlot < handle
       ISIMeans = zeros(2, 1);
       halfLabels = [{'1st'}, {'2nd'}];
       for i = 1:2
-        startIndex = 1 + (i - 1) * floor(obj.numISIs / 2);
-        endIndex = startIndex + floor(obj.numISIs / 2) - 1;
+        startIndex = 1 + (i - 1) * floor(numISIs / 2);
+        endIndex = startIndex + floor(numISIs / 2) - 1;
         ISIMeans(i) = mean(obj.isiMS(startIndex:endIndex));
         meansText{i} = sprintf('%s half: mean %.0f, SD %.0f', halfLabels{i}, ...
                   ISIMeans(i), std(obj.isiMS(startIndex:endIndex)));
       end
-      % prepare text displaying the number of ISIs and drift
-      countsText = cell(2, 1);
-      countsText{1} = sprintf('%d ISIs', obj.numISIs);
-      countsText{2} = sprintf('Drift %.0f%%', abs(ISIMeans(1) - ISIMeans(2)) / mean(ISIMeans) * 100.0);
-      if ~isempty(obj.hText)
-        delete(obj.hText);
-      end
-      % display the text, saving it for writing to disk later. 
-      obj.hText(1) = text(app.isiAxes, 0.02, 0.95, countsText, 'units', 'normalized', 'verticalAlignment', 'top');
-      obj.hText(2) = text(app.isiAxes, 0.15, 0.95, meansText, 'units', 'normalized', 'verticalAlignment', 'top');
+      driftPC = (ISIMeans(1) - ISIMeans(2)) / mean(ISIMeans) * 100.0;
     end
 
     % plotISI - plot the ISIs as a function of time
@@ -104,12 +95,14 @@ classdef SRISIPlot < handle
         obj.isiPlotYLimit = meanISI * 2.0;
         rescale = true;
       end
-      if rescale                                                          % replot entire set of isis
+      % replot the entire set of ISIs if we need to rescale or update the
+      % drift rate display
+      if rescale || mod(obj.numISIs, 20) == 0                               % replot entire set of isis
         hold(app.isiAxes, 'off');
         axis(app.isiAxes, [0, obj.isiPlotXLimit, 0, obj.isiPlotYLimit]);
         clearSnippets(obj.isiSnippets);
         hold(app.isiAxes, 'on');
-        obj.isiLastPlot = 0;                                              % force a replot of all points
+        obj.isiLastPlot = 0;                                                % force a replot of all points
       end
       set(nextSnippet(obj.isiSnippets, app), 'XData', obj.isiLastPlot + 1:obj.numISIs, ...
           'YData', obj.isiMS(obj.isiLastPlot + 1:obj.numISIs));
