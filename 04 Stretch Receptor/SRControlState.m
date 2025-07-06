@@ -1,7 +1,7 @@
 function SRControlState(app, state, except)
       
-  controls = {app.startButton, app.clearButton, app.savePlotsButton, app.shortWindowMSText, app.longWindowMSText, ...
-    app.contMSPerDivButton, app.vPerDivButton, app.doShortCountsCheckbox};   
+  controls = {app.startButton, app.clearButton, app.savePlotsButton, app.longWindowMSText, ...
+    app.contMSPerDivButton, app.vPerDivButton};   
   for c = 1:length(controls)
     skip = false;
     for e = 1:length(except)

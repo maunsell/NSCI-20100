@@ -1,4 +1,4 @@
-function ctDrawHitRates(app, doAllBaseContrasts)
+function ctDrawHitRates(app, ~)
 % Draw the hit rates, their CIs, and fitted pschometric function for one
 % (or all) base contrast(s). This isdone at the end of each trial.
 
@@ -6,11 +6,11 @@ function ctDrawHitRates(app, doAllBaseContrasts)
   errNeg = zeros(size(app.trialsDone));               % for all neg CIs
   errPos = zeros(size(app.trialsDone));               % for all pos CIs
   pci = zeros(size(app.trialsDone, 1), size(app.trialsDone, 2), 2);
-  if (doAllBaseContrasts) 
-    basesToUpdate = 1:app.numIncrements;
-  else
-    basesToUpdate = app.baseIndex;
-  end
+  % if (doAllBaseContrasts) 
+  %   basesToUpdate = 1:app.numIncrements;
+  % else
+  %   basesToUpdate = app.baseIndex;
+  % end
   for base = 1:app.numIncrements
     [hitRate(base, :), pci(base,:,:)] = binofit(app.hits(base, :), app.trialsDone(base, :));
     errNeg(base, :) = hitRate(base, :) - pci(base, :, 1);
@@ -41,7 +41,8 @@ function ctDrawHitRates(app, doAllBaseContrasts)
 
   % plot points and CIs (using errorbar), then fit curves and marker lines if enough blocks have been done
   x = app.testContrasts';                             % test values for all base contrasts
-  errorbar(app.axes1, x, hitRate', errNeg', errPos', 'o', 'markerfacecolor', [0.5, 0.5, 0.5], 'markersize', 8);
+  errorbar(app.axes1, x, hitRate', errNeg', errPos', 'o', 'LineWidth', 1.0, 'markerfacecolor', [0.5, 0.5, 0.5], ...
+    'MarkerSize', 8);
   hold(app.axes1, 'on');
   plot(app.axes1, [0.02, 1.0], [0.75, 0.75], 'color', [0.75, 0.75, 0.75]);  % mark threshold level
   plot(app.axes1, [0.02, 1.0], [0.5, 0.5], 'color', [0.75, 0.75, 0.75]);    % mark chance level

@@ -55,6 +55,7 @@ classdef MetricsPosVelPlots < handle
       % current trial position trace
       plot(app.posAxes, trialTimes, app.posTrace, 'color', colors(app.absStepIndex,:));
       saccades = app.saccades;
+      xlabel(app.posAxes,'Time (ms)','FontSize',14);
       if saccades.degPerV > 0                                     % plot saccade threshold
         if strcmp(app.ThresholdType.SelectedObject.Text, 'Position')
           thresholdV = saccades.thresholdDeg / saccades.degPerV * app.stepSign;
@@ -93,6 +94,7 @@ classdef MetricsPosVelPlots < handle
           end
           hold(app.avgPosAxes, 'off');
           % if eye position has been calibrated, change the y scaling on the average to degrees rather than volts
+          xlabel(app.avgPosAxes,'Time (ms)','FontSize', 14);
           if saccades.degPerV > 0
             yTicks = [fliplr(-app.offsetsDeg(1:app.numOffsets/2)), 0, ...
               app.offsetsDeg(1:app.numOffsets/2)] / saccades.degPerV;

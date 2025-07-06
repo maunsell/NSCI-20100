@@ -12,14 +12,14 @@ function plotRates
   plot([0, 35], [0, 35], 'k:');
   axis([0, 40, 0, 40]);
   hold on;
-  errorbar(meanRates, meanRates, meanRates - negShort, posShort - meanRates, 'bo');
+  errorbar(meanRates, meanRates, meanRates - negShort, posShort - meanRates, 'bo', 'LineWidth', 1.0);
   title('Short window');
 
   subplot(2, 2, 2)
   plot([0, 35], [0, 35], 'k:');
   axis([0, 40, 0, 40]);
   hold on;
-  errorbar(meanRates, meanRates, meanRates - negLong, posLong - meanRates, 'bo');
+  errorbar(meanRates, meanRates, meanRates - negLong, posLong - meanRates, 'bo', 'LineWidth', 1.0);
   title('Long window');
 
   meanRates = [5.6, 10.8, 14.8, 22.6, 25.6, 25.9, 27.1, 34.1];
@@ -32,13 +32,13 @@ function plotRates
   plot([0, 35], [0, 35], 'k:');
   axis([0, 40, 0, 40]);
   hold on;
-  errorbar(meanRates, meanRates, meanRates - negShort, posShort - meanRates, 'bo');
+  errorbar(meanRates, meanRates, meanRates - negShort, posShort - meanRates, 'bo', 'LineWidth', 1.0);
   title('Short window -- Didn''t exclude drifting data');
 
   subplot(2, 2, 4)
   plot([0, 35], [0, 35], 'k:');
   axis([0, 40, 0, 40]);
   hold on;
-  errorbar(meanRates, meanRates, meanRates - negLong, posLong - meanRates, 'bo');
+  errorbar(meanRates, meanRates, meanRates - negLong, posLong - meanRates, 'bo', 'LineWidth', 1.0);
   title('Long window -- Didn''t exclude drifting data');
 end

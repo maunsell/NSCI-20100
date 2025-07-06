@@ -124,13 +124,13 @@ classdef MetricsAmpDur < handle
         c{offset + 1, 6} = percentiles(2);
         c{offset + 1, 7} = percentiles(3);
       end
-      fPath = [app.folderPath, 'AmpDur'];
+      fPath = [dataRoot(), '/MData/AmpDur'];
       if ~isfolder(fPath)
         mkdir(fPath);
       end
       filePath = fullfile(fPath, ['MT-', timeString, '.xlsx']);
       writecell(c, filePath, 'writeMode', 'replacefile', 'autoFitWidth', 1);
-      backupFile(filePath, '~/Desktop', '~/Documents/Respository');     % save backup in repository directory
+      backupFile(filePath);     % save backup in repository directory
     end
   end
 end

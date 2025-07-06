@@ -3,6 +3,7 @@ function timeChars = saveTable(theTable, folderPath, appString, timeChars)
   if nargin < 4
     timeChars = char(string(datetime('now', 'format', 'MMM-dd-HHmmss')));
   end
+  folderPath = fullfile(dataRoot(), folderPath);     % put everything in data root
   if ~isfolder(folderPath)
     mkdir(folderPath);
   end
@@ -12,6 +13,6 @@ function timeChars = saveTable(theTable, folderPath, appString, timeChars)
   t.Properties.VariableNames = {'pc_3', 'pc_6', 'pc_12', 'pc_24', 'pc_48'};
   t.Properties.RowNames = theTable.RowName;
   writetable(t, filePath, 'writeRowNames', true);
-  backupFile(filePath, '~/Desktop', '~/Documents/Respository');
+  backupFile(filePath);
 end
   

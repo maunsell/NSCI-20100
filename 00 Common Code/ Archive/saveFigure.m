@@ -11,6 +11,6 @@ function timeChar = saveFigure(fHandle, folderPath, appString, extString, timeCh
   tic
   exportgraphics(fHandle, filePath);
   fprintf(' (%.1f s)\n', toc);
-  backupFile(filePath, '~/Desktop', '~/Documents/Respository');     % save backup in repository directory
+  backupFile(filePath);     % save backup in repository directory
 end
   

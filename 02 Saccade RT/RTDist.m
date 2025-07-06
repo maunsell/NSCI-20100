@@ -124,9 +124,8 @@ classdef RTDist < handle
     %% plotLabels -- prepare a blank plot
     function plotLabels(obj)
       title(obj.fHandle, sprintf('%s Condition', obj.titles{obj.index}), 'fontSize', 12, 'fontWeight', 'bold');
-      if (obj.index == 2)                                 % label the bottom plot
-        xlabel(obj.fHandle, 'Reaction Time (ms)', 'fontSize', 14);
-      end
+      xlabel(obj.fHandle, 'Reaction Time (ms)', 'fontSize', 14);
+      ylabel(obj.fHandle, 'Saccade Count', 'fontSize', 14);
     end
      
     %% setXAxisMax -- set the maximum x axis value 

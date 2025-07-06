@@ -16,7 +16,7 @@
         while ~strcmp(app.startButton.Text, 'Start')
           pause(2);
         end
-        testCase.press(app.savePlotsButton);          % save the samples
+        testCase.press(app.saveDataButton);          % save the samples
       end
     end
 

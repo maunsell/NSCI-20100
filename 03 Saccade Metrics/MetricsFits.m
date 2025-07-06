@@ -113,13 +113,13 @@ classdef MetricsFits < handle
       if nargin < 3
         timeString = string(datetime('now', 'Format', 'MMM-dd-HHmmss'));
       end
-      fPath = [app.folderPath, 'Fits'];
+      fPath = [dataRoot(), '/MData/Fits'];
       if ~isfolder(fPath)
         mkdir(fPath);
       end
       filePath = fullfile(fPath, ['MT-', timeString, '.xlsx']);
       writecell(obj.fitData, filePath, 'writeMode', 'replacefile', 'autoFitWidth', 1);
-      backupFile(filePath, '~/Desktop', '~/Documents/Respository');     % save backup in repository directory
+      backupFile(filePath);     % save backup in repository directory
     end
   end
 end

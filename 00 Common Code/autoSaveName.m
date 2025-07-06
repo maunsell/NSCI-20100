@@ -1,7 +1,7 @@
 function fileName = autoSaveName(taskName, timeString)
 
   fileName = sprintf('%s-Auto-%s', taskName, timeString);
-  dirName = sprintf('~/Desktop/%sData/Data/', taskName);
+  dirName = sprintf('%s/%sData/Data/', dataRoot(), taskName);
   % check whether there are old auto saves that need to be purged
   dirList = dir(dirName);
   fileNames = {dirList(:).name};

@@ -54,6 +54,7 @@ classdef RTPosVelPlots < handle
       plot(app.posAxes, trialTimes, app.posTrace, 'b');
       yLimit = max(abs(ylim(app.posAxes)));
       ylim(app.posAxes, [-yLimit, yLimit]);
+      xlabel(app.posAxes,'Time (ms)','FontSize',14);
       saccades = app.saccades;
       if saccades.degPerV > 0                                     % plot saccade threshold
         if strcmp(app.ThresholdType.SelectedObject.Text, 'Position')

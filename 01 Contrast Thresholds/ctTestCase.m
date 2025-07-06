@@ -32,7 +32,7 @@ classdef ctTestCase < matlab.uitest.TestCase
         while strcmp(app.runButton.Text, 'Stop')    % wait for end of a block
           pause(1);
         end
-        testCase.press(app.savePlotsButton);        % save the data
+        testCase.press(app.saveDataButton);        % save the data
         repsDone = str2double(app.stimRepsText.Value);
         testCase.type(app.stimRepsText, sprintf('%d', repsDone + repsInc))
         if (repsDone >= repsLimit)

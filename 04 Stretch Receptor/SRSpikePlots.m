@@ -75,7 +75,7 @@ classdef SRSpikePlots < handle
       % y axis
       yticks(app.vContAxes, -vLimit:app.vPerDiv:vLimit);
       yticklabels(app.vContAxes, yTickLabels);
-      ylabel(app.vContAxes, 'Analog Input (V)','FontSize', 14, 'FontWeight','Bold');
+      ylabel(app.vContAxes, 'Voltage (V)','FontSize', 14, 'FontWeight','Bold');
       hold(app.vContAxes, 'on');
       % We must remake new snippets every time we clear because the old
       % ones get deleted.  They must be made after we set hold on
@@ -116,7 +116,7 @@ classdef SRSpikePlots < handle
       end
       yticks(theAxes, -vLimit:app.vPerDiv:vLimit);
       yticklabels(theAxes, yTickLabels);
-      ylabel(theAxes, 'Analog Input (V)', 'fontSize', 14, 'fontWeight', 'bold');
+      ylabel(theAxes, 'Voltage (V)', 'fontSize', 14, 'fontWeight', 'bold');
       hold(theAxes, 'on');
       axis(theAxes, [1, floor(obj.triggerSamples / 2) * 2 + 1, -maxV, maxV]);
       plot(theAxes, [triggerSample, triggerSample], [-maxV, maxV], 'k:');

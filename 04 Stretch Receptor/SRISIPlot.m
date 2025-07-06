@@ -19,9 +19,6 @@ classdef SRISIPlot < handle
     maxISIMS;       % largest ISI in list
     numISIs;        % number of ISIs recorded
     numLongCounts;  % number of long window counts in the buffer
-    numShortCounts; % number of short window counts in the buffer
-    shortCounts;    % individual spike counts for short count window
-    shortHist;      % histogram of spike counts for short interval
   end
   
   methods

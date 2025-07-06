@@ -26,7 +26,7 @@
         while strcmp(app.startButton.Text, 'Stop')
           pause(1);
         end
-        testCase.press(app.savePlotsButton);          % save the samples
+        testCase.press(app.saveDataButton);          % save the samples
         blocksDone = str2double(app.stopAfterText.Value);
         testCase.type(app.stopAfterText, sprintf('%d', blocksDone + blockInc))
         if (blocksDone >= blockLimit)

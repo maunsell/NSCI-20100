@@ -18,8 +18,6 @@ classdef SRSignalProcess < handle
     longStartTimeMS
     nextFakeSpike0Sample
     outSampleRatio
-    shortCount
-    shortStartTimeMS
     tracesRead
   end
   
@@ -42,8 +40,7 @@ classdef SRSignalProcess < handle
       obj.audioBuffer = int16(zeros(obj.audioBufferSize, 1));
       obj.audioOutIndex = 0;
       obj.audioOutDevice = audioDeviceWriter('SampleRate', outSampleRateHz, 'BufferSize', obj.audioBufferSize);
-        % 'SupportVariableSizeInput', true);
-        makeFakeSpike(obj, app);
+      makeFakeSpike(obj, app);
       setVolume(obj, app);
       clearAll(obj, app);
     end
@@ -62,22 +59,15 @@ classdef SRSignalProcess < handle
       end
     end
     
-    % addSpikeTime: add a spike time to the long and short window counts.
-    % We need to keep track of time across trace cycles. For this we use
-    % tracesRead
+    % addSpikeTime: add a spike time to the window count.
+    % We need to keep track of time across trace cycles. For this we use tracesRead
     function addSpikeTime(obj, app, spikeIndex)
       if atCountLimit(app)
         return;
       end
       spikeTimeMS = (obj.lastProcessed + spikeIndex + obj.tracesRead * app.contSamples) / app.lbj.SampleRateHz * 1000.0;
       obj.lastSpikeTimeMS = spikeTimeMS;
-      while spikeTimeMS > obj.shortStartTimeMS + app.shortWindowMS
-        addShortCount(app.countPlot, app, obj.shortCount);
-        obj.shortCount = 0;
-        obj.shortStartTimeMS = obj.shortStartTimeMS + app.shortWindowMS;
-      end
-      obj.shortCount = obj.shortCount + 1;
-     while spikeTimeMS > obj.longStartTimeMS + app.longWindowMS
+      while spikeTimeMS > obj.longStartTimeMS + app.longWindowMS
        addLongCount(app.countPlot, app, obj.longCount);
        obj.longCount = 0;
        obj.longStartTimeMS = obj.longStartTimeMS + app.longWindowMS;
@@ -95,8 +85,6 @@ classdef SRSignalProcess < handle
       obj.lastSpikeIndex = 2 * app.maxContSamples;              % flag start of ISI sequence
       obj.nextFakeSpike0Sample = floor(app.lbj.SampleRateHz / app.fakeSpikeRateHz);
       obj.fakeSpike0Drift = randn() * 0.0002;
-      obj.shortCount = 0;
-      obj.shortStartTimeMS = 0;
       obj.tracesRead = 0;
       app.inSpike = false;
     end
@@ -173,11 +161,11 @@ function outputAudio(obj, app)
   inIndex = obj.lastProcessed + 1;  % Start index in filtered trace
   inEndIndex = app.samplesRead;     % End index
 
-  if inIndex < inEndIndex
-    T = datetime('now');
-    T.Format = 'HH:mm:ss.SSS';
-    fprintf('audioOutDevice %s processing %d total samples\n', T, inEndIndex - inIndex);
-  end
+  % if inIndex < inEndIndex
+  %   T = datetime('now');
+  %   T.Format = 'HH:mm:ss.SSS';
+  %   fprintf('audioOutDevice %s processing %d total samples\n', T, inEndIndex - inIndex);
+  % end
   while inIndex < inEndIndex
     inNum = min(inEndIndex - inIndex, floor((obj.audioBufferSize - obj.audioOutIndex) / obj.outSampleRatio));
     if inNum <= 0
@@ -199,7 +187,7 @@ function outputAudio(obj, app)
         obj.audioOutDevice(obj.audioBuffer);  % Send to audio output
         elapsedAudioOut = toc(audioOutStart);
         if elapsedAudioOut > 0.010
-            fprintf('audioOutDevice time %.6f; passed %d samples, %d remaining\n', elapsedAudioOut, length(expandedSamples), inEndIndex - inIndex);
+            fprintf('  audioOutDevice slow audio processing: %.3f s; passed %d samples, %d remaining\n', elapsedAudioOut, length(expandedSamples), inEndIndex - inIndex);
         end
       catch
         fprintf('Error: Failed to output to audioOutDevice\n');

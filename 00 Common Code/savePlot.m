@@ -1,12 +1,9 @@
 function timeChar = savePlot(axesToSave, folderPath, appString, extString, timeChar)
 
-  % if strcmp(extString, 'pdf')
-  %   fprintf('savePlots: exportgraphics does not support pdf format, using png\n')
-  %   extString = 'png';
-  % end
   if nargin < 5
     timeChar = char(string(datetime('now', 'format', 'MMM-dd-HHmmss')));
   end
+  folderPath = fullfile(dataRoot(), folderPath);     % put everything in data root
   if ~isfolder(folderPath)
       mkdir(folderPath);
   end
@@ -27,6 +24,6 @@ function timeChar = savePlot(axesToSave, folderPath, appString, extString, timeC
   fHandle.Children.Position = [10, 10, pos(3), pos(4)];
   exportgraphics(fHandle.Children(1), filePath);                    % export the copied axes (now the first child)
   close(fHandle);                                                   % destroy the window
-  backupFile(filePath, '~/Desktop', '~/Documents/Respository');     % save backup in repository directory
+  backupFile(filePath);     % save backup in repository directory
 end
   
