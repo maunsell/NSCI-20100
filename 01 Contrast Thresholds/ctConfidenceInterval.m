@@ -1,5 +1,7 @@
 function CIs = ctConfidenceInterval(app, base)
 
+% Use a bootstrap to find the confidence interval for one base contrast
+% threshold
   numBoot = 100;
   thresholds = zeros(numBoot, 1);
   hits = app.hits(base, :);

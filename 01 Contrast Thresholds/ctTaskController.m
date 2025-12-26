@@ -70,8 +70,10 @@ try
     case ctTaskState.taskProcessResponse
       if app.testMode
         prob = 0.5 + 0.5 / (1.0 + exp(-10.0 * (app.testContrasts(app.baseIndex, app.testIndex) - ...
-          app.testContrasts(app.baseIndex, 3)) / app.baseContrasts(app.baseIndex)));
-        hit = rand(1,1) < prob;
+          (1.1 * app.baseContrasts(app.baseIndex) + 0.01)) / app.baseContrasts(app.baseIndex)));
+        hit = rand(1, 1) < prob;
+        % fprintf('base: %.3f contrast %.3f, prob %.2f, hit: %d\n', app.baseContrasts(app.baseIndex), ...
+        %   app.testContrasts(app.baseIndex, app.testIndex), prob, hit);
       else
         if strcmp(app.theKey, 'left')
           hit = app.stimParams.changeSide == 0;
@@ -108,7 +110,7 @@ try
           end
         end
         doSaveData(app, true);
-      %automatically save data every block
+      %automatically save data at the end of every block
       elseif ~mod(sum(app.trialsDone(app.baseIndex, :)), app.numIncrements) 
         doSaveData(app, true);
       end
@@ -122,8 +124,9 @@ try
       app.taskState = ctTaskState.taskStopped;
   end
 catch e
-  fprintf(1,'The identifier was:\n%s',e.identifier);
-  fprintf(1,'There was an error! The message was:\n%s',e.message);
+  fprintf(1, 'Error in ctTaskController\n')
+  fprintf(1, ' Identifier:\n%s', e.identifier);
+  fprintf(1, ' Message:\n%s', e.message);
   return;
 end
 end

@@ -8,7 +8,6 @@ function demoStats
   [hitRates, pci] = binofit(hitSums, numSamples);
   figure(1);
   clf;
-  % ax = plot(hitRates, 'bo', 'markerFaceColor', 'blue');
   errBars = hitRates - pci(:, 1:2)';
   ax = errorbar(1:1:numPoints, hitRates, errBars(1, :), errBars(2, :), ...
               'o', 'markerfacecolor', 'b', 'markersize', 6, 'LineWidth', 1.5);

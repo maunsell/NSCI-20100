@@ -18,12 +18,14 @@ function timeChar = savePlot(axesToSave, folderPath, appString, extString, timeC
   % to save the axes from the new figure, then 4) destroying the figure.
   % All this nonsense can be completed in under a second, which is fine for
   % our purposes. 
-  fHandle = figure('visible', 'off', 'Position', [100, 100, 750, 750]); % create a new figure, big enough for all plots
-  copyobj(axesToSave, fHandle);                                     % copy the axes into that figure
-  pos = fHandle.Children.Position;                                  % make sure the axes are positioned visibly
-  fHandle.Children.Position = [10, 10, pos(3), pos(4)];
-  exportgraphics(fHandle.Children(1), filePath);                    % export the copied axes (now the first child)
-  close(fHandle);                                                   % destroy the window
+  fHandle = figure('Visible','off', 'Position',[100 100 750 750]);
+  axCopy = copyobj(axesToSave, fHandle);
+  axCopy.Units = 'pixels';
+  axCopy.Position = [50 50 650 650];
+  drawnow;
+  exportgraphics(axCopy, filePath);
+  close(fHandle);
+
   backupFile(filePath);     % save backup in repository directory
 end
   
