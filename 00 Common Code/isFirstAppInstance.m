@@ -6,7 +6,7 @@ function okToProceed = isFirstAppInstance(appFigureHandle)
 %   Returns false if any *other* visible figure has a conflicting tag.
 
   % Define mutually exclusive tags
-  conflictTags = {'ContrastThresholds', 'SaccadeRT', 'Metrics', 'StretchReceptor'};
+  conflictTags = {'Oscilloscope', 'ContrastThresholds', 'SaccadeRT', 'Metrics', 'StretchReceptor'};
   existingApps = [];
   conflictSource = '';  % Store which tag triggered the conflict
   for i = 1:numel(conflictTags)

@@ -1,17 +1,14 @@
 function ax = ctLinearFits(app)
 
-% hitRate = zeros(app.numBases, app.numIncrements); % hitRates
-% ci95low = zeros(app.numBases, 1);                 % neg CIs
-% ci95high = zeros(app.numBases, 1);                % pos CIs
-% thresholdsPC = zeros(app.numBases, 1);
-% for base = 1:app.numBases
-%   [hitRate(base, :), ~] = binofit(app.hits(base, :), app.trialsDone(base, :));
-%   fitParams = ctSigmoidFit(app, base, hitRate(base, :));  % fit logistic function
-%   thresholdsPC(base) = (fitParams(1) - app.baseContrasts(base)) * 100.0;
-%   CIPC = ctConfidenceInterval(app, base) - app.baseContrasts(base) * 100.0;
-%   ci95low(base) = CIPC(1);   % error bars are relative to threshold
-%   ci95high(base) = CIPC(2);
-% end
+fig = figure(10);
+clf(fig);
+ax = axes(fig);
+
+% --- If insufficient data, return empty axes ---
+if (min(app.blocksFit) == 0)
+    return;
+end
+
 % ---- Plot settings ----
 markerColor = [0 0.4470 0.7410];
 markerShape = 'o';
@@ -66,13 +63,9 @@ p_wls = 2 * (1 - tcdf(abs(t_wls), dof_w));
 ci95_wls_intercept = wls_beta(1) + [-1 1] * tinv(0.975, dof_w) * se_intercept_w;
 
 % ---- Plotting ----
-fig = figure(10);
-clf(fig);
-ax = axes(fig);
 hold(ax, 'on');
 grid(ax, 'on');
 box(ax, 'on');
-
 xlabel(ax, 'Base Contrast (%)', 'FontSize', fontSize);
 ylabel(ax, 'Threshold (% Contrast)', 'FontSize', fontSize);
 title(ax, 'Ordinary and Weighted Linear Fits', 'FontSize', fontSize);
@@ -87,7 +80,7 @@ h_data = plot(baseContrastsPC, thresholdsPC, markerShape, ...
 
 % Force axes to include origin and CIs
 xlim([0, 50]);
-ylim([0, max(ci95high)] * 1.05);
+ylim([0, max(max(ci95high), 0.001)] * 1.05);
 
 % Get current axis limits to extend fit lines
 xlims = xlim();
@@ -108,9 +101,11 @@ plot([0 0], ylim, 'k--', 'LineWidth', 1);
 plot(xlim, [0 0], 'k--', 'LineWidth', 1);
 
 % Legend — only the relevant handles
-legend([h_data, h_ols, h_wls], ...
-  {'Thresholds (95% CI)', 'Ordinary Fit', 'Weighted Fit'}, ...
-  'FontSize', fontSize, 'Location', 'north');
+lgd = legend([h_data, h_ols, h_wls], ...
+  {'Thresholds (95% CI)', 'Ordinary Fit', 'Weighted Fit'}, 'FontSize', fontSize);
+set(lgd, 'Location', 'none');         % disable auto positioning
+set(lgd, 'Units', 'normalized');      % position relative to axes
+set(lgd, 'Position', [0.64,  0.8275, 0.1, 0.08]);  
 
 % ---- Add OLS and WLS text boxes inside plot area ----
 olsText = {

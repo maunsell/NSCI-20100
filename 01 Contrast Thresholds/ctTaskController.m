@@ -13,6 +13,9 @@ try
       app.stimStartTime = [];
       app.taskState = ctTaskState.taskStartTrial;
     case ctTaskState.taskStartTrial
+      if ~app.testMode
+        figure(app.figure1);
+      end
       if isempty(app.trialStartTime)                                % start the trial
         ctDrawStatusText(app, 'intertrial');
         app.trialStartTime = datetime('now');
@@ -95,9 +98,9 @@ try
         clearScreen(app.stimuli);
       end
       ctDrawHitRates(app, false);
-      % Check whether we are done with all the trials
+      % Check whether we are done with all the trials for this base contrast
       if sum(app.trialsDone(app.baseIndex, :)) >= app.stimParams.stimReps * app.numIncrements
-        if (~app.testMode)                         % if we're not in test mode, we're done testing
+        if ~app.testMode                         % if we're not in test mode, we're done testing
           app.taskState = ctTaskState.taskStopRunning;
         else                                        % if we're testing, see if there are more to do, try next block
           if sum(app.trialsDone, 'all') >= app.stimParams.stimReps * app.numIncrements * app.numBases

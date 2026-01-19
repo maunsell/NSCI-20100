@@ -73,9 +73,6 @@ methods
       if offsetMS > 100 && preStimSamples + length(positions) <= length(posTrace)
         break;
       end
-      % fprintf('app.targetTimeS %.2f sampleRateHz %.1f, preStimSamples %d\n', ...
-      %   app.targetTimeS, app.lbj.SampleRateHz, preStimSamples);
-      % fprintf(' offsetMS %.2f length(positions) %d avail %d\n', offsetMS, length(positions), length(posTrace));
     end
     posTrace(preStimSamples + 1:preStimSamples + length(positions)) = positions;
     for i = preStimSamples + length(positions) + 1:length(posTrace)

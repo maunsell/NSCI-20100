@@ -83,7 +83,7 @@ function ctDrawHitRates(app, drawOnly)
   set(app.axes1, 'xTick', [minX; 0.03; 0.04; 0.05; 0.06; 0.07; 0.08; 0.09; 0.1; 0.2; 0.3; 0.4; 0.5; 0.6; 0.8; 1.0]);
   set(app.axes1, 'xTickLabel', [2:10, 20:10:60, 80, 100]);
   xlabel(app.axes1, 'stimulus contrast (%)', 'fontSize', 14);
-  ylabel(app.axes1, 'correct (%)', 'fontSize', 14);
+  ylabel(app.axes1, 'hit rate (%)', 'fontSize', 14);
   set(app.axes1, 'xscale','log');
   hold(app.axes1, 'off');
 end
