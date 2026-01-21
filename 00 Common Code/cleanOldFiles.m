@@ -8,25 +8,9 @@ function cleanOldFiles(currentAppName)
     today = datetime("today");
     cleanFolderRecursive(folderPath, today);
   end
-  
-  % Define all possible app folder names and remove the current app's folder from the deletion list
-  allAppFolders = {'OData', 'CTData', 'RTData', 'MData', 'SRData'};
-  if ismember(currentAppName, allAppFolders)
-    foldersToDelete = setdiff(allAppFolders, {currentAppName});
-    % Delete the others if they exist in data root  
-    for i = 1:length(foldersToDelete)
-      oldFolderPath = fullfile(dataRoot(), foldersToDelete{i});
-      if isfolder(oldFolderPath)
-        try
-          rmdir(oldFolderPath, 's');
-        catch ME
-          warning('Could not remove folder "%s": %s', oldFolderPath, ME.message);
-        end
-      end
-    end
-  end
 end
   
+%% Remove any files older than today, recursively
 function cleanFolderRecursive(currentFolder, today)
   contents = dir(currentFolder);
   for i = 1:length(contents)

@@ -27,19 +27,6 @@ classdef RTDist < handle
       obj.ampLabel = sprintf('%.0f', 25.3);
       obj.reactTimesMS = zeros(1, 10000);             	 % preallocate a generous buffer
       obj.initPlots();
-      % colors = get(obj.fHandle, 'ColorOrder');
-      % cla(obj.fHandle);
-      % set(obj.fHandle, 'TickDir', 'out');
-      % hold(obj.fHandle, 'on');
-      % obj.hHist = histogram(obj.fHandle, ...
-      %       NaN, ...                          % placeholder
-      %       'FaceColor', colors(obj.index, :));
-      % obj.hMean = plot(obj.fHandle, [NaN NaN], [0 1], 'k:');
-      % title(obj.fHandle, sprintf('%s Condition', obj.titles{obj.index}), 'fontSize', 12, 'fontWeight', 'bold');
-      % xlabel(obj.fHandle, 'Reaction Time (ms)', 'fontSize', 14);
-      % ylabel(obj.fHandle, 'Saccade Count', 'fontSize', 14);
-      % axis(obj.fHandle,'manual');           % CRITICAL: freeze layout
-      % hold(obj.fHandle,'off');
       obj.clearAll(obj);
     end
 
@@ -116,12 +103,6 @@ end
     obj.initPlots();     % creates hHist, hMean, labels, axis state
     obj.doPlots();   % fills histogram + mean line
     xMax = obj.nativeXAxisMax;
-    % Repopulate from restored data
-    % if obj.n > 0
-    %     obj.doPlots();   % fills histogram + mean line
-    % else
-    %     obj.clearAll();
-    % end
   end
 
     %% rescale -- rescale the plots
