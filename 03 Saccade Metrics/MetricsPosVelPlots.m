@@ -48,7 +48,7 @@ classdef MetricsPosVelPlots < handle
     end
     
     %% posPlots: do the trial and average position plots
-    function posPlots(~, app, startIndex, endIndex, mustPlot)
+    function posPlots(obj, app, startIndex, endIndex, mustPlot)
       timestepMS = 1000.0 / app.lbj.SampleRateHz;                 % time interval of samples
       trialTimes = (0:1:size(app.posTrace, 1) - 1) * timestepMS;	% make array of trial time points
       colors = get(app.posAxes, 'ColorOrder');
@@ -62,7 +62,8 @@ classdef MetricsPosVelPlots < handle
           hold(app.posAxes, 'on');
           plot(app.posAxes, [trialTimes(1) trialTimes(end)], [thresholdV, thresholdV], ':r');
           hold(app.posAxes, 'off');
-        end        
+        end
+        calibratedLabels(obj, app.posAxes, saccades.degPerV, 2);
         ylabel(app.posAxes, 'Eye Position (deg)', 'FontSize', 14);
       else
         ylabel(app.posAxes, 'Analog Input (V)', 'FontSize', 14); 
@@ -111,7 +112,9 @@ classdef MetricsPosVelPlots < handle
       if sum(app.numSummed) > app.numOffsets
         yLim = max(abs(ylim(app.avgPosAxes)));
         set(app.posAxes, ['Y' 'Lim'], [-yLim, yLim]);
-        fprintf('test ylimits to %.1f %.1f\n', -yLim, yLim);
+        % if app.testMode
+        %   fprintf('test ylimits to %.1f %.1f\n', -yLim, yLim);
+        % end
       end
       yLim = ylim(app.posAxes);
       % Once the y-axis scaling is set, we can draw vertical marks for stimOn and saccades
