@@ -23,12 +23,12 @@
         end
         testCase.press(app.savePlotsButton);          % save the samples
         testCase.press(app.clearButton);
-        tableData = get(app.resultsTable, 'Data');          % update table
-        meanRates(r + 1) = str2double(tableData{1, 4});
-        thresholds(1, r + 1) = str2double(tableData{1, 3});
-        thresholds(2, r + 1) = str2double(tableData{1, 5});
-        thresholds(3, r + 1) = str2double(tableData{2, 3});
-        thresholds(4, r + 1) = str2double(tableData{2, 5});
+        % tableData = get(app.resultsTable, 'Data');          % update table
+        % meanRates(r + 1) = str2double(tableData{1, 4});
+        % thresholds(1, r + 1) = str2double(tableData{1, 3});
+        % thresholds(2, r + 1) = str2double(tableData{1, 5});
+        % thresholds(3, r + 1) = str2double(tableData{2, 3});
+        % thresholds(4, r + 1) = str2double(tableData{2, 5});
         figure(1);
         clf;
         hold on;

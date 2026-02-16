@@ -11,6 +11,7 @@ classdef SRCountPlot < handle
     countBins;      % number bins in spike count histograms
     countMaxX;      % last count histogram bin to plot
     countMaxY;      % limit on count histogram y axis
+    countStatsText  % in-axes text showing count statistics
     longCounts;     % individual spike counts for long count window
     longHist;       % histogram of spike counts for long interval
     longMaxCount;
@@ -37,8 +38,6 @@ classdef SRCountPlot < handle
       app.countAxes.YGrid = 'on';
       xlabel(app.countAxes, 'Spike Counts', 'fontsize', 14, 'fontWeight', 'bold');
       ylabel(app.countAxes, 'Number of Intervals', 'fontsize', 14, 'fontWeight', 'bold');
-      % configureTable(obj, app);
-      addStyle(app.resultsTable, uistyle('horizontalAlignment', 'center'));
     end
 
     % addLongCount -- add a new long count to the distribution
@@ -67,9 +66,7 @@ classdef SRCountPlot < handle
         makeCountHistograms(obj, app);
       end
       plotCounts(obj, app);
-      tableData = get(app.resultsTable, 'Data');          % update table
-      tableData = loadCountData(obj, app, tableData, obj.longCounts(1:obj.numLongCounts), app.longWindowMS, 1);
-      set(app.resultsTable, 'Data', tableData);
+      updateCountStatsText(obj, app, obj.longCounts(1:obj.numLongCounts), app.longWindowMS);
       plotISI(app.isiPlot, app);
     end
     
@@ -98,18 +95,15 @@ classdef SRCountPlot < handle
       % clear the contents of the count table
       tableData = cell(2, 7);
       tableData{1, 3} = app.longWindowMSText.Value;
-      % if app.doShortCounts
-      %   tableData{2, 3} = app.shortWindowMSText.Value;
-      % end
-      set(app.resultsTable, 'Data', tableData);
+      % set(app.resultsTable, 'Data', tableData);
+      % In-axes stats text (included in PNG exports)
+      obj.countStatsText = text(app.countAxes, 0.02, 0.98, '', 'Units','normalized', ...
+          'HorizontalAlignment','left', 'VerticalAlignment','top', 'FontSize',12, 'FontWeight','bold', ...
+          'Color',[0 0 0], 'BackgroundColor',[1 1 1], 'Margin',2, 'Interpreter','none', 'HitTest','off', ...
+          'PickableParts','none', 'Clipping','off');
+      set(obj.countStatsText, 'String', sprintf(['Counting window: %d ms\n' 'Number of counts: 0\n' ...
+          'Mean count: \n' 'SD count: \n' 'JND count: '], app.longWindowMS));
     end
-
-    % configureTable
-    % configure the data table to determine whether it shows long and short counts
-    % function configureTable(~, app)
-    %   app.resultsTable.Position(2) = 50;
-    %   app.resultsTable.Position(4) = 50;
-    % end
 
     % loadCountData
     % load the data table with values for one count window
@@ -122,9 +116,9 @@ classdef SRCountPlot < handle
         tableData{1, 3} = app.longWindowMSText.Value;
         rates = counts / (windowMS / 1000);
         sdRate = std(rates);                                        % SD of rate
-        [numISIs, driftPC] = countStats(app.isiPlot);
-        tableData{row, 1} = sprintf('%.0f', numISIs);
-        tableData{row, 2} = sprintf('%.0f%%', driftPC);
+        % [numISIs, driftPC] = countStats(app.isiPlot);
+        % tableData{row, 1} = sprintf('%.0f', numISIs);
+        % tableData{row, 2} = sprintf('%.0f%%', driftPC);
         tableData{row, 4} = sprintf('%.0f', length(counts));
         tableData{row, 5} = validString(obj, app, mean(rates));
         tableData{row, 6} = validString(obj, app, sdRate);
@@ -167,6 +161,35 @@ classdef SRCountPlot < handle
       else
         string = sprintf('%.1f', value);
       end
+    end
+
+    function updateCountStatsText(obj, ~, counts, windowMS)
+      if ~isgraphics(obj.countStatsText)
+        return;
+      end
+
+      n = length(counts);
+      if n == 0
+        obj.countStatsText.String = sprintf([ ...
+        'Counting window: %d ms\n'  'Number of counts: %d\n'  'Mean count: %.1f\n' 'SD count: %.1f\n' ...
+        'JND count: %.1f'], windowMS);
+        return;
+      end
+
+      % For windowMS=1000, counts==rates. Keep general in case you change window length.
+      rates = counts / (windowMS / 1000);
+
+      mu = mean(rates);
+      sd = std(rates);
+      jnd = sd * 1.34;
+
+      obj.countStatsText.String = sprintf([ ...
+        'Counting window: %d ms\n' ...
+        'Number of counts: %d\n' ...
+        'Mean count: %.1f spikes\n' ...
+        'SD count: %.1f spikes\n' ...
+        'JND count: %.1f spikes'], ...
+        windowMS, n, mu, sd, jnd);
     end
 
   end

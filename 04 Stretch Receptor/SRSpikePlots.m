@@ -4,14 +4,17 @@ classdef SRSpikePlots < handle
   
   properties
     clearingTrig
+    contThresholdLine
     contSnippets
-    threshSnippets
-    samplesPlotted
+    lastThresholdV = NaN    % last threshold value displayed
+    samplesPlotted          % number of samples plotted in the continuous plot
     singleSpikeDisplayed
-    triggerDivisions
+    triggerDivisions        % number of horizontal division in the triggered plot
     triggerFraction
-    triggerSamples
+    triggerSamples          % number of samples displayed in the triggered plot
     triggerSnippets
+    triggerSpikeCount       % number of trigger spikes displayed
+    triggerSpikeCountText   % text handle inside vTrigAxes
     triggerThresholdLine
     triggerTraceDurS
   end
@@ -26,12 +29,13 @@ classdef SRSpikePlots < handle
       obj.triggerDivisions = 10;
       obj.triggerFraction = 0.20;
       obj.triggerTraceDurS = 0.020;
+      obj.triggerSpikeCount = 0;
+      obj.triggerSpikeCountText = gobjects(1);
       obj.triggerSamples = floor(obj.triggerTraceDurS * app.lbj.SampleRateHz);
       app.vTrigAxes.XGrid = 'on';
       app.vTrigAxes.YGrid = 'on';
       obj.contSnippets = plotSnippets(app, app.vContAxes, 'b');
       obj.triggerSnippets = plotSnippets(app, app.vTrigAxes, 'b');
-      obj.threshSnippets = plotSnippets(app, app.vContAxes, 'r');
       clearAll(obj, app);
     end
     
@@ -77,10 +81,12 @@ classdef SRSpikePlots < handle
       yticklabels(app.vContAxes, yTickLabels);
       ylabel(app.vContAxes, 'Voltage (V)','FontSize', 14, 'FontWeight','Bold');
       hold(app.vContAxes, 'on');
+      % Create (or recreate) the threshold line spanning the whole sweep
+      obj.contThresholdLine = plot(app.vContAxes, [1, app.contSamples], app.thresholdV*[1 1], 'r');
+
       % We must remake new snippets every time we clear because the old
       % ones get deleted.  They must be made after we set hold on
       makeSnippets(obj.contSnippets, app, 100);
-      makeSnippets(obj.threshSnippets, app, 100);
     end
     
     % clearTriggerPlot -- clear the continuous trace plot
@@ -121,7 +127,13 @@ classdef SRSpikePlots < handle
       axis(theAxes, [1, floor(obj.triggerSamples / 2) * 2 + 1, -maxV, maxV]);
       plot(theAxes, [triggerSample, triggerSample], [-maxV, maxV], 'k:');
       makeSnippets(obj.triggerSnippets, app, 100);
-      obj.triggerThresholdLine = plot(app.vTrigAxes, NaN, NaN, 'r');
+      obj.triggerSpikeCount = 0;            % reset spike count for this sweep
+      % Create on-axes text for spike count (cla deletes it, so recreate once per sweep)
+      obj.triggerSpikeCountText = text(theAxes, 0.975, 0.025, '0 spikes superimposed', ...
+          'Units','normalized', 'HorizontalAlignment','right', 'VerticalAlignment','bottom', ...
+          'FontSize', 12, 'FontWeight','bold', 'Color',[0 0 0], 'BackgroundColor',[1 1 1], 'Margin', 2, ...
+          'Interpreter','none', 'HitTest','off', 'PickableParts','none', 'Clipping','off');
+      obj.triggerThresholdLine = plot(app.vTrigAxes, [1 obj.triggerSamples], app.thresholdV * [1 1], 'r');      
       obj.singleSpikeDisplayed = false;
       obj.clearingTrig = false;
     end
@@ -133,9 +145,10 @@ classdef SRSpikePlots < handle
       else
         if ~app.stopAtTraceEnd                      % no request to stop, clear snippets for next plot
           clearSnippets(obj.contSnippets, app);
-          clearSnippets(obj.threshSnippets, app);
           clearSnippets(obj.triggerSnippets, app);
           obj.samplesPlotted = 0;
+          obj.triggerSpikeCount = 0;
+          obj.triggerSpikeCountText.String = "";
           return;
         else                                        % request to stop, plot out to end of trace
           endIndex = app.contSamples;
@@ -145,8 +158,6 @@ classdef SRSpikePlots < handle
       if startIndex >= endIndex
         return;
       end
-      set(nextSnippet(obj.threshSnippets, app), 'XData', [startIndex, endIndex], ...
-                'YData', app.thresholdV * [1, 1]);
       set(nextSnippet(obj.contSnippets, app), 'XData', startIndex:endIndex, ...
                 'YData', app.filteredTrace(startIndex:endIndex));
       obj.samplesPlotted = endIndex;
@@ -161,6 +172,7 @@ classdef SRSpikePlots < handle
         app.spikeIndices = [];                                      %   then don't plot the spikes
         return;
       end
+      newSpikesAdded = 0;
       while ~isempty(app.spikeIndices)
         spikeIndex = app.spikeIndices(1);
         startIndex = floor(spikeIndex - obj.triggerSamples * obj.triggerFraction);
@@ -173,17 +185,39 @@ classdef SRSpikePlots < handle
           break;
         end
         if ~obj.singleSpikeDisplayed
-          set(obj.triggerThresholdLine, 'XData', [1, obj.triggerSamples], 'YData', app.thresholdV * [1, 1]);
+          % set(obj.triggerThresholdLine, 'XData', [1, obj.triggerSamples], 'YData', app.thresholdV * [1, 1]);
           obj.singleSpikeDisplayed = true;
         end
         set(nextSnippet(obj.triggerSnippets, app), 'XData', 1:obj.triggerSamples, ...
                 'YData', app.filteredTrace(startIndex:endIndex));
+        newSpikesAdded = newSpikesAdded + 1;
         if app.singleSpikeCheckbox.Value
           app.spikeIndices = [];                                    % single spike, throw out any remaining
         else
           app.spikeIndices(1) = [];                                 % delete this spike time
         end
       end
+      if newSpikesAdded > 0
+          obj.triggerSpikeCount = obj.triggerSpikeCount + newSpikesAdded;
+          if isgraphics(obj.triggerSpikeCountText)
+              obj.triggerSpikeCountText.String = ...
+                  sprintf('%3.d spikes superimposed', obj.triggerSpikeCount);
+          end
+      end
     end
-  end
+
+    function updateThresholdIfNeeded(obj, app)
+      thr = app.thresholdV;
+      if isequal(thr, obj.lastThresholdV)           % Only draw if the value changed (or we've never drawn it)
+        return;
+      end
+      obj.lastThresholdV = thr;
+      if isgraphics(obj.contThresholdLine)          % Continuous plot (full-width line)
+        obj.contThresholdLine.YData = thr * [1 1];
+      end
+      if isgraphics(obj.triggerThresholdLine)       % Trigger plot (line across trigger samples)
+        obj.triggerThresholdLine.YData = thr * [1 1];
+      end
+    end
+  end 
 end
