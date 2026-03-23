@@ -9,7 +9,6 @@ classdef SRISIPlot < handle
   properties
     countMaxX;      % last count histogram bin to plot
     countMaxY;      % limit on count histogram y axis
-    % isiLastPlot;  % countt of the last ISI plot
     isiCountText    % handle to in-axes text label    
     isiMS;          % array of all isi in ms
     isiLine         % handle to the plotted ISI points
@@ -56,7 +55,7 @@ classdef SRISIPlot < handle
       hold(app.isiAxes, 'off');
       cla(app.isiAxes);
 
-      axis(app.isiAxes, [0, str2double(app.longWindowLimitText.Value), 0, max(10, obj.maxISIMS * 1.1)]);
+      axis(app.isiAxes, [0, str2double(app.countLimitText.Value), 0, max(10, obj.maxISIMS * 1.1)]);
       app.isiAxes.YGrid = 'on';
       hold(app.isiAxes, 'on');
 
@@ -111,8 +110,9 @@ classdef SRISIPlot < handle
 
       if isgraphics(obj.isiCountText)
         [~, driftPC] = countStats(obj);
-        if abs(driftPC) < 0.05
-          driftPC = 0;
+        if isprop(app, 'resultsRow') && istable(app.resultsRow)
+          app.resultsRow.("Num ISIs")  = obj.numISIs;
+          app.resultsRow.("Drift (%)") = driftPC;
         end
         labelStr = sprintf('%d ISIs displayed,  Drift: %+0.1f%%', obj.numISIs, driftPC);
         obj.isiCountText.String = labelStr;

@@ -53,7 +53,7 @@ classdef SRSignalProcess < handle
         obj.lastSpikeIndex = spikeIndex;
         return;
       end
-      if ~atCountLimit(app)
+      if ~atLimit(app)
         addISI(app.isiPlot, app, (spikeIndex - obj.lastSpikeIndex) / app.lbj.SampleRateHz * 1000.0);
         obj.lastSpikeIndex = spikeIndex;                   % update the reference index
       end
@@ -62,7 +62,7 @@ classdef SRSignalProcess < handle
     % addSpikeTime: add a spike time to the window count.
     % We need to keep track of time across trace cycles. For this we use tracesRead
     function addSpikeTime(obj, app, spikeIndex)
-      if atCountLimit(app)
+      if atLimit(app)
         return;
       end
       spikeTimeMS = (obj.lastProcessed + spikeIndex + obj.tracesRead * app.contSamples) / app.lbj.SampleRateHz * 1000.0;
@@ -84,7 +84,8 @@ classdef SRSignalProcess < handle
       obj.longStartTimeMS = 0;
       obj.lastSpikeIndex = 2 * app.maxContSamples;              % flag start of ISI sequence
       obj.nextFakeSpike0Sample = floor(app.lbj.SampleRateHz / app.fakeSpikeRateHz);
-      obj.fakeSpike0Drift = randn() * 0.0002;
+      % obj.fakeSpike0Drift = randn() * 0.0002;
+      obj.fakeSpike0Drift = 0.0;
       obj.tracesRead = 0;
       app.inSpike = false;
     end
@@ -252,7 +253,7 @@ end
               if sIndices(i) > lastIndex + 1 && (sIndices(i) - lastIndex) > app.spikePlots.triggerSamples - 25
                 numSpikes = numSpikes + 1;                    % it's a new spike
                 spikeIndices(numSpikes) = sIndices(i);        % record the index for this spike
-               addISI(obj, app, sIndices(i));                % add this spike to the ISIs
+                addISI(obj, app, sIndices(i));                % add this spike to the ISIs
                 addSpikeTime(obj, app, sIndices(i));
               end
               lastIndex = sIndices(i);                        % used to find gaps between spikes

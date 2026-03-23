@@ -6,7 +6,7 @@
       fprintf('This operation requires a LabJack U6 with DAC0 connected to ANI0\n')
       app = StretchReceptor('test');                % launch in test mode
       testCase.addTeardown(@delete, app);           % delete app after testing is done
-      testCase.type(app.longWindowLimitText, '20');
+      testCase.type(app.countLimitText, '20');
       testCase.type(app.longWindowMSText, '1000');
       testCase.type(app.shortWindowMSText, '250');
       rates = 25;
