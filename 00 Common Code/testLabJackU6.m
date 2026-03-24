@@ -68,8 +68,8 @@ classdef testLabJackU6 < handle
 
     %% getStreamData
     % get streaming data
-    function [data, errorCode] = getStreamData(~)
-      data = [];
+    function [data, errorCode] = getStreamData(obj)
+      data = zeros(obj.SampleRateHz / 25, 1);           % assume task calls at ~25 Hz
       errorCode = 0;
     end
 

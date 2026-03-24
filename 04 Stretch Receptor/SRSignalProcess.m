@@ -159,14 +159,13 @@ classdef SRSignalProcess < handle
 
 % outputAudio: output the audio signal
 function outputAudio(obj, app)
+
+  if ~app.lbjExists
+    return
+  end
+
   inIndex = obj.lastProcessed + 1;  % Start index in filtered trace
   inEndIndex = app.samplesRead;     % End index
-
-  % if inIndex < inEndIndex
-  %   T = datetime('now');
-  %   T.Format = 'HH:mm:ss.SSS';
-  %   fprintf('audioOutDevice %s processing %d total samples\n', T, inEndIndex - inIndex);
-  % end
   while inIndex < inEndIndex
     inNum = min(inEndIndex - inIndex, floor((obj.audioBufferSize - obj.audioOutIndex) / obj.outSampleRatio));
     if inNum <= 0
@@ -197,11 +196,9 @@ function outputAudio(obj, app)
     else
       obj.audioOutIndex = obj.audioOutIndex + length(expandedSamples);
     end
-
     if obj.audioOutIndex > obj.audioBufferSize
       error('Audio buffer mishandling -- buffer overrun');
     end
-
     inIndex = inIndex + inNum;
   end
 end

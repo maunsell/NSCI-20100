@@ -12,7 +12,7 @@ classdef OSignalProcess < handle
       inSampleRateHz = app.lbj.SampleRateHz;
       obj.outSampleRatio = 1;
       outSampleRateHz = inSampleRateHz;
-      while outSampleRateHz < 8000                                    % must be 8 kHz or greater
+      while outSampleRateHz < 8000                                   % must be 8 kHz or greater
         obj.outSampleRatio = obj.outSampleRatio + 1;
         outSampleRateHz = inSampleRateHz * obj.outSampleRatio;
       end
@@ -22,7 +22,7 @@ classdef OSignalProcess < handle
     function processSignals(~, app, old, new)
       if app.testMode
         % add 60Hz noise and random noise
-        dt = 1/app.sampleRateHz;                   % seconds per sample
+        dt = 1/app.sampleRateHz;                     % seconds per sample
         samples = old + 1:old + new;                 % seconds
         app.rawData(old + 1:old + new) = ones(new, 1) + cos(2.0 * pi * 60 * samples * dt)' * 0.5...
           + 0.25 * rand(new, 1) - 0.125;

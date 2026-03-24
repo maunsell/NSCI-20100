@@ -41,12 +41,12 @@ classdef MetricsFits < handle
       speedIntercept = p(2);
       speedSSR = sum((y - polyval(p, x)).^2);
       speedR2 = 1 - speedSSR / TSS;
-      if speedR2 < 0
-          fprintf('\nnegative R2\n')
-          fprintf('speedSSR %.1f, TSS %.1f R2 %.2f', speedSSR, TSS, speedR2);
-          fprintf('mean y: %.1f\n', mean(y))
-          fprintf('y values: %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f %.1f\n\n', y)
-      end
+      % if speedR2 < 0
+      %     fprintf('\nnegative R2\n')
+      %     fprintf('speedSSR %.1f, TSS %.1f R2 %.2f', speedSSR, TSS, speedR2);
+      %     fprintf('mean y: %.1f\n', mean(y))
+      %     fprintf('y values: %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f %.1f\n\n', y)
+      % end
       obj.tableData{1, 1} = sprintf('%.0f%c/s', speedSlope, 176);
       obj.tableData{1, 2} = sprintf('%.0f ms', speedIntercept);
       obj.tableData{1, 3} = sprintf('%.2f', speedR2);
