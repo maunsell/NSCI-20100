@@ -72,9 +72,9 @@ classdef SRSpikePlots < handle
       end
       xticklabels(app.vContAxes, xTickLabels);
       if app.contMSPerDiv <= 50
-        xlabel(app.vContAxes, 'Time (ms)', 'FontSize', 14,'FontWeight','Bold');
+        xlabel(app.vContAxes, 'Time (ms)', 'FontSize', 14, 'FontWeight', 'Bold');
       else
-        xlabel(app.vContAxes, 'Time (s)' ,'FontSize', 14,'FontWeight','Bold');
+        xlabel(app.vContAxes, 'Time (s)' , 'FontSize', 14, 'FontWeight', 'Bold');
       end
       % y axis
       yticks(app.vContAxes, -vLimit:app.vPerDiv:vLimit);

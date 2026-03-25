@@ -33,7 +33,7 @@ classdef SRISIPlot < handle
       obj.isiCountText = gobjects(1);
       clearAll(obj, app);
       app.isiAxes.YGrid = 'on';
-      xlabel(app.isiAxes, 'ISI Ordered in Time', 'fontsize', 14, 'fontWeight', 'bold');
+      xlabel(app.isiAxes, 'ISIs Ordered in Time', 'fontsize', 14, 'fontWeight', 'bold');
       ylabel(app.isiAxes, 'ISI (ms)', 'fontsize', 14, 'fontWeight', 'bold');
     end
 
@@ -60,9 +60,7 @@ classdef SRISIPlot < handle
       hold(app.isiAxes, 'on');
 
       % One graphics object for all points
-      obj.isiLine = plot(app.isiAxes, NaN, NaN, 'bo', ...
-        'LineStyle','none', ...
-        'MarkerSize',4);
+      obj.isiLine = plot(app.isiAxes, NaN, NaN, 'bo', 'LineStyle','none', 'MarkerSize',4);
 
       % In-axes label (included in PNG exports)
       obj.isiCountText = text(app.isiAxes, 0.025, 0.025, '0 ISIs displayed', ...

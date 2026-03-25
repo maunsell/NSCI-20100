@@ -26,7 +26,7 @@ classdef RTStimulus < handle
   end
   methods
     function obj = RTStimulus(app)
-      imtool close all;                               % close imtool figures from Image Processing Toolbox
+      % imtool close all;                               % close imtool figures from Image Processing Toolbox
       screenRectPix = get(0, 'MonitorPositions');   	% get the size of the primary screen
       if size(screenRectPix, 1) > 1
         screenRectPix = screenRectPix(1, :);

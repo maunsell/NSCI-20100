@@ -42,9 +42,9 @@ classdef RTDist < handle
         'FaceColor', colors(obj.index,:), ...
         'Normalization','count' );        % or whatever you want
     obj.hMean = plot(obj.fHandle, [NaN NaN], [0 1], 'k:');
-    title(obj.fHandle, sprintf('%s Condition', obj.titles{obj.index}), 'fontSize', 12, 'fontWeight', 'bold');
-    xlabel(obj.fHandle, 'Reaction Time (ms)', 'fontSize', 14);
-    ylabel(obj.fHandle, 'Saccade Count', 'fontSize', 14);
+    title(obj.fHandle, sprintf('%s Condition', obj.titles{obj.index}), 'fontSize', 14, 'fontWeight', 'bold');
+    xlabel(obj.fHandle, 'Reaction Time (ms)', 'fontSize', 14, 'fontWeight', 'bold');
+    ylabel(obj.fHandle, 'Saccade Count', 'fontSize', 14, 'fontWeight', 'bold');
     axis(obj.fHandle,'manual');           % CRITICAL: freeze layout
     hold(obj.fHandle,'off');
 end

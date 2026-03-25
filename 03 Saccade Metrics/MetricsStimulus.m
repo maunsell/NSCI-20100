@@ -25,9 +25,7 @@ classdef MetricsStimulus < handle
   end
   methods
     function obj = MetricsStimulus(app)
-%       obj.doStimDisplay = app.doStimDisplay;
       if app.doStimDisplay
-        % imtool close all;                               % close imtool figures from Image Processing Toolbox
         obj.spotRadiusPix = 10;
         dockPix = 75;
         windHeightPix = 60;

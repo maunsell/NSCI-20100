@@ -32,10 +32,10 @@ classdef MetricsPosVelPlots < handle
    
     function doTitles(~, app)
       title(app.posAxes, 'Eye Position', 'fontSize', 12, 'fontWeight', 'bold');
-      title(app.velAxes, 'Eye Velocity', 'fontSize', 12, 'fontWeight', 'bold');
+      title(app.velAxes, 'Eye Speed', 'fontSize', 12, 'fontWeight', 'bold');
       title(app.avgPosAxes, sprintf('Average Positions (n\x2265%d)', app.blocksDone), ...
             'FontSize',12,'FontWeight','Bold');
-      title(app.avgVelAxes, sprintf('Average Velocities (n\x2265%d)', app.blocksDone), ...
+      title(app.avgVelAxes, sprintf('Average Speeds (n\x2265%d)', app.blocksDone), ...
             'fontSize', 12, 'fontWeight','Bold');
     end
 

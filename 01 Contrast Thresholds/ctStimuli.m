@@ -31,14 +31,7 @@ end
 methods
   %% ctStimuli()
   function obj = ctStimuli(app)
-    imtool close all;                               % close imtool figures from Image Processing Toolbox
-%     screenRectPix = get(0, 'MonitorPositions');   	% get the size of the primary screen
-%     if size(screenRectPix, 1) > 1
-%       screenRectPix = screenRectPix(1, :);
-%     end
-%     if screenRectPix(3) > 3000                  % Retina display
-%       screenRectPix(3) = screenRectPix(3) / 2.0;
-%     end
+    % imtool close all;                               % close imtool figures from Image Processing Toolbox
     obj.windowRectPix = [0, 0, obj.windSidePix, obj.windSidePix];
     obj.hFig = figure('renderer', 'painters', 'position', obj.windowRectPix, 'visible', 'off');
     obj.hFig.CloseRequestFcn = '';                % prevent user from closing the stimulus window
