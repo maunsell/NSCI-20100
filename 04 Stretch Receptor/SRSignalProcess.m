@@ -84,8 +84,7 @@ classdef SRSignalProcess < handle
       obj.longStartTimeMS = 0;
       obj.lastSpikeIndex = 2 * app.maxContSamples;              % flag start of ISI sequence
       obj.nextFakeSpike0Sample = floor(app.lbj.SampleRateHz / app.fakeSpikeRateHz);
-      % obj.fakeSpike0Drift = randn() * 0.0002;
-      obj.fakeSpike0Drift = 0.0;
+      obj.fakeSpike0Drift = randn() * 0.0002;
       obj.tracesRead = 0;
       app.inSpike = false;
     end
@@ -121,41 +120,6 @@ classdef SRSignalProcess < handle
     obj.fakeSpike = resample(templateSpike, round(spikeSamples), length(templateSpike)) * peakV / 100;
     obj.fakeNoise = 0.2;
   end
-
-%     % outputAudio: output the audio signal
-%     function outputAudio(obj, app)
-%       inIndex = obj.lastProcessed + 1;                    % range to read from filtered trace
-%       inEndIndex = app.samplesRead;
-%       % output to audio output in chunks of audioBufferSize
-%       while inIndex < inEndIndex
-%         inNum = min(inEndIndex - inIndex, (obj.audioBufferSize - obj.audioOutIndex) / obj.outSampleRatio);
-%         ptr = obj.audioOutIndex + 1;
-%         for i = inIndex + 1:inIndex + inNum
-%           for rep = 1:obj.outSampleRatio
-%             obj.audioBuffer(ptr) = int16(app.filteredTrace(i) * obj.audioMultiplier);
-%             ptr = ptr + 1;
-%           end
-%         end
-%         if obj.audioOutIndex + inNum * obj.outSampleRatio == obj.audioBufferSize
-%           try                                         % full buffer, send to audio output
-%             obj.audioOutDevice(obj.audioBuffer);
-% %             underrun = obj.audioOutDevice(obj.audioBuffer);
-% %             if underrun ~= 0
-% %               fprintf('Audio underrun (%d samples)\n', underrun / obj.outSampleRatio);
-% %             end
-%           catch
-%             fprintf('error trying to output to audioOutDevice\n');
-%           end
-%           obj.audioOutIndex = 0;                      % start a new buffer
-%         else
-%           obj.audioOutIndex = obj.audioOutIndex + inNum * obj.outSampleRatio;
-%         end
-%         if obj.audioOutIndex > obj.audioBufferSize
-%           fprintf('Audio buffer mishandling -- buffer overrun\n');
-%         end
-%         inIndex = inIndex + inNum;
-%       end
-%     end
 
 % outputAudio: output the audio signal
 function outputAudio(obj, app)
@@ -202,84 +166,84 @@ function outputAudio(obj, app)
     inIndex = inIndex + inNum;
   end
 end
-    %% processSignals: function to process data from one trial
-    function overRun = processSignals(obj, app)
-      if app.testMode
-        insertFakeSpikes(obj, app);
-      end
-      app.filteredTrace(obj.lastProcessed + 1:app.samplesRead) = ...
-                            filter(app.filter, app.rawData(obj.lastProcessed + 1:app.samplesRead));
-      outputAudio(obj, app);
-      % Find spikes
-      spikesEnabled = ~any((app.thresholdSlider.Limits - app.thresholdSlider.Value) == 0);            
-      if spikesEnabled
-        if app.thresholdV >= 0
-          sIndices = find(app.filteredTrace(obj.lastProcessed + 1:app.samplesRead) > app.thresholdV);
-        else
-          sIndices = find(app.filteredTrace(obj.lastProcessed + 1:app.samplesRead) < app.thresholdV);
-        end
-        if isempty(sIndices)                                  % nothing above threshold
-          app.inSpike = false;                                % clear the inSpike flag
-        else
-          % If we entered this call partway through a spike, we need to get rid of any trailing parts of the spike.
-          % That tail will start at index 1, so we can just eliminate from sIndices all indices that are equal to
-          % their own index
-          if app.inSpike                                      % we were part way through a spike before
-            for i = 1:length(sIndices)
-              if sIndices(i) ~= i
-                app.inSpike = false;                          % clear the inSpike flag
-                break;
-              end
-            end
-            if app.inSpike                                    % never got out of spike, return
-             overRun = false;
-              return;
-            end
-            sIndices = sIndices(i:end);                       % work with >thresholds past any spike tail
-          end
-          % Process newly detected spikes
-          numSpikes = 1;                                      % we have at least one spike
-          lastIndex = sIndices(1);                            % used to find gaps between spikes
-          spikeIndices = lastIndex;                           % save the start of this spike
-          addISI(obj, app, sIndices(1));                      % add this spike to the ISIs
-          addSpikeTime(obj, app, sIndices(1));
-          if length(sIndices) > 1                             % for all the remaining indices...
-            for i = 2:length(sIndices)
-              % we only allow one trigger per trigger cycle, but a bit more
-              % so we can see 60 Hz noise triggering
-              if sIndices(i) > lastIndex + 1 && (sIndices(i) - lastIndex) > app.spikePlots.triggerSamples - 25
-                numSpikes = numSpikes + 1;                    % it's a new spike
-                spikeIndices(numSpikes) = sIndices(i);        % record the index for this spike
-                addISI(obj, app, sIndices(i));                % add this spike to the ISIs
-                addSpikeTime(obj, app, sIndices(i));
-              end
-              lastIndex = sIndices(i);                        % used to find gaps between spikes
-            end
-          end
-          if sIndices(end) == app.samplesRead - obj.lastProcessed % end of new data in middle of a spike?
-            app.inSpike = true;
-          end
-          app.spikeIndices = [app.spikeIndices, spikeIndices + obj.lastProcessed]; % add new spikes to the list of spikes
-        end
-        obj.lastSpikeIndex = obj.lastSpikeIndex - (app.samplesRead - obj.lastProcessed);
-      end
-      % check whether we've run past the end of the continuous display
-      overRun = app.samplesRead - app.contSamples;
-      if overRun > 0
-        app.rawData(1:overRun) = app.rawData(app.contSamples + 1:app.samplesRead);
-        app.filteredTrace(1:overRun) = app.filteredTrace(app.contSamples + 1:app.samplesRead);
-        app.spikeIndices = app.spikeIndices - app.contSamples;
-        obj.nextFakeSpike0Sample = obj.nextFakeSpike0Sample - app.contSamples;
-        app.samplesRead = overRun;
-        obj.tracesRead = obj.tracesRead + 1;
-      end
-      obj.lastProcessed = app.samplesRead;
+  %% processSignals: function to process data from one trial
+  function overRun = processSignals(obj, app)
+    if app.testMode
+      insertFakeSpikes(obj, app);
     end
+    app.filteredTrace(obj.lastProcessed + 1:app.samplesRead) = ...
+                          filter(app.filter, app.rawData(obj.lastProcessed + 1:app.samplesRead));
+    outputAudio(obj, app);
+    % Find spikes
+    spikesEnabled = ~any((app.thresholdSlider.Limits - app.thresholdSlider.Value) == 0);            
+    if spikesEnabled
+      if app.thresholdV >= 0
+        sIndices = find(app.filteredTrace(obj.lastProcessed + 1:app.samplesRead) > app.thresholdV);
+      else
+        sIndices = find(app.filteredTrace(obj.lastProcessed + 1:app.samplesRead) < app.thresholdV);
+      end
+      if isempty(sIndices)                                  % nothing above threshold
+        app.inSpike = false;                                % clear the inSpike flag
+      else
+        % If we entered this call partway through a spike, we need to get rid of any trailing parts of the spike.
+        % That tail will start at index 1, so we can just eliminate from sIndices all indices that are equal to
+        % their own index
+        if app.inSpike                                      % we were part way through a spike before
+          for i = 1:length(sIndices)
+            if sIndices(i) ~= i
+              app.inSpike = false;                          % clear the inSpike flag
+              break;
+            end
+          end
+          if app.inSpike                                    % never got out of spike, return
+           overRun = false;
+            return;
+          end
+          sIndices = sIndices(i:end);                       % work with >thresholds past any spike tail
+        end
+        % Process newly detected spikes
+        numSpikes = 1;                                      % we have at least one spike
+        lastIndex = sIndices(1);                            % used to find gaps between spikes
+        spikeIndices = lastIndex;                           % save the start of this spike
+        addISI(obj, app, sIndices(1));                      % add this spike to the ISIs
+        addSpikeTime(obj, app, sIndices(1));
+        if length(sIndices) > 1                             % for all the remaining indices...
+          for i = 2:length(sIndices)
+            % we only allow one trigger per trigger cycle, but a bit more
+            % so we can see 60 Hz noise triggering
+            if sIndices(i) > lastIndex + 1 && (sIndices(i) - lastIndex) > app.spikePlots.triggerSamples - 25
+              numSpikes = numSpikes + 1;                    % it's a new spike
+              spikeIndices(numSpikes) = sIndices(i);        % record the index for this spike
+              addISI(obj, app, sIndices(i));                % add this spike to the ISIs
+              addSpikeTime(obj, app, sIndices(i));
+            end
+            lastIndex = sIndices(i);                        % used to find gaps between spikes
+          end
+        end
+        if sIndices(end) == app.samplesRead - obj.lastProcessed % end of new data in middle of a spike?
+          app.inSpike = true;
+        end
+        app.spikeIndices = [app.spikeIndices, spikeIndices + obj.lastProcessed]; % add new spikes to the list of spikes
+      end
+      obj.lastSpikeIndex = obj.lastSpikeIndex - (app.samplesRead - obj.lastProcessed);
+    end
+    % check whether we've run past the end of the continuous display
+    overRun = app.samplesRead - app.contSamples;
+    if overRun > 0
+      app.rawData(1:overRun) = app.rawData(app.contSamples + 1:app.samplesRead);
+      app.filteredTrace(1:overRun) = app.filteredTrace(app.contSamples + 1:app.samplesRead);
+      app.spikeIndices = app.spikeIndices - app.contSamples;
+      obj.nextFakeSpike0Sample = obj.nextFakeSpike0Sample - app.contSamples;
+      app.samplesRead = overRun;
+      obj.tracesRead = obj.tracesRead + 1;
+    end
+    obj.lastProcessed = app.samplesRead;
+  end
     
-    %% setVolume -- set volume based on the volume slider
-    function setVolume(obj, app)
-      obj.audioMultiplier = 10^get(app.volumeSlider, 'value');
-    end
+  %% setVolume -- set volume based on the volume slider
+  function setVolume(obj, app)
+    obj.audioMultiplier = 10^get(app.volumeSlider, 'value');
+  end
   end
 end
 
