@@ -127,13 +127,13 @@ classdef SRSpikePlots < handle
       axis(theAxes, [1, floor(obj.triggerSamples / 2) * 2 + 1, -maxV, maxV]);
       plot(theAxes, [triggerSample, triggerSample], [-maxV, maxV], 'k:');
       makeSnippets(obj.triggerSnippets, app, 100);
+      obj.triggerThresholdLine = plot(app.vTrigAxes, [1 obj.triggerSamples], app.thresholdV * [1 1], 'r');      
       obj.triggerSpikeCount = 0;            % reset spike count for this sweep
       % Create on-axes text for spike count (cla deletes it, so recreate once per sweep)
       obj.triggerSpikeCountText = text(theAxes, 0.975, 0.025, '0 spikes superimposed', ...
           'Units','normalized', 'HorizontalAlignment','right', 'VerticalAlignment','bottom', ...
           'FontSize', 12, 'FontWeight','bold', 'Color',[0 0 0], 'BackgroundColor',[1 1 1], 'Margin', 2, ...
           'Interpreter','none', 'HitTest','off', 'PickableParts','none', 'Clipping','off');
-      obj.triggerThresholdLine = plot(app.vTrigAxes, [1 obj.triggerSamples], app.thresholdV * [1 1], 'r');      
       obj.singleSpikeDisplayed = false;
       obj.clearingTrig = false;
     end
@@ -185,7 +185,6 @@ classdef SRSpikePlots < handle
           break;
         end
         if ~obj.singleSpikeDisplayed
-          % set(obj.triggerThresholdLine, 'XData', [1, obj.triggerSamples], 'YData', app.thresholdV * [1, 1]);
           obj.singleSpikeDisplayed = true;
         end
         set(nextSnippet(obj.triggerSnippets, app), 'XData', 1:obj.triggerSamples, ...

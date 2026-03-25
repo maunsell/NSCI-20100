@@ -3,16 +3,18 @@ classdef OPlots < handle
     % Support for plotting of spike waveforms in Oscilloscope
     
     properties
-        lastThresholdXPlotted
-        samplesPlotted
-        singleSpike
-        singleSpikeDisplayed
-        triggerDivisions
-        triggerFraction
-        triggerSamples
-        triggerTraceDurS
-        vContAxes
-        vTrigAxes
+      contThresholdLine
+      lastThresholdV = NaN    % last threshold value displayed
+      samplesPlotted
+      singleSpike
+      singleSpikeDisplayed
+      triggerDivisions
+      triggerFraction
+      triggerSamples
+      triggerThresholdLine
+      triggerTraceDurS
+      vContAxes
+      vTrigAxes
     end
     
     methods
@@ -29,7 +31,6 @@ classdef OPlots < handle
             obj.vTrigAxes = app.axes2;
             obj.vTrigAxes.XGrid = 'on';
             obj.vTrigAxes.YGrid = 'on';
-            obj.lastThresholdXPlotted = 0;
             obj.singleSpike = false;
             obj.singleSpikeDisplayed = false;
             obj.triggerDivisions = 10;
@@ -49,7 +50,6 @@ classdef OPlots < handle
         %% clearContPlot -- clear the continuous trace plot
         function clearContPlot(obj, app)
             obj.samplesPlotted = 0;
-            obj.lastThresholdXPlotted = 0;
             maxV = app.vPerDiv * app.vDivs / 2;
             vLimit = app.vDivs / 2 * app.vPerDiv;
             yTickLabels = cell(app.vDivs, 1);
@@ -82,6 +82,9 @@ classdef OPlots < handle
             yticks(obj.vContAxes, -vLimit:app.vPerDiv:vLimit);
             yticklabels(obj.vContAxes, yTickLabels);
             ylabel(obj.vContAxes, 'Analog Input (V)','FontSize', 14, 'FontWeight','Bold');
+
+            % Create (or recreate) the threshold line spanning the whole sweep
+            obj.contThresholdLine = plot(obj.vContAxes, [1, app.contSamples], app.thresholdV * [1 1], 'r');
             hold(obj.vContAxes, 'on');
         end
                 
@@ -95,6 +98,7 @@ classdef OPlots < handle
             triggerSampleOffset = mod(triggerSample - 1, samplesPerDiv);
             negTriggerDivisions = floor(obj.triggerDivisions * obj.triggerFraction) + 1;
             cla(theAxes);
+            hold(theAxes, 'off');
             xticks(theAxes, 1:samplesPerDiv:floor(obj.triggerSamples / 2) * 2 + 1 + triggerSampleOffset);
             theAxes.XGrid = 'on';
             xTickLabels = cell(obj.triggerDivisions, 1);
@@ -116,6 +120,7 @@ classdef OPlots < handle
             yticklabels(theAxes, yTickLabels);
             theAxes.YGrid = 'on';
             ylabel(theAxes, 'Analog Input (V)', 'fontSize', 14, 'fontWeight', 'bold');            
+            obj.triggerThresholdLine = plot(obj.vTrigAxes, [1 obj.triggerSamples], app.thresholdV * [1 1], 'r');      
             hold(theAxes, 'on');
             axis(theAxes, [1, floor(obj.triggerSamples / 2) * 2 + 1, -maxV, maxV]);
             plot(theAxes, [triggerSample, triggerSample], [-maxV, maxV], 'k:');
@@ -124,20 +129,11 @@ classdef OPlots < handle
   
         %% plot the continuous and triggered spike waveforms
         function doPlots(obj, app)
-            dirty = false;
             % continuous trace
             startIndex = max(1, obj.samplesPlotted + 1);  	% start from previous plotted point
             endIndex = min(length(app.rawData), app.samplesRead);
-            % save some CPU time by not plotting the treshold line every time
-            if endIndex >= app.contSamples || endIndex - obj.lastThresholdXPlotted > app.sampleRateHz / 10
-                plot(obj.vContAxes, [obj.lastThresholdXPlotted, endIndex], [app.thresholdV, app.thresholdV], ...
-                    'color', [1.0, 0.25, 0.25]);
-                obj.lastThresholdXPlotted = endIndex;
-                plot(obj.vContAxes, startIndex:endIndex, app.filteredTrace(startIndex:endIndex), 'b');
-                obj.samplesPlotted = endIndex;
-                dirty = true;
-            end
-            % triggered spikes
+            plot(obj.vContAxes, startIndex:endIndex, app.filteredTrace(startIndex:endIndex), 'b');
+            obj.samplesPlotted = endIndex;
             if obj.singleSpike && obj.singleSpikeDisplayed        % in single spike mode and already displayed?
                 app.spikeIndices = [];                             %   then don't plot the spikes
                 return;
@@ -154,23 +150,33 @@ classdef OPlots < handle
                     break;
                 end
                 if ~obj.singleSpikeDisplayed
-                    plot(obj.vTrigAxes, [1, obj.triggerSamples], [app.thresholdV, app.thresholdV], 'color', ...
-                        [1.0, 0.25, 0.25]);
                     obj.singleSpikeDisplayed = true;
                 end
                 plot(obj.vTrigAxes, 1:obj.triggerSamples, app.filteredTrace(startIndex:endIndex), 'b');
-                dirty = true;
                 if obj.singleSpike
                     app.spikeIndices = [];                 % single spike, throw out any remaining
                 else
                     app.spikeIndices(1) = [];              % delete this spike time
                 end
             end
-            if dirty
-                drawnow limitrate nocallbacks;             	% don't plot too often, or notify callbacks
-            end
+            drawnow limitrate nocallbacks;             	% don't plot too often, or notify callbacks
         end
-        
+
+        %% update the threshold voltage line if it has changed
+        function updateThresholdIfNeeded(obj, app)
+          thr = app.thresholdV;
+          if isequal(thr, obj.lastThresholdV)           % Only draw if the value changed (or we've never drawn it)
+            return;
+          end
+          obj.lastThresholdV = thr;
+          if isgraphics(obj.contThresholdLine)          % Continuous plot (full-width line)
+            obj.contThresholdLine.YData = thr * [1 1];
+          end
+          if isgraphics(obj.triggerThresholdLine)       % Trigger plot (line across trigger samples)
+            obj.triggerThresholdLine.YData = thr * [1 1];
+          end
+        end
+
     end
     
 end
