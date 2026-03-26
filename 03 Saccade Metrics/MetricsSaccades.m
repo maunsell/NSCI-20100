@@ -68,10 +68,12 @@ methods
       end
       % decay to zero and add random noise
       app.posTrace = app.posTrace - decayTrace + 2.0 * rand(size(app.posTrace)) - 1.0;
+      
       % smooth with a boxcar to take out the highest frequencies
       filterSamples = max(1, floor(app.lbj.SampleRateHz * 10.0 / 1000.0));
       b = (1 / filterSamples) * ones(1, filterSamples);
       app.posTrace = filter(b, 1, app.posTrace);
+      
       % add 60Hz noise
       dt = 1/app.lbj.SampleRateHz;                   % seconds per sample
       t = (0:dt:samples * dt - dt)';              % seconds
@@ -81,29 +83,48 @@ methods
       app.posTrace = filter(obj.filter60Hz, app.posTrace);
       app.velTrace(1:end - 1) = diff(app.posTrace);
       app.velTrace(end) = app.velTrace(end - 1);
-      app.velTrace = filter(obj.filterLP, app.velTrace);
+      % app.velTrace = filter(obj.filterLP, app.velTrace);
+      app.velTrace = filtfilt(obj.filterLP.sosMatrix, obj.filterLP.ScaleValues, app.velTrace);
     else
       app.velTrace(1:end - 1) = diff(app.posTrace);
       app.velTrace(end) = app.velTrace(end - 1);
     end
     % find a saccade and make sure we have enough samples before and after its start
-    % sIndex = floor(app.prestimDurS * app.lbj.SampleRateHz);
     sIndex = floor(app.stimTimeS * app.lbj.SampleRateHz);
     [startIndex, endIndex] = findSaccade(obj, app, sIndex);
-    saccadeOffset = floor(app.saccadeSamples / 2);
-    firstIndex = startIndex - saccadeOffset;
-    lastIndex = startIndex + saccadeOffset;
-    if mod(app.saccadeSamples, 2) == 0                     % make sure the samples are divisible by 2
-      lastIndex = lastIndex - 1;
-    end
-    if (firstIndex < 1 || lastIndex > app.trialSamples)    % not enough samples around saccade to process
-      startIndex = 0;
+    
+    if startIndex <= 0 || endIndex <= 0
       return;
     end
-    % sum into the average pos and vel plot, inverting for negative steps
+    
+    % Build averaging window around a jittered copy of the start time
+    saccadeOffset = floor(app.saccadeSamples / 2);
+    
+    alignIndex = startIndex;   % true start for display; jittered copy for averaging only
+    
+    % Zero-centered uniform jitter over roughly one 60 Hz cycle total width
+    jitterHalfRange = floor(app.lbj.SampleRateHz / 120);   % ~8 samples at 1 kHz
+    jitterSamples = randi([-jitterHalfRange, jitterHalfRange], 1);
+    
+    alignIndex = alignIndex + jitterSamples;
+    
+    firstIndex = alignIndex - saccadeOffset;
+    lastIndex  = alignIndex + saccadeOffset;
+    if mod(app.saccadeSamples, 2) == 0
+      lastIndex = lastIndex - 1;
+    end
+    
+    % If jitter pushes the averaging window out of bounds, skip averaging but keep display indices
+    if (firstIndex < 1 || lastIndex > app.trialSamples)
+      return;
+    end
+    
+    % sum into the average pos and vel plot
     app.posSummed(:, app.offsetIndex) = app.posSummed(:, app.offsetIndex) + ...
       app.posTrace(firstIndex:lastIndex);
-    app.velSummed(:, app.offsetIndex) = app.velSummed(:, app.offsetIndex) + app.velTrace(firstIndex:lastIndex);
+    app.velSummed(:, app.offsetIndex) = app.velSummed(:, app.offsetIndex) + ...
+      app.velTrace(firstIndex:lastIndex);
+    
     % tally the sums and compute the averages
     app.numSummed(app.offsetIndex) = app.numSummed(app.offsetIndex) + 1;
     app.posAvg(:, app.offsetIndex) = app.posSummed(:, app.offsetIndex) / app.numSummed(app.offsetIndex);

@@ -87,12 +87,4 @@ function [sIndex, eIndex] = findSaccade(obj, app, startIndex)
       eIndex = 0;
     end
   end
-  % add some jitter to reduce alignment on noise
-  if sIndex > 0 && eIndex > 0
-    offset = floor(app.lbj.SampleRateHz * 0.01666 * rand(1));
-    sIndex = sIndex - offset;
-    eIndex = eIndex - offset;
-  end
-%   fprintf('findSaccade end\n');
-
 end
